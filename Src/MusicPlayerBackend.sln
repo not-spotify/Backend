@@ -1,0 +1,16 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MusicPlayerBackend", "MusicPlayerBackend\MusicPlayerBackend.csproj", "{A2EEAF86-CE21-493E-9659-E4EFA893C485}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A2EEAF86-CE21-493E-9659-E4EFA893C485}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A2EEAF86-CE21-493E-9659-E4EFA893C485}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A2EEAF86-CE21-493E-9659-E4EFA893C485}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A2EEAF86-CE21-493E-9659-E4EFA893C485}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
