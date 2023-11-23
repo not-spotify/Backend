@@ -60,13 +60,12 @@ public interface IEntityRepository<TKey, TEntity>
 
     Task<TResult> SingleAsync<TResult>(Expression<Func<TEntity, TResult>> selector);
 
-    Task<TResult> SingleAsync<TResult>(Expression<Func<TEntity?, bool>> where,
-        Expression<Func<TEntity, TResult>> selector);
+    Task<TResult> SingleAsync<TResult>(Expression<Func<TEntity?, bool>> where, Expression<Func<TEntity, TResult>> selector);
 
     Task<bool> AnyAsync();
-    Task<bool> AnyAsync(Expression<Func<TEntity?, bool>> predicate);
+    Task<bool> AnyAsync(Expression<Func<TEntity, bool>> predicate);
     Task<int> CountAsync();
-    Task<int> CountAsync(Expression<Func<TEntity?, bool>> predicate);
+    Task<int> CountAsync(Expression<Func<TEntity, bool>> predicate);
 }
 
 [SuppressMessage("Design", "CA1012:Abstract types should not have constructors", Justification = "<Pending>")]
@@ -150,12 +149,12 @@ public abstract class EntityRepositoryBase<TKey, TEntity>(AppDbContext dbContext
         return QueryAll().Select(selector);
     }
 
-    public IQueryable<TEntity?> QueryMany(Expression<Func<TEntity?, bool>> predicate)
+    public IQueryable<TEntity?> QueryMany(Expression<Func<TEntity, bool>> predicate)
     {
         return QueryAll().Where(predicate);
     }
 
-    public IQueryable<TResult> QueryMany<TResult>(Expression<Func<TEntity?, bool>> predicate, Expression<Func<TEntity, TResult>> selector)
+    public IQueryable<TResult> QueryMany<TResult>(Expression<Func<TEntity, bool>> predicate, Expression<Func<TEntity, TResult>> selector)
     {
         return QueryMany(predicate).Select(selector);
     }
@@ -216,7 +215,7 @@ public abstract class EntityRepositoryBase<TKey, TEntity>(AppDbContext dbContext
         return await QueryAll().SingleAsync();
     }
 
-    public async Task<TEntity?> SingleAsync(Expression<Func<TEntity?, bool>> where)
+    public async Task<TEntity?> SingleAsync(Expression<Func<TEntity, bool>> where)
     {
         return await QueryAll().SingleAsync(where);
     }
@@ -226,8 +225,7 @@ public abstract class EntityRepositoryBase<TKey, TEntity>(AppDbContext dbContext
         return await QueryAll(selector).FirstOrDefaultAsync();
     }
 
-    public async Task<TResult?> FirstOrDefaultAsync<TResult>(Expression<Func<TEntity?, bool>> where,
-        Expression<Func<TEntity, TResult?>> selector)
+    public async Task<TResult?> FirstOrDefaultAsync<TResult>(Expression<Func<TEntity, bool>> where, Expression<Func<TEntity, TResult?>> selector)
     {
         return await QueryMany(where, selector).FirstOrDefaultAsync();
     }
@@ -280,7 +278,7 @@ public abstract class EntityRepositoryBase<TKey, TEntity>(AppDbContext dbContext
         return await QueryAll().CountAsync();
     }
 
-    public async Task<int> CountAsync(Expression<Func<TEntity?, bool>> predicate)
+    public async Task<int> CountAsync(Expression<Func<TEntity, bool>> predicate)
     {
         return await QueryMany(predicate).CountAsync();
     }

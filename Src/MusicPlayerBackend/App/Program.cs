@@ -1,6 +1,6 @@
 using Autofac.Extensions.DependencyInjection;
 
-namespace MusicPlayerBackend;
+namespace MusicPlayerBackend.App;
 
 public static class Program
 {

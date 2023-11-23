@@ -18,7 +18,7 @@ public interface IUnitOfWork
     Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken ct);
 }
 
-public class UnitOfWork(AppDbContext dbContext) : IUnitOfWork
+public sealed class UnitOfWork(AppDbContext dbContext) : IUnitOfWork
 {
     private IDbContextTransaction _dbContextTransaction = null!;
 

@@ -1,5 +1,6 @@
 ﻿using System.Text.Json.Serialization;
-namespace MusicPlayerBackend;
+
+namespace MusicPlayerBackend.App;
 
 public sealed class Startup
 {

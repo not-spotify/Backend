@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using MusicPlayerBackend.Data;
 using MusicPlayerBackend.Data.Entities;
 using MusicPlayerBackend.Repositories;
+using MusicPlayerBackend.Services;
 using MusicPlayerBackend.TransferObjects.Playlist;
 
 namespace MusicPlayerBackend.Controllers;
@@ -14,7 +15,8 @@ namespace MusicPlayerBackend.Controllers;
 [Produces(MediaTypeNames.Application.Json)]
 [ProducesResponseType(StatusCodes.Status400BadRequest)]
 [Route("[controller]")]
-public sealed class PlaylistController(IPlaylistRepository playlistRepository, ITrackRepository trackRepository, ITrackPlaylistRepository trackPlaylistRepository, IUnitOfWork unitOfWork) : ControllerBase
+public sealed class PlaylistController(IPlaylistRepository playlistRepository, ITrackRepository trackRepository, ITrackPlaylistRepository trackPlaylistRepository,
+    IUnitOfWork unitOfWork, IS3Service s3Service) : ControllerBase
 {
     [HttpGet]
     public async Task<IActionResult> List(CancellationToken ct)
@@ -25,9 +27,15 @@ public sealed class PlaylistController(IPlaylistRepository playlistRepository, I
 
     [HttpPost]
     [ProducesResponseType(typeof(PlaylistResponse), StatusCodes.Status200OK)]
-    public async Task<IActionResult> Create()
+    public async Task<IActionResult> Create([FromBody] CreatePlaylistRequest request)
     {
-        var playlist = new Playlist();
+        var playlist = new Playlist
+        {
+            Name = request.Name,
+            Visibility = (PlaylistVisibility) request.Visibility!
+        };
+
+        request.Visibility = request.Visibility;
         playlistRepository.Save(playlist);
 
         await unitOfWork.SaveChangesAsync();
@@ -140,5 +148,23 @@ public sealed class PlaylistController(IPlaylistRepository playlistRepository, I
 
         await unitOfWork.SaveChangesAsync();
         return Ok(new BulkTrackActionResponse { Tracks = responseTrackItems });
+    }
+
+    [HttpPut("{playlistId:guid}/Cover")]
+    public async Task<IActionResult> UpdateCover(Guid playlistId, IFormFile cover, CancellationToken ct)
+    {
+        var playlist = await playlistRepository.GetByIdOrDefaultAsync(playlistId);
+        if (playlist == default)
+            return NotFound();
+
+        var coverUri = await s3Service.TryUploadFileStream("covers", Guid.NewGuid().ToString(), cover.OpenReadStream(), ct);
+        if (coverUri == default)
+            return BadRequest();
+
+        playlist.CoverUri = coverUri;
+        playlistRepository.Save(playlist);
+        await unitOfWork.SaveChangesAsync(ct);
+
+        return NoContent();
     }
 }

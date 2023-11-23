@@ -1,4 +1,6 @@
-﻿namespace MusicPlayerBackend.TransferObjects.Playlist;
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace MusicPlayerBackend.TransferObjects.Playlist;
 
 public enum TrackActionRequest
 {
@@ -41,5 +43,19 @@ public sealed class PlaylistResponse
 {
     public required Guid Id { get; set; }
     public required string Name { get; set; }
+    public string? CoverUri { get; set; }
     public required IEnumerable<Guid> TrackIds { get; set; }
+}
+
+public enum VisibilityLevel
+{
+    Private = 0,
+    Public
+}
+
+public sealed class CreatePlaylistRequest
+{
+    [Required]
+    public string Name { get; set; } = null!;
+    public VisibilityLevel? Visibility { get; set; } = VisibilityLevel.Private;
 }
