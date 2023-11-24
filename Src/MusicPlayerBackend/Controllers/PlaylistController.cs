@@ -19,10 +19,17 @@ public sealed class PlaylistController(IPlaylistRepository playlistRepository, I
     IUnitOfWork unitOfWork, IS3Service s3Service) : ControllerBase
 {
     [HttpGet]
-    public async Task<IActionResult> List(CancellationToken ct)
+    [ProducesResponseType(typeof(PlaylistListResponse), StatusCodes.Status200OK)]
+    public async Task<IActionResult> List(PlaylistListRequest request, CancellationToken ct)
     {
-        var playlists = await playlistRepository.QueryAll().ToArrayAsync(ct);
-        return Ok(playlists);
+        var playlists = await playlistRepository.QueryAll().OrderBy(p => p.CreatedAt).Select(p => new PlaylistListItemResponse
+        {
+            CoverUri = p.CoverUri,
+            Id = p.Id,
+            Name = p.Name
+        }).Skip(request.PageSize * request.PageSize).Take(request.PageSize).ToArrayAsync(ct);
+
+        return Ok(new PlaylistListResponse { Items = playlists });
     }
 
     [HttpPost]
@@ -39,7 +46,6 @@ public sealed class PlaylistController(IPlaylistRepository playlistRepository, I
         playlistRepository.Save(playlist);
 
         await unitOfWork.SaveChangesAsync();
-        
         return Ok(playlist);
     }
 
@@ -54,7 +60,7 @@ public sealed class PlaylistController(IPlaylistRepository playlistRepository, I
         var originalPlaylistId = playlist.Id;
 
         await unitOfWork.BeginTransactionAsync(cancellationToken);
-        
+
         playlist.Id = Guid.Empty;
         playlist.Name = request.Name ?? $"{playlist.Name} (1)";
         playlistRepository.Save(playlist);

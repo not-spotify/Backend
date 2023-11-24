@@ -37,6 +37,7 @@ public sealed class BulkTrackActionResponse
 public sealed class ClonePlaylistRequest
 {
     public string? Name { get; set; }
+    public bool IncludeTrackIds { get; set; }
 }
 
 public sealed class PlaylistResponse
@@ -44,13 +45,34 @@ public sealed class PlaylistResponse
     public required Guid Id { get; set; }
     public required string Name { get; set; }
     public string? CoverUri { get; set; }
-    public required IEnumerable<Guid> TrackIds { get; set; }
+    public IEnumerable<Guid>? TrackIds { get; set; }
 }
 
 public enum VisibilityLevel
 {
     Private = 0,
     Public
+}
+
+public sealed class PlaylistListRequest
+{
+    public int Page { get; set; }
+
+    [Range(5, 20)]
+    public int PageSize { get; set; }
+}
+
+public sealed class PlaylistListResponse
+{
+    [Required]
+    public IEnumerable<PlaylistListItemResponse> Items { get; set; } = null!;
+}
+
+public sealed class PlaylistListItemResponse
+{
+    public required Guid Id { get; set; }
+    public required string Name { get; set; }
+    public string? CoverUri { get; set; }
 }
 
 public sealed class CreatePlaylistRequest
