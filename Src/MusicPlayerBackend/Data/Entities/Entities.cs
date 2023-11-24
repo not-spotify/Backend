@@ -5,14 +5,14 @@ public record TrackPlaylist : EntityBase
     public Guid TrackId { get; set; }
     public Guid PlaylistId { get; set; }
     
-    public virtual Track Track { get; set; }
-    public virtual Playlist Playlist { get; set; }
+    public virtual Track Track { get; set; } = null!;
+    public virtual Playlist Playlist { get; set; } = null!;
 }
 
 public record Album : EntityBase
 {
     public string? CoverUrl { get; set; }
-    public IEnumerable<AlbumTrack> AlbumTracks { get; set; }
+    public IEnumerable<AlbumTrack> AlbumTracks { get; set; } = null!;
 }
 
 public sealed record Track : EntityBase
@@ -25,8 +25,8 @@ public record AlbumTrack : EntityBase
     public Guid AlbumId { get; set; }
     public Guid TrackId { get; set; }
 
-    public virtual Album Album { get; set; }
-    public virtual Track Track { get; set; }
+    public virtual Album Album { get; set; } = null!;
+    public virtual Track Track { get; set; } = null!;
 }
 
 public enum PlaylistVisibility

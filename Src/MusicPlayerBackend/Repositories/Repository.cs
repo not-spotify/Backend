@@ -1,13 +1,10 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
 using MusicPlayerBackend.Data;
 
 namespace MusicPlayerBackend.Repositories;
 
-public interface IEntityRepository<TKey, TEntity>
-    where TEntity : class, IEntity<TKey>
-    where TKey : IEquatable<TKey>
+public interface IEntityRepository<in TKey, TEntity> where TEntity : class, IEntity<TKey> where TKey : IEquatable<TKey>
 {
     void Save(TEntity entity);
     void Delete(TEntity entity);
@@ -28,39 +25,32 @@ public interface IEntityRepository<TKey, TEntity>
     IQueryable<TResult> QueryMany<TResult>(Expression<Func<TEntity, bool>> predicate,
         Expression<Func<TEntity, TResult>> selector);
 
-    Task<IReadOnlyCollection<TEntity?>> GetAllAsync();
+    Task<IReadOnlyCollection<TEntity>> GetAllAsync();
     Task<IReadOnlyCollection<TResult>> GetAllAsync<TResult>(Expression<Func<TEntity, TResult>> selector);
-    Task<IReadOnlyCollection<TEntity?>> GetManyAsync(Expression<Func<TEntity?, bool>> predicate);
 
-    Task<IReadOnlyCollection<TResult>> GetManyAsync<TResult>(Expression<Func<TEntity?, bool>> predicate,
-        Expression<Func<TEntity, TResult>> selector);
+    Task<IReadOnlyCollection<TEntity>> GetManyAsync(Expression<Func<TEntity, bool>> predicate);
+    Task<IReadOnlyCollection<TResult>> GetManyAsync<TResult>(Expression<Func<TEntity, bool>> predicate, Expression<Func<TEntity, TResult>> selector);
 
     Task<TEntity?> FirstOrDefaultAsync();
     Task<TEntity?> FirstOrDefaultAsync(Expression<Func<TEntity?, bool>> where);
     Task<TEntity> FirstAsync();
-    Task<TEntity> FirstAsync(Expression<Func<TEntity?, bool>> where);
+    Task<TEntity> FirstAsync(Expression<Func<TEntity, bool>> where);
     Task<TEntity?> SingleOrDefaultAsync();
     Task<TEntity?> SingleOrDefaultAsync(Expression<Func<TEntity?, bool>> where);
     Task<TEntity> SingleAsync();
     Task<TEntity> SingleAsync(Expression<Func<TEntity, bool>> where);
 
-    Task<TResult?> FirstOrDefaultAsync<TResult>(Expression<Func<TEntity, TResult?>> selector);
-
+    Task<TResult?> FirstOrDefaultAsync<TResult>(Expression<Func<TEntity, TResult>> selector);
     Task<TResult?> FirstOrDefaultAsync<TResult>(Expression<Func<TEntity, bool>> where, Expression<Func<TEntity, TResult?>> selector);
 
     Task<TResult> FirstAsync<TResult>(Expression<Func<TEntity, TResult>> selector);
+    Task<TResult> FirstAsync<TResult>(Expression<Func<TEntity, bool>> where, Expression<Func<TEntity, TResult>> selector);
 
-    Task<TResult> FirstAsync<TResult>(Expression<Func<TEntity?, bool>> where,
-        Expression<Func<TEntity, TResult>> selector);
-
-    Task<TResult?> SingleOrDefaultAsync<TResult>(Expression<Func<TEntity, TResult?>> selector);
-
-    Task<TResult?> SingleOrDefaultAsync<TResult>(Expression<Func<TEntity?, bool>> where,
-        Expression<Func<TEntity, TResult?>> selector);
+    Task<TResult?> SingleOrDefaultAsync<TResult>(Expression<Func<TEntity, TResult>> selector);
+    Task<TResult?> SingleOrDefaultAsync<TResult>(Expression<Func<TEntity, bool>> where, Expression<Func<TEntity, TResult>> selector);
 
     Task<TResult> SingleAsync<TResult>(Expression<Func<TEntity, TResult>> selector);
-
-    Task<TResult> SingleAsync<TResult>(Expression<Func<TEntity?, bool>> where, Expression<Func<TEntity, TResult>> selector);
+    Task<TResult> SingleAsync<TResult>(Expression<Func<TEntity, bool>> where, Expression<Func<TEntity, TResult>> selector);
 
     Task<bool> AnyAsync();
     Task<bool> AnyAsync(Expression<Func<TEntity, bool>> predicate);
@@ -68,7 +58,6 @@ public interface IEntityRepository<TKey, TEntity>
     Task<int> CountAsync(Expression<Func<TEntity, bool>> predicate);
 }
 
-[SuppressMessage("Design", "CA1012:Abstract types should not have constructors", Justification = "<Pending>")]
 public abstract class EntityRepositoryBase<TKey, TEntity>(AppDbContext dbContext) : IEntityRepository<TKey, TEntity>
     where TEntity : class, IEntity<TKey>
     where TKey : IEquatable<TKey>
@@ -108,7 +97,7 @@ public abstract class EntityRepositoryBase<TKey, TEntity>(AppDbContext dbContext
         if (result == null)
             ThrowEntityNotFoundException(id);
 
-        return result;
+        return result!;
     }
 
     public async Task<IReadOnlyCollection<TEntity>> GetByIdsAsync(IEnumerable<TKey> ids)
@@ -149,7 +138,7 @@ public abstract class EntityRepositoryBase<TKey, TEntity>(AppDbContext dbContext
         return QueryAll().Select(selector);
     }
 
-    public IQueryable<TEntity?> QueryMany(Expression<Func<TEntity, bool>> predicate)
+    public IQueryable<TEntity> QueryMany(Expression<Func<TEntity, bool>> predicate)
     {
         return QueryAll().Where(predicate);
     }
@@ -159,7 +148,7 @@ public abstract class EntityRepositoryBase<TKey, TEntity>(AppDbContext dbContext
         return QueryMany(predicate).Select(selector);
     }
 
-    public async Task<IReadOnlyCollection<TEntity?>> GetAllAsync()
+    public async Task<IReadOnlyCollection<TEntity>> GetAllAsync()
     {
         return await QueryAll().ToArrayAsync();
     }
@@ -169,13 +158,12 @@ public abstract class EntityRepositoryBase<TKey, TEntity>(AppDbContext dbContext
         return await QueryAll(selector).ToArrayAsync();
     }
 
-    public async Task<IReadOnlyCollection<TEntity?>> GetManyAsync(Expression<Func<TEntity?, bool>> predicate)
+    public async Task<IReadOnlyCollection<TEntity>> GetManyAsync(Expression<Func<TEntity, bool>> predicate)
     {
         return await QueryMany(predicate).ToArrayAsync();
     }
 
-    public async Task<IReadOnlyCollection<TResult>> GetManyAsync<TResult>(Expression<Func<TEntity?, bool>> predicate,
-        Expression<Func<TEntity, TResult>> selector)
+    public async Task<IReadOnlyCollection<TResult>> GetManyAsync<TResult>(Expression<Func<TEntity, bool>> predicate, Expression<Func<TEntity, TResult>> selector)
     {
         return await QueryMany(predicate, selector).ToArrayAsync();
     }
@@ -190,12 +178,12 @@ public abstract class EntityRepositoryBase<TKey, TEntity>(AppDbContext dbContext
         return await QueryAll().FirstOrDefaultAsync(where);
     }
 
-    public async Task<TEntity?> FirstAsync()
+    public async Task<TEntity> FirstAsync()
     {
         return await QueryAll().FirstAsync();
     }
 
-    public async Task<TEntity?> FirstAsync(Expression<Func<TEntity?, bool>> where)
+    public async Task<TEntity> FirstAsync(Expression<Func<TEntity, bool>> where)
     {
         return await QueryAll().FirstAsync(where);
     }
@@ -210,17 +198,17 @@ public abstract class EntityRepositoryBase<TKey, TEntity>(AppDbContext dbContext
         return await QueryAll().SingleOrDefaultAsync(where);
     }
 
-    public async Task<TEntity?> SingleAsync()
+    public async Task<TEntity> SingleAsync()
     {
         return await QueryAll().SingleAsync();
     }
 
-    public async Task<TEntity?> SingleAsync(Expression<Func<TEntity, bool>> where)
+    public async Task<TEntity> SingleAsync(Expression<Func<TEntity, bool>> where)
     {
         return await QueryAll().SingleAsync(where);
     }
 
-    public async Task<TResult?> FirstOrDefaultAsync<TResult>(Expression<Func<TEntity, TResult?>> selector)
+    public async Task<TResult?> FirstOrDefaultAsync<TResult>(Expression<Func<TEntity, TResult>> selector)
     {
         return await QueryAll(selector).FirstOrDefaultAsync();
     }
@@ -235,19 +223,17 @@ public abstract class EntityRepositoryBase<TKey, TEntity>(AppDbContext dbContext
         return await QueryAll(selector).FirstAsync();
     }
 
-    public async Task<TResult> FirstAsync<TResult>(Expression<Func<TEntity?, bool>> where,
-        Expression<Func<TEntity, TResult>> selector)
+    public async Task<TResult> FirstAsync<TResult>(Expression<Func<TEntity, bool>> where, Expression<Func<TEntity, TResult>> selector)
     {
         return await QueryMany(where, selector).FirstAsync();
     }
 
-    public async Task<TResult?> SingleOrDefaultAsync<TResult>(Expression<Func<TEntity, TResult?>> selector)
+    public async Task<TResult?> SingleOrDefaultAsync<TResult>(Expression<Func<TEntity, TResult>> selector)
     {
         return await QueryAll(selector).SingleOrDefaultAsync();
     }
 
-    public async Task<TResult?> SingleOrDefaultAsync<TResult>(Expression<Func<TEntity?, bool>> where,
-        Expression<Func<TEntity, TResult?>> selector)
+    public async Task<TResult?> SingleOrDefaultAsync<TResult>(Expression<Func<TEntity, bool>> where, Expression<Func<TEntity, TResult>> selector)
     {
         return await QueryMany(where, selector).SingleOrDefaultAsync();
     }
@@ -257,8 +243,7 @@ public abstract class EntityRepositoryBase<TKey, TEntity>(AppDbContext dbContext
         return await QueryAll(selector).SingleAsync();
     }
 
-    public async Task<TResult> SingleAsync<TResult>(Expression<Func<TEntity?, bool>> where,
-        Expression<Func<TEntity, TResult>> selector)
+    public async Task<TResult> SingleAsync<TResult>(Expression<Func<TEntity, bool>> where, Expression<Func<TEntity, TResult>> selector)
     {
         return await QueryMany(where, selector).SingleAsync();
     }
@@ -268,7 +253,7 @@ public abstract class EntityRepositoryBase<TKey, TEntity>(AppDbContext dbContext
         return await QueryAll().AnyAsync();
     }
 
-    public async Task<bool> AnyAsync(Expression<Func<TEntity?, bool>> predicate)
+    public async Task<bool> AnyAsync(Expression<Func<TEntity, bool>> predicate)
     {
         return await QueryAll().AnyAsync(predicate);
     }
