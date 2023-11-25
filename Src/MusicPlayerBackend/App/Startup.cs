@@ -2,8 +2,11 @@
 using Autofac;
 using Autofac.Builder;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Minio;
 using MusicPlayerBackend.Common;
+using MusicPlayerBackend.Data;
 using MusicPlayerBackend.Data.Entities;
 using MusicPlayerBackend.Data.Identity.Stores;
 using MusicPlayerBackend.Data.Infr;
@@ -24,11 +27,17 @@ public sealed class Startup(IConfiguration configuration)
         services.Configure<AppConfig>(configuration);
         services.Configure<Common.Minio>(configuration.GetSection(nameof(Common.Minio)));
         services.AddHttpContextAccessor();
+
+        services.AddTransient<IdentityErrorDescriber>();
         services.AddTransient<ILookupNormalizer, LookupNormalizer>();
         services.AddTransient<IPasswordHasher<User>, PasswordHasher>();
+        services.AddTransient<IUserClaimsPrincipalFactory<User>, UserClaimsPrincipalFactory<User>>();
+        services.AddTransient<IUserConfirmation<User>, UserConfirmation>();
         services.AddTransient<IUserStore<User>, UserStore>();
-        services.AddTransient<UserManager<User>, UserManager<User>>();
-        services.AddDefaultIdentity<User>();
+        services.AddTransient<IUserValidator<User>, UserValidator>();
+        services.AddTransient<UserManager<User>, UserManager>();
+        services.AddTransient<SignInManager<User>, SignInManager>();
+
         services.AddTransient<IMinioClient, MinioClient>();
         services.AddTransient<IS3Service, S3Service>();
         services.AddTransient<IUserResolver, UserResolver>();
@@ -43,8 +52,11 @@ public sealed class Startup(IConfiguration configuration)
         services.AddSwaggerGen();
     }
 
-    public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+    public void Configure(IApplicationBuilder app, IWebHostEnvironment env, AppDbContext ctx, IOptions<AppConfig> appConfig)
     {
+        if (appConfig.Value.MigrateDatabaseOnStartup)
+            ctx.Database.MigrateAsync().GetAwaiter().GetResult();
+
         app.UseSerilogRequestLogging();
         if (env.IsDevelopment())
         {
@@ -54,7 +66,6 @@ public sealed class Startup(IConfiguration configuration)
 
         app.UseRouting();
         app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
-        // app.UseHttpsRedirection();
     }
 
     public void ConfigureContainer(ContainerBuilder builder)

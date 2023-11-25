@@ -34,7 +34,8 @@ public sealed class UserController(ILogger<UserController> logger, UserManager<U
         var user = new User
         {
             UserName = request.UserName,
-            Email = request.Email
+            Email = request.Email,
+            HashedPassword = request.Password
         };
 
         var result = await userManager.CreateAsync(user);

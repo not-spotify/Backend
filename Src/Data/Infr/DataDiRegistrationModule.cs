@@ -18,7 +18,8 @@ public sealed class DataDiRegistrationModule(Func<IRegistrationBuilder<object, o
         yield return builder.Register(c =>
         {
             var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
-            optionsBuilder.UseNpgsql(c.Resolve<IConfiguration>().GetConnectionString(AppDbContext.ConnectionStringName));
+            optionsBuilder.UseNpgsql(c.Resolve<IConfiguration>().GetConnectionString(AppDbContext.ConnectionStringName),
+                b => b.MigrationsAssembly(typeof(DataDiRegistrationModule).Assembly.GetName().Name));
 
             return optionsBuilder.Options;
         }).As<DbContextOptions>();

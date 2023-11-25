@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Identity;
 
 namespace MusicPlayerBackend.Data.Identity.Stores;
 
-public sealed class UserStore(ILogger<UserStore> logger, IUserRepository userRepository, IUnitOfWork unitOfWork) : IUserStore<User>
+public sealed class UserStore(ILogger<UserStore> logger, IUserRepository userRepository, ILookupNormalizer lookupNormalizer, IUnitOfWork unitOfWork) : IUserStore<User>
 {
     public void Dispose()
     {
@@ -19,12 +19,15 @@ public sealed class UserStore(ILogger<UserStore> logger, IUserRepository userRep
 
     public Task<string?> GetUserNameAsync(User user, CancellationToken cancellationToken)
     {
-        return Task.FromResult(user.UserName);
+        return Task.FromResult(user.Email)!;
     }
 
     public async Task SetUserNameAsync(User user, string? userName, CancellationToken cancellationToken)
     {
-        user.UserName = userName;
+        if (userName == default)
+            throw new ArgumentException("Can't set username to null", nameof(userName));
+
+        user.Email = userName;
         userRepository.Save(user);
         await unitOfWork.SaveChangesAsync(cancellationToken);
     }
@@ -36,7 +39,10 @@ public sealed class UserStore(ILogger<UserStore> logger, IUserRepository userRep
 
     public async Task SetNormalizedUserNameAsync(User user, string? normalizedName, CancellationToken cancellationToken)
     {
-        user.NormalizedUserName = normalizedName;
+        if (normalizedName == default)
+            throw new ArgumentException("Can't set username to null", nameof(normalizedName));
+
+        user.NormalizedEmail = normalizedName;
         userRepository.Save(user);
         await unitOfWork.SaveChangesAsync(cancellationToken);
     }
@@ -45,6 +51,9 @@ public sealed class UserStore(ILogger<UserStore> logger, IUserRepository userRep
     {
         try
         {
+            user.NormalizedUserName = lookupNormalizer.NormalizeName(user.UserName);
+            user.NormalizedEmail = lookupNormalizer.NormalizeEmail(user.Email);
+
             userRepository.Save(user);
             await unitOfWork.SaveChangesAsync(cancellationToken);
             return IdentityResult.Success;
@@ -60,6 +69,9 @@ public sealed class UserStore(ILogger<UserStore> logger, IUserRepository userRep
     {
         try
         {
+            user.NormalizedUserName = lookupNormalizer.NormalizeName(user.UserName);
+            user.NormalizedEmail = lookupNormalizer.NormalizeEmail(user.Email);
+
             userRepository.Save(user);
             await unitOfWork.SaveChangesAsync(cancellationToken);
 
