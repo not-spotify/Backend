@@ -1,0 +1,65 @@
+services:
+  postgres:
+    container_name: postgres
+    image: postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      PGDATA: /data/postgres
+    volumes:
+       - postgres:/data/postgres
+    ports:
+      - "9732:5432"
+  
+  pgadmin:
+    container_name: pgadmin_container
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: pgadmin@pgadmin.org
+      PGADMIN_DEFAULT_PASSWORD: postgres
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    volumes:
+       - pgadmin:/var/lib/pgadmin
+    ports:
+      - "9750:80"
+
+  minio:
+    image: minio/minio
+    ports:
+      - "9700:9000"
+      - "9701:9001"
+    volumes:
+      - minio:/data
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+      MINIO_ACCESS_KEY_FILE: /run/secrets/minioaccess
+      MINIO_SECRET_KEY_FILE: /run/secrets/miniosecret
+    command: server --console-address ":9001" /data
+    secrets:
+    - minioaccess
+    - miniosecret
+  
+  minio_default_bucket:
+    image: minio/mc
+    depends_on:
+      - minio
+    entrypoint: >
+      /bin/sh -c "
+      /usr/bin/mc config host add myminio http://minio:9000 minio_access_key minio_secret_key;
+      /usr/bin/mc rm -r --force myminio/devbucket;
+      /usr/bin/mc mb myminio/devbucket;
+      /usr/bin/mc anonymous download myminio/devbucket;
+      exit 0;
+      "
+
+volumes:
+    postgres:
+    pgadmin:
+    minio:
+
+secrets:
+  minioaccess:
+    file: minioaccess.txt
+  miniosecret:
+    file: miniosecret.txt
