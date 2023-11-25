@@ -5,7 +5,8 @@ namespace MusicPlayerBackend.Data.Entities;
 public enum PlaylistPermission
 {
     Full = 0,
-    AllowedToModifyTracks = 1
+    AllowedToModifyTracks = 1,
+    AllowedToView = 2
 }
 
 [PrimaryKey(nameof(PlaylistId), nameof(UserId), nameof(Permission))]

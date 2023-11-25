@@ -92,7 +92,7 @@ public abstract class EntityRepositoryBase<TKey, TEntity>(AppDbContext dbContext
     public async Task<TEntity> GetByIdAsync(TKey id, CancellationToken cancellationToken = default)
     {
         var result = await DbSet.FindAsync(new object?[] { id }, cancellationToken: cancellationToken);
-        if (result == null)
+        if (result == default)
             ThrowEntityNotFoundException(id);
 
         return result!;

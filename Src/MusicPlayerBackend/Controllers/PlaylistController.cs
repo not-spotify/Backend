@@ -16,7 +16,7 @@ namespace MusicPlayerBackend.Controllers;
 [ProducesResponseType(StatusCodes.Status400BadRequest)]
 [Route("[controller]")]
 public sealed class PlaylistController(IPlaylistRepository playlistRepository, ITrackRepository trackRepository, ITrackPlaylistRepository trackPlaylistRepository,
-    IUnitOfWork unitOfWork, IS3Service s3Service) : ControllerBase
+    IPlaylistUserPermissionRepository playlistUserPermissionRepository, IUnitOfWork unitOfWork, IS3Service s3Service, IUserResolver userResolver) : ControllerBase
 {
     [HttpGet]
     [ProducesResponseType(typeof(PlaylistListResponse), StatusCodes.Status200OK)]
@@ -53,11 +53,15 @@ public sealed class PlaylistController(IPlaylistRepository playlistRepository, I
     [ProducesResponseType(typeof(PlaylistResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> Clone(Guid id, ClonePlaylistRequest request, CancellationToken cancellationToken)
     {
-        var playlist = await playlistRepository.GetByIdOrDefaultAsync(id);
-        if (playlist == null)
+        var playlist = await playlistRepository.GetByIdOrDefaultAsync(id, cancellationToken);
+        if (playlist == default)
             return BadRequest(new { Error = $"Can't find playlist with id {id}" });
 
         var originalPlaylistId = playlist.Id;
+
+        var currentUserId = await userResolver.GetUserIdAsync();
+        if (playlist.OwnerUserId != currentUserId && !await playlistUserPermissionRepository.AnyAsync(p => p.PlaylistId == originalPlaylistId && p.UserId == currentUserId && (p.Permission == PlaylistPermission.AllowedToView || p.Permission == PlaylistPermission.AllowedToModifyTracks || p.Permission == PlaylistPermission.Full), cancellationToken))
+            return BadRequest(new { Error = $"Can't find playlist with id {originalPlaylistId}" });
 
         await unitOfWork.BeginTransactionAsync(cancellationToken);
 
@@ -85,7 +89,7 @@ public sealed class PlaylistController(IPlaylistRepository playlistRepository, I
     public async Task<IActionResult> Update(Guid id)
     {
         var playlist = await playlistRepository.GetByIdOrDefaultAsync(id);
-        if (playlist == null)
+        if (playlist == default)
             return BadRequest(new { Error = $"Can't find playlist with id {id}" });
 
         return NoContent();
@@ -96,7 +100,7 @@ public sealed class PlaylistController(IPlaylistRepository playlistRepository, I
     public async Task<IActionResult> Delete(Guid id)
     {
         var playlist = await playlistRepository.GetByIdOrDefaultAsync(id);
-        if (playlist == null)
+        if (playlist == default)
             return BadRequest(new { Error = $"Can't find playlist with id {id}" });
 
         playlistRepository.Delete(playlist);
@@ -108,15 +112,19 @@ public sealed class PlaylistController(IPlaylistRepository playlistRepository, I
     [HttpPost("{playlistId:guid}/Tracks")]
     [ProducesResponseType(typeof(BulkTrackActionResponse), StatusCodes.Status200OK)]
     [SuppressMessage("ReSharper", "SwitchStatementHandlesSomeKnownEnumValuesWithDefault")]
-    public async Task<IActionResult> BulkTrackActions(Guid playlistId, BulkTrackActionRequest request)
+    public async Task<IActionResult> BulkTrackActions(Guid playlistId, BulkTrackActionRequest request, CancellationToken cancellationToken)
     {
-        var playlist = await playlistRepository.GetByIdOrDefaultAsync(playlistId);
-        if (playlist == null)
+        var playlist = await playlistRepository.GetByIdOrDefaultAsync(playlistId, cancellationToken);
+        if (playlist == default)
+            return BadRequest(new { Error = $"Can't find playlist with id {playlistId}" });
+
+        var currentUserId = await userResolver.GetUserIdAsync();
+        if (playlist.OwnerUserId != currentUserId && !await playlistUserPermissionRepository.AnyAsync(p => p.PlaylistId == playlistId && p.UserId == currentUserId && (p.Permission == PlaylistPermission.AllowedToModifyTracks || p.Permission == PlaylistPermission.Full), cancellationToken))
             return BadRequest(new { Error = $"Can't find playlist with id {playlistId}" });
 
         var trackIds = request.Tracks.Select(t => t.Id).Distinct();
-        var tracks = (await trackRepository.GetByIdsAsync(trackIds)).ToDictionary(t => t.Id);
-        var addedTracks = await trackPlaylistRepository.QueryAll().Where(tp => tp.PlaylistId == playlistId).Select(tp => tp.TrackId).ToListAsync();
+        var tracks = (await trackRepository.GetByIdsAsync(trackIds, cancellationToken)).ToDictionary(t => t.Id);
+        var addedTracks = await trackPlaylistRepository.QueryAll().Where(tp => tp.PlaylistId == playlistId).Select(tp => tp.TrackId).ToListAsync(cancellationToken: cancellationToken);
 
         var responseTrackItems = new List<TrackResponseItem>(request.Tracks.Count());
         foreach (var track in request.Tracks)
@@ -130,7 +138,7 @@ public sealed class PlaylistController(IPlaylistRepository playlistRepository, I
             {
                 case TrackActionRequest.Delete:
                 {
-                    var trackPlaylist = await trackPlaylistRepository.SingleAsync(tp => tp.PlaylistId == playlistId && tp.TrackId == id);
+                    var trackPlaylist = await trackPlaylistRepository.SingleAsync(tp => tp.PlaylistId == playlistId && tp.TrackId == id, cancellationToken);
                     trackPlaylistRepository.Delete(trackPlaylist);
                     addedTracks.Remove(id);
 
@@ -152,14 +160,14 @@ public sealed class PlaylistController(IPlaylistRepository playlistRepository, I
             }
         }
 
-        await unitOfWork.SaveChangesAsync();
+        await unitOfWork.SaveChangesAsync(cancellationToken);
         return Ok(new BulkTrackActionResponse { Tracks = responseTrackItems });
     }
 
     [HttpPut("{playlistId:guid}/Cover")]
     public async Task<IActionResult> UpdateCover(Guid playlistId, IFormFile cover, CancellationToken ct)
     {
-        var playlist = await playlistRepository.GetByIdOrDefaultAsync(playlistId);
+        var playlist = await playlistRepository.GetByIdOrDefaultAsync(playlistId, ct);
         if (playlist == default)
             return NotFound();
 
