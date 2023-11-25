@@ -43,19 +43,22 @@ public sealed class UserController(ILogger<UserController> logger, UserManager<U
         if (result != IdentityResult.Success)
             return BadRequest(new { result.Errors });
 
-        return Ok(new RegisterResponse { Id = user.Id});
+        return Ok(new RegisterResponse { Id = user.Id });
     }
 
     [HttpPost]
     [ProducesResponseType(typeof(LoginResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> Login(LoginRequest request)
     {
-        var signInResult = await signInManager.PasswordSignInAsync(request.Email, request.Password, true, true);
+        var user = await userManager.FindByEmailAsync(request.Email);
+
+        if (user == default)
+            return BadRequest(new { Error = "Can't find user or wrong password" });
+
+        var signInResult = await signInManager.CheckPasswordSignInAsync(user, request.Password, true);
 
         if (!signInResult.Succeeded)
             return BadRequest(new { Error = signInResult });
-
-        var user = (await userManager.FindByEmailAsync(request.Email))!;
 
         var claims = new[] {
             new Claim(ClaimTypes.Name, user.Email),
@@ -66,10 +69,10 @@ public sealed class UserController(ILogger<UserController> logger, UserManager<U
         var signingCredentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha512Signature);
         var token = new JwtSecurityToken(
             claims: claims,
-            expires: DateTime.UtcNow.AddDays(1),
+            expires: DateTime.UtcNow.AddDays(228),
             signingCredentials: signingCredentials
         );
         var jwt = new JwtSecurityTokenHandler().WriteToken(token);
-        return Ok(jwt);
+        return Ok(new LoginResponse { JwtBearer = jwt });
     }
 }

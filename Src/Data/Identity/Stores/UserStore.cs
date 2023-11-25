@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Identity;
 
 namespace MusicPlayerBackend.Data.Identity.Stores;
 
-public sealed class UserStore(ILogger<UserStore> logger, IUserRepository userRepository, ILookupNormalizer lookupNormalizer, IUnitOfWork unitOfWork) : IUserStore<User>
+public sealed class UserStore(ILogger<UserStore> logger, IUserRepository userRepository, ILookupNormalizer lookupNormalizer, IUnitOfWork unitOfWork) : IUserPasswordStore<User>, IUserEmailStore<User>
 {
     public void Dispose()
     {
@@ -107,6 +107,71 @@ public sealed class UserStore(ILogger<UserStore> logger, IUserRepository userRep
 
     public async Task<User?> FindByNameAsync(string normalizedUserName, CancellationToken cancellationToken)
     {
-        return await userRepository.FindByNameOrDefaultAsync(normalizedUserName, cancellationToken);
+        return await userRepository.FindByNormalizedEmailOrDefaultAsync(normalizedUserName, cancellationToken);
+    }
+
+    public async Task SetPasswordHashAsync(User user, string? passwordHash, CancellationToken cancellationToken)
+    {
+        if (passwordHash == default)
+            throw new ArgumentException("Password hash can't be null", nameof(passwordHash));
+
+        user.HashedPassword = passwordHash;
+        userRepository.Save(user);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+    }
+
+    public Task<string?> GetPasswordHashAsync(User user, CancellationToken cancellationToken)
+    {
+        return Task.FromResult(user.HashedPassword)!;
+    }
+
+    public Task<bool> HasPasswordAsync(User user, CancellationToken cancellationToken)
+    {
+        return Task.FromResult(true);
+    }
+
+    public async Task SetEmailAsync(User user, string? email, CancellationToken cancellationToken)
+    {
+        if (email == default)
+            throw new ArgumentException("Email can't be null!", nameof(email));
+
+        user.Email = email;
+        userRepository.Save(user);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+    }
+
+    public Task<string?> GetEmailAsync(User user, CancellationToken cancellationToken)
+    {
+        return Task.FromResult(user.Email)!;
+    }
+
+    public Task<bool> GetEmailConfirmedAsync(User user, CancellationToken cancellationToken)
+    {
+        return Task.FromResult(true);
+    }
+
+    public Task SetEmailConfirmedAsync(User user, bool confirmed, CancellationToken cancellationToken)
+    {
+        return Task.FromResult(true);
+    }
+
+    public async Task<User?> FindByEmailAsync(string normalizedEmail, CancellationToken cancellationToken)
+    {
+        return await userRepository.FindByNormalizedEmailOrDefaultAsync(normalizedEmail, cancellationToken);
+    }
+
+    public Task<string?> GetNormalizedEmailAsync(User user, CancellationToken cancellationToken)
+    {
+        return Task.FromResult(user.NormalizedEmail)!;
+    }
+
+    public async Task SetNormalizedEmailAsync(User user, string? normalizedEmail, CancellationToken cancellationToken)
+    {
+        if (normalizedEmail == default)
+            throw new ArgumentException("Email can't be null!", nameof(normalizedEmail));
+
+        user.NormalizedEmail = normalizedEmail;
+        userRepository.Save(user);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
     }
 }

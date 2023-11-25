@@ -48,6 +48,8 @@ public sealed class Startup(IConfiguration configuration)
             opts.JsonSerializerOptions.Converters.Add(enumConverter);
         });
 
+        services.AddAuthentication().AddBearerToken("Identity.Application");
+
         services.AddEndpointsApiExplorer();
         services.AddSwaggerGen();
     }
