@@ -1,5 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using System.Net.Mime;
+﻿using System.Net.Mime;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MusicPlayerBackend.Data;
@@ -111,7 +110,6 @@ public sealed class PlaylistController(IPlaylistRepository playlistRepository, I
 
     [HttpPost("{playlistId:guid}/Tracks")]
     [ProducesResponseType(typeof(BulkTrackActionResponse), StatusCodes.Status200OK)]
-    [SuppressMessage("ReSharper", "SwitchStatementHandlesSomeKnownEnumValuesWithDefault")]
     public async Task<IActionResult> BulkTrackActions(Guid playlistId, BulkTrackActionRequest request, CancellationToken cancellationToken)
     {
         var playlist = await playlistRepository.GetByIdOrDefaultAsync(playlistId, cancellationToken);

@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿// ReSharper disable CheckNamespace
+using System.ComponentModel.DataAnnotations;
 
 namespace MusicPlayerBackend.TransferObjects.Playlist;
 
