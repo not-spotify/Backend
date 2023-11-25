@@ -5,8 +5,8 @@ public record TrackPlaylist : EntityBase
     public Guid TrackId { get; set; }
     public Guid PlaylistId { get; set; }
     
-    public virtual Track Track { get; set; } = null!;
-    public virtual Playlist Playlist { get; set; } = null!;
+    public Track Track { get; set; } = null!;
+    public Playlist Playlist { get; set; } = null!;
 }
 
 public record Album : EntityBase
@@ -25,8 +25,8 @@ public record AlbumTrack : EntityBase
     public Guid AlbumId { get; set; }
     public Guid TrackId { get; set; }
 
-    public virtual Album Album { get; set; } = null!;
-    public virtual Track Track { get; set; } = null!;
+    public Album Album { get; set; } = null!;
+    public Track Track { get; set; } = null!;
 }
 
 public enum PlaylistVisibility

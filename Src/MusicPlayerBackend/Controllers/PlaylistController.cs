@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MusicPlayerBackend.Data;
 using MusicPlayerBackend.Data.Entities;
-using MusicPlayerBackend.Repositories;
+using MusicPlayerBackend.Data.Repositories;
 using MusicPlayerBackend.Services;
 using MusicPlayerBackend.TransferObjects.Playlist;
 

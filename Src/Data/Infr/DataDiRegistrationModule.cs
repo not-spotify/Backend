@@ -1,12 +1,13 @@
 ﻿using Autofac;
 using Autofac.Builder;
 using Microsoft.EntityFrameworkCore;
-using MusicPlayerBackend.Data;
-using MusicPlayerBackend.Repositories;
+using Microsoft.Extensions.Configuration;
+using MusicPlayerBackend.Common.Infr;
+using MusicPlayerBackend.Data.Repositories;
 
-namespace MusicPlayerBackend;
+namespace MusicPlayerBackend.Data.Infr;
 
-public sealed class DataDiRegistrationModule(Func<IRegistrationBuilder<object, object, object>, IRegistrationBuilder<object, object, object>> lifetimeScopeConfigurator) 
+public sealed class DataDiRegistrationModule(Func<IRegistrationBuilder<object, object, object>, IRegistrationBuilder<object, object, object>> lifetimeScopeConfigurator)
     : DiRegistrationModuleBase(lifetimeScopeConfigurator)
 {
     protected override IEnumerable<IRegistrationBuilder<object, object, object>> RegisterTypesWithDefaultLifetimeScope(ContainerBuilder builder)

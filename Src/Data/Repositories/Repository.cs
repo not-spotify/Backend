@@ -1,8 +1,7 @@
 ﻿using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
-using MusicPlayerBackend.Data;
 
-namespace MusicPlayerBackend.Repositories;
+namespace MusicPlayerBackend.Data.Repositories;
 
 public interface IEntityRepository<in TKey, TEntity> where TEntity : class, IEntity<TKey> where TKey : IEquatable<TKey>
 {
@@ -17,7 +16,7 @@ public interface IEntityRepository<in TKey, TEntity> where TEntity : class, IEnt
     Task<TEntity?> GetByIdOrDefaultAsync(Guid id);
 
     Task<TResult?> GetByIdOrDefaultAsync<TResult>(Guid id, Expression<Func<TEntity, TResult>> selector);
-    
+
     IQueryable<TEntity> QueryAll();
     IQueryable<TResult> QueryAll<TResult>(Expression<Func<TEntity, TResult>> selector);
     IQueryable<TEntity> QueryMany(Expression<Func<TEntity, bool>> predicate);
@@ -109,7 +108,7 @@ public abstract class EntityRepositoryBase<TKey, TEntity>(AppDbContext dbContext
     public async Task<TResult> GetByIdAsync<TResult>(Guid id, Expression<Func<TEntity, TResult>> selector)
     {
         var result = await QueryMany(e => e.Id.Equals(id), selector).Take(1).ToArrayAsync();
-        
+
         if (result.Length == 0)
             ThrowEntityNotFoundException(id);
 

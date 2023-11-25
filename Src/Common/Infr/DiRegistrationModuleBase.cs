@@ -1,7 +1,7 @@
 ﻿using Autofac;
 using Autofac.Builder;
 
-namespace MusicPlayerBackend;
+namespace MusicPlayerBackend.Common.Infr;
 
 public abstract class DiRegistrationModuleBase(Func<IRegistrationBuilder<object, object, object>, IRegistrationBuilder<object, object, object>> lifetimeScopeConfigurator) : Module
 {
