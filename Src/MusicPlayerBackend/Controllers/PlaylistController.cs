@@ -20,6 +20,7 @@ public sealed class PlaylistController(IPlaylistRepository playlistRepository, I
     IPlaylistUserPermissionRepository playlistUserPermissionRepository, IUnitOfWork unitOfWork, IS3Service s3Service, IUserResolver userResolver) : ControllerBase
 {
     [HttpGet]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(PlaylistListResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> List([FromQuery] PlaylistListRequest request, CancellationToken ct)
     {
@@ -41,6 +42,7 @@ public sealed class PlaylistController(IPlaylistRepository playlistRepository, I
     [HttpPost]
     [Authorize]
     [ProducesResponseType(typeof(PlaylistResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Create([FromBody] CreatePlaylistRequest request)
     {
@@ -59,6 +61,8 @@ public sealed class PlaylistController(IPlaylistRepository playlistRepository, I
 
     [HttpPut("{id:guid}/Clone")]
     [ProducesResponseType(typeof(PlaylistResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Clone(Guid id, ClonePlaylistRequest request, CancellationToken cancellationToken)
     {
         var playlist = await playlistRepository.GetByIdOrDefaultAsync(id, cancellationToken);
@@ -109,6 +113,7 @@ public sealed class PlaylistController(IPlaylistRepository playlistRepository, I
 
     [HttpPut("{id:guid}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Update(Guid id)
     {
         var playlist = await playlistRepository.GetByIdOrDefaultAsync(id);
@@ -120,6 +125,7 @@ public sealed class PlaylistController(IPlaylistRepository playlistRepository, I
 
     [HttpDelete("{id:guid}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Delete(Guid id)
     {
         var playlist = await playlistRepository.GetByIdOrDefaultAsync(id);
@@ -134,6 +140,8 @@ public sealed class PlaylistController(IPlaylistRepository playlistRepository, I
 
     [HttpPost("{playlistId:guid}/Tracks")]
     [ProducesResponseType(typeof(BulkTrackActionResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> BulkTrackActions(Guid playlistId, BulkTrackActionRequest request, CancellationToken cancellationToken)
     {
         var playlist = await playlistRepository.GetByIdOrDefaultAsync(playlistId, cancellationToken);
@@ -187,11 +195,14 @@ public sealed class PlaylistController(IPlaylistRepository playlistRepository, I
     }
 
     [HttpPut("{playlistId:guid}/Cover")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> UpdateCover(Guid playlistId, IFormFile cover, CancellationToken ct)
     {
         var playlist = await playlistRepository.GetByIdOrDefaultAsync(playlistId, ct);
         if (playlist == default)
-            return NotFound();
+            return BadRequest();
 
         var coverUri = await s3Service.TryUploadFileStream("covers", Guid.NewGuid().ToString(), cover.OpenReadStream(), ct);
         if (coverUri == default)
