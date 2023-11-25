@@ -19,7 +19,7 @@ public sealed class PlaylistController(IPlaylistRepository playlistRepository, I
 {
     [HttpGet]
     [ProducesResponseType(typeof(PlaylistListResponse), StatusCodes.Status200OK)]
-    public async Task<IActionResult> List(PlaylistListRequest request, CancellationToken ct)
+    public async Task<IActionResult> List([FromQuery] PlaylistListRequest request, CancellationToken ct)
     {
         var playlists = await playlistRepository.QueryAll().OrderBy(p => p.CreatedAt).Select(p => new PlaylistListItemResponse
         {

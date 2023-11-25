@@ -4,6 +4,7 @@ public sealed class AppConfig
 {
     public string JwtSecret { get; set; } = null!;
     public Minio Minio { get; set; } = null!;
+    public bool MigrateDatabaseOnStartup { get; set; }
 }
 
 public sealed class Minio

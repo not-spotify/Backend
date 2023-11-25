@@ -61,12 +61,12 @@ public sealed class UserController(ILogger<UserController> logger, UserManager<U
             new Claim(ClaimTypes.Role, "Admin")
         };
 
-        var key = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(_appConfig.JwtSecret));
-        var cred = new SigningCredentials(key, SecurityAlgorithms.HmacSha512Signature);
+        var securityKey = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(_appConfig.JwtSecret));
+        var signingCredentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha512Signature);
         var token = new JwtSecurityToken(
             claims: claims,
             expires: DateTime.UtcNow.AddDays(1),
-            signingCredentials: cred
+            signingCredentials: signingCredentials
         );
         var jwt = new JwtSecurityTokenHandler().WriteToken(token);
         return Ok(jwt);
