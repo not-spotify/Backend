@@ -1,4 +1,5 @@
 ﻿using System.Net.Mime;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MusicPlayerBackend.Data;
@@ -13,6 +14,7 @@ namespace MusicPlayerBackend.Controllers;
 [Consumes(MediaTypeNames.Application.Json)]
 [Produces(MediaTypeNames.Application.Json)]
 [ProducesResponseType(StatusCodes.Status400BadRequest)]
+[Authorize]
 [Route("[controller]")]
 public sealed class PlaylistController(IPlaylistRepository playlistRepository, ITrackRepository trackRepository, ITrackPlaylistRepository trackPlaylistRepository,
     IPlaylistUserPermissionRepository playlistUserPermissionRepository, IUnitOfWork unitOfWork, IS3Service s3Service, IUserResolver userResolver) : ControllerBase
@@ -21,18 +23,25 @@ public sealed class PlaylistController(IPlaylistRepository playlistRepository, I
     [ProducesResponseType(typeof(PlaylistListResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> List([FromQuery] PlaylistListRequest request, CancellationToken ct)
     {
-        var playlists = await playlistRepository.QueryAll().OrderBy(p => p.CreatedAt).Select(p => new PlaylistListItemResponse
-        {
-            CoverUri = p.CoverUri,
-            Id = p.Id,
-            Name = p.Name
-        }).Skip(request.PageSize * request.PageSize).Take(request.PageSize).ToArrayAsync(ct);
+        var userId = await userResolver.GetUserIdAsync();
+
+        var playlists = await playlistRepository.QueryAll()
+            .Where(p => p.Visibility == PlaylistVisibility.Public || p.OwnerUserId == userId || p.Permissions.Any(np => np.UserId == userId && np.PlaylistId == p.Id))
+            .OrderBy(p => p.CreatedAt)
+            .Select(p => new PlaylistListItemResponse
+            {
+                CoverUri = p.CoverUri,
+                Id = p.Id,
+                Name = p.Name
+            }).Skip(request.PageSize * request.PageSize).Take(request.PageSize).ToArrayAsync(ct);
 
         return Ok(new PlaylistListResponse { Items = playlists });
     }
 
     [HttpPost]
+    [Authorize]
     [ProducesResponseType(typeof(PlaylistResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Create([FromBody] CreatePlaylistRequest request)
     {
         var playlist = new Playlist
@@ -56,16 +65,31 @@ public sealed class PlaylistController(IPlaylistRepository playlistRepository, I
         if (playlist == default)
             return BadRequest(new { Error = $"Can't find playlist with id {id}" });
 
+        var currentUserId = await userResolver.GetUserIdAsync();
+        var createdPlaylistNames = await playlistRepository.GetManyAsync(p => p.OwnerUserId == currentUserId, p => p.Name, cancellationToken);
+
+        if (createdPlaylistNames.Count >= 10)
+            return BadRequest(new { Error = "Current limit of playlists is 10. Sorry." });
+
         var originalPlaylistId = playlist.Id;
 
-        var currentUserId = await userResolver.GetUserIdAsync();
         if (playlist.OwnerUserId != currentUserId && !await playlistUserPermissionRepository.AnyAsync(p => p.PlaylistId == originalPlaylistId && p.UserId == currentUserId && (p.Permission == PlaylistPermission.AllowedToView || p.Permission == PlaylistPermission.AllowedToModifyTracks || p.Permission == PlaylistPermission.Full), cancellationToken))
             return BadRequest(new { Error = $"Can't find playlist with id {originalPlaylistId}" });
 
         await unitOfWork.BeginTransactionAsync(cancellationToken);
 
+        var playlistName = playlist.Name;
+        if (!string.IsNullOrWhiteSpace(request.Name?.Trim()))
+        {
+            playlistName = request.Name;
+            if (createdPlaylistNames.Contains(playlistName))
+                playlistName += " (1)";
+        }
+
         playlist.Id = Guid.Empty;
-        playlist.Name = request.Name ?? $"{playlist.Name} (1)";
+        playlist.CreatedAt = DateTimeOffset.UtcNow;
+        playlist.UpdatedAt = null;
+        playlist.Name = playlistName;
         playlistRepository.Save(playlist);
 
         await unitOfWork.SaveChangesAsync(cancellationToken);

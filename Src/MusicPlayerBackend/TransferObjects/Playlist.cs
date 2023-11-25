@@ -37,7 +37,9 @@ public sealed class BulkTrackActionResponse
 
 public sealed class ClonePlaylistRequest
 {
+    [StringLength(maximumLength: 17, MinimumLength = 5, ErrorMessage = "Expected playlist name between 5 and 17")]
     public string? Name { get; set; }
+
     public bool IncludeTrackIds { get; set; }
 }
 
@@ -79,6 +81,8 @@ public sealed class PlaylistListItemResponse
 public sealed class CreatePlaylistRequest
 {
     [Required]
+    [StringLength(maximumLength: 17, MinimumLength = 5, ErrorMessage = "Expected playlist name between 5 and 17")]
     public string Name { get; set; } = null!;
+
     public VisibilityLevel? Visibility { get; set; } = VisibilityLevel.Private;
 }
