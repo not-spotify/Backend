@@ -11,7 +11,7 @@ public interface IUnitOfWork
     void SaveChanges();
     Task SaveChangesAsync();
     Task SaveChangesAsync(CancellationToken cancellationToken);
-    
+
     bool HasActiveTransaction { get; }
     IDbContextTransaction? GetCurrentTransaction();
     Task<IDbContextTransaction> BeginTransactionAsync();
@@ -20,7 +20,7 @@ public interface IUnitOfWork
 
 public sealed class UnitOfWork(AppDbContext dbContext) : IUnitOfWork
 {
-    private IDbContextTransaction _dbContextTransaction = null!;
+    private IDbContextTransaction _dbContextTransaction = null!; // Let it crash.
 
     public void Commit()
     {
@@ -54,7 +54,7 @@ public sealed class UnitOfWork(AppDbContext dbContext) : IUnitOfWork
 
     public bool HasActiveTransaction => ReferenceEquals(_dbContextTransaction, null);
 
-    public IDbContextTransaction? GetCurrentTransaction()
+    public IDbContextTransaction GetCurrentTransaction()
     {
         return _dbContextTransaction;
     }
