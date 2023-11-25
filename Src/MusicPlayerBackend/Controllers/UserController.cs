@@ -1,6 +1,7 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
 using System.Net.Mime;
 using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
@@ -17,9 +18,16 @@ namespace MusicPlayerBackend.Controllers;
 [Produces(MediaTypeNames.Application.Json)]
 [ProducesResponseType(StatusCodes.Status400BadRequest)]
 [Route("[controller]/[action]")]
-public sealed class UserController(ILogger<UserController> logger, UserManager<User> userManager, SignInManager<User> signInManager, IUserResolver userResolver, IOptions<AppConfig> appConfig) : ControllerBase
+public sealed class UserController(ILogger<UserController> logger, UserManager<User> userManager, SignInManager<User> signInManager, IUserResolver userResolver, IOptions<TokenConfig> tokenConfig) : ControllerBase
 {
-    private readonly AppConfig _appConfig = appConfig.Value;
+    private readonly TokenConfig _tokenConfig = tokenConfig.Value;
+
+    [Authorize]
+    [HttpGet]
+    public async Task<IActionResult> Me()
+    {
+        return Ok(await userResolver.GetUserAsync());
+    }
 
     [HttpPost]
     [ProducesResponseType(typeof(RegisterResponse), StatusCodes.Status200OK)]
@@ -62,17 +70,23 @@ public sealed class UserController(ILogger<UserController> logger, UserManager<U
 
         var claims = new[] {
             new Claim(ClaimTypes.Name, user.Email),
-            new Claim(ClaimTypes.Role, "Admin")
+            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+            new Claim(ClaimTypes.Email, user.Email)
         };
 
-        var securityKey = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(_appConfig.JwtSecret));
-        var signingCredentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha512Signature);
-        var token = new JwtSecurityToken(
-            claims: claims,
-            expires: DateTime.UtcNow.AddDays(228),
-            signingCredentials: signingCredentials
-        );
-        var jwt = new JwtSecurityTokenHandler().WriteToken(token);
-        return Ok(new LoginResponse { JwtBearer = jwt });
+        var tokenDescriptor = new SecurityTokenDescriptor
+        {
+            Subject = new ClaimsIdentity(new[]
+            {
+                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+            }),
+            Expires = DateTime.UtcNow.AddMinutes(40),
+            SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(_tokenConfig.SigningKey)), SecurityAlgorithms.HmacSha256Signature)
+        };
+
+        var tokenHandler = new JwtSecurityTokenHandler();
+        var token = tokenHandler.CreateToken(tokenDescriptor);
+
+        return Ok(new LoginResponse { JwtBearer = tokenHandler.WriteToken(token) });
     }
 }
