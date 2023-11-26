@@ -46,10 +46,13 @@ public sealed class PlaylistController(IPlaylistRepository playlistRepository, I
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Create([FromBody] CreatePlaylistRequest request)
     {
+        var userId = await userResolver.GetUserIdAsync();
+
         var playlist = new Playlist
         {
             Name = request.Name,
-            Visibility = (PlaylistVisibility) request.Visibility!
+            Visibility = (PlaylistVisibility) request.Visibility!,
+            OwnerUserId = userId
         };
 
         request.Visibility = request.Visibility;
