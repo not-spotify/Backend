@@ -26,20 +26,6 @@ namespace MusicPlayerBackend.Data.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Tracks",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    Cover = table.Column<string>(type: "text", nullable: true),
-                    CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
-                    UpdatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Tracks", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "Users",
                 columns: table => new
                 {
@@ -55,33 +41,6 @@ namespace MusicPlayerBackend.Data.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Users", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "AlbumTracks",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    AlbumId = table.Column<Guid>(type: "uuid", nullable: false),
-                    TrackId = table.Column<Guid>(type: "uuid", nullable: false),
-                    CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
-                    UpdatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_AlbumTracks", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_AlbumTracks_Albums_AlbumId",
-                        column: x => x.AlbumId,
-                        principalTable: "Albums",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_AlbumTracks_Tracks_TrackId",
-                        column: x => x.TrackId,
-                        principalTable: "Tracks",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -101,6 +60,31 @@ namespace MusicPlayerBackend.Data.Migrations
                     table.PrimaryKey("PK_Playlists", x => x.Id);
                     table.ForeignKey(
                         name: "FK_Playlists_Users_OwnerUserId",
+                        column: x => x.OwnerUserId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Tracks",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    CoverUri = table.Column<string>(type: "text", nullable: true),
+                    TrackUri = table.Column<string>(type: "text", nullable: true),
+                    Visibility = table.Column<int>(type: "integer", nullable: false),
+                    Name = table.Column<string>(type: "text", nullable: false),
+                    Author = table.Column<string>(type: "text", nullable: false),
+                    OwnerUserId = table.Column<Guid>(type: "uuid", nullable: false),
+                    CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    UpdatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Tracks", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Tracks_Users_OwnerUserId",
                         column: x => x.OwnerUserId,
                         principalTable: "Users",
                         principalColumn: "Id",
@@ -135,6 +119,33 @@ namespace MusicPlayerBackend.Data.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
+            migrationBuilder.CreateTable(
+                name: "AlbumTracks",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    AlbumId = table.Column<Guid>(type: "uuid", nullable: false),
+                    TrackId = table.Column<Guid>(type: "uuid", nullable: false),
+                    CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    UpdatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_AlbumTracks", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_AlbumTracks_Albums_AlbumId",
+                        column: x => x.AlbumId,
+                        principalTable: "Albums",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_AlbumTracks_Tracks_TrackId",
+                        column: x => x.TrackId,
+                        principalTable: "Tracks",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
             migrationBuilder.CreateIndex(
                 name: "IX_AlbumTracks_AlbumId",
                 table: "AlbumTracks",
@@ -153,6 +164,11 @@ namespace MusicPlayerBackend.Data.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_Playlists_OwnerUserId",
                 table: "Playlists",
+                column: "OwnerUserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Tracks_OwnerUserId",
+                table: "Tracks",
                 column: "OwnerUserId");
         }
 

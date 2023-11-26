@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace MusicPlayerBackend.Data.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20231125070921_Initial")]
+    [Migration("20231126044620_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -137,16 +137,35 @@ namespace MusicPlayerBackend.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<string>("Cover")
+                    b.Property<string>("Author")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("CoverUri")
                         .HasColumnType("text");
 
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("OwnerUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("TrackUri")
+                        .HasColumnType("text");
+
                     b.Property<DateTimeOffset?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<int>("Visibility")
+                        .HasColumnType("integer");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("OwnerUserId");
 
                     b.ToTable("Tracks");
                 });
@@ -233,6 +252,17 @@ namespace MusicPlayerBackend.Data.Migrations
                     b.Navigation("Playlist");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("MusicPlayerBackend.Data.Entities.Track", b =>
+                {
+                    b.HasOne("MusicPlayerBackend.Data.Entities.User", "OwnerUser")
+                        .WithMany()
+                        .HasForeignKey("OwnerUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("OwnerUser");
                 });
 
             modelBuilder.Entity("MusicPlayerBackend.Data.Entities.Album", b =>
