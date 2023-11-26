@@ -77,7 +77,7 @@ public sealed class PlaylistController(IPlaylistRepository playlistRepository, I
 
         var originalPlaylistId = playlist.Id;
 
-        if (playlist.OwnerUserId != currentUserId && !await playlistUserPermissionRepository.AnyAsync(p => p.PlaylistId == originalPlaylistId && p.UserId == currentUserId && (p.Permission == PlaylistPermission.AllowedToView || p.Permission == PlaylistPermission.AllowedToModifyTracks || p.Permission == PlaylistPermission.Full), cancellationToken))
+        if (playlist.OwnerUserId != currentUserId && !await playlistUserPermissionRepository.HasAccessForView(originalPlaylistId, currentUserId, cancellationToken))
             return BadRequest(new { Error = $"Can't find playlist with id {originalPlaylistId}" });
 
         await unitOfWork.BeginTransactionAsync(cancellationToken);
@@ -148,8 +148,8 @@ public sealed class PlaylistController(IPlaylistRepository playlistRepository, I
         if (playlist == default)
             return BadRequest(new { Error = $"Can't find playlist with id {playlistId}" });
 
-        var currentUserId = await userResolver.GetUserIdAsync();
-        if (playlist.OwnerUserId != currentUserId && !await playlistUserPermissionRepository.AnyAsync(p => p.PlaylistId == playlistId && p.UserId == currentUserId && (p.Permission == PlaylistPermission.AllowedToModifyTracks || p.Permission == PlaylistPermission.Full), cancellationToken))
+        var userId = await userResolver.GetUserIdAsync();
+        if (playlist.OwnerUserId != userId && !await playlistUserPermissionRepository.HasAccessForChange(playlist.Id, userId, cancellationToken))
             return BadRequest(new { Error = $"Can't find playlist with id {playlistId}" });
 
         var trackIds = request.Tracks.Select(t => t.Id).Distinct();
