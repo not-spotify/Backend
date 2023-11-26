@@ -22,13 +22,48 @@ public sealed class UserController(ILogger<UserController> logger, UserManager<U
 {
     private readonly TokenConfig _tokenConfig = tokenConfig.Value;
 
+    /// <summary>
+    /// Gets authorized User.
+    /// </summary>
+    /// <returns>Authorized User</returns>
+    /// <response code="200">Returns User</response>
+    /// <response code="400">Wrong schema</response>
+    /// <response code="401">Not authorized</response>
     [Authorize]
     [HttpGet]
+    [ProducesResponseType(typeof(UserResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Me()
     {
-        return Ok(await userResolver.GetUserAsync());
+        var user = await userResolver.GetUserAsync();
+        var response = new UserResponse
+        {
+            Id = user.Id,
+            Email = user.Email,
+            UserName = user.UserName
+        };
+
+        return Ok(response);
     }
 
+    /// <summary>
+    /// Creates User.
+    /// </summary>
+    /// <param name="request"></param>
+    /// <returns>Jwt Bearer</returns>
+    /// <remarks>
+    /// Sample request:
+    ///
+    ///     POST /User/Register
+    ///     {
+    ///       "userName": "metauser",
+    ///       "email": "meta@mail.local",
+    ///       "password": "somesecurepassword"
+    ///     }
+    ///
+    /// </remarks>
+    /// <response code="200">Returns User identifier</response>
+    /// <response code="400">Wrong schema</response>
     [HttpPost]
     [ProducesResponseType(typeof(RegisterResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> Register(RegisterRequest request)
@@ -54,6 +89,23 @@ public sealed class UserController(ILogger<UserController> logger, UserManager<U
         return Ok(new RegisterResponse { Id = user.Id });
     }
 
+    /// <summary>
+    /// Get Jwt Bearer for using secure actions.
+    /// </summary>
+    /// <param name="request"></param>
+    /// <returns>Jwt Bearer</returns>
+    /// <remarks>
+    /// Sample request:
+    ///
+    ///     POST /User/Login
+    ///     {
+    ///       "email": "meta@mail.local",
+    ///       "password": "somesecurepassword"
+    ///     }
+    ///
+    /// </remarks>
+    /// <response code="200">Returns JWT Bearer</response>
+    /// <response code="400">Wrong email or password</response>
     [HttpPost]
     [ProducesResponseType(typeof(LoginResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> Login(LoginRequest request)

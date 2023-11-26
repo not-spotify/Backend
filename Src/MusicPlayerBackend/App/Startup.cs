@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Reflection;
+using System.Text;
 using System.Text.Json.Serialization;
 using Autofac;
 using Autofac.Builder;
@@ -93,6 +94,9 @@ public sealed class Startup(IConfiguration configuration)
                     Array.Empty<string>()
                 }
             });
+
+            var xmlFilename = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+            c.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFilename));
         });
     }
 
