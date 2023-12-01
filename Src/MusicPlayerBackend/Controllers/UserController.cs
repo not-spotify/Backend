@@ -9,6 +9,7 @@ using Microsoft.IdentityModel.Tokens;
 using MusicPlayerBackend.Common;
 using MusicPlayerBackend.Data.Entities;
 using MusicPlayerBackend.Services;
+using MusicPlayerBackend.TransferObjects;
 using MusicPlayerBackend.TransferObjects.User;
 
 namespace MusicPlayerBackend.Controllers;
@@ -32,7 +33,7 @@ public sealed class UserController(ILogger<UserController> logger, UserManager<U
     [Authorize]
     [HttpGet]
     [ProducesResponseType(typeof(UserResponse), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(UnauthorizedResponse), StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Me()
     {
         var user = await userResolver.GetUserAsync();

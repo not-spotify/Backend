@@ -10,6 +10,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Minio;
+using MusicPlayerBackend.App.Middlewares;
 using MusicPlayerBackend.Common;
 using MusicPlayerBackend.Data;
 using MusicPlayerBackend.Data.Entities;
@@ -112,6 +113,7 @@ public sealed class Startup(IConfiguration configuration)
             app.UseSwaggerUI();
         }
 
+        app.UseMiddleware<UnauthorizedMiddleware>();
         app.UseAuthentication();
         app.UseRouting();
         app.UseAuthorization();

@@ -5,6 +5,7 @@ using MusicPlayerBackend.Data;
 using MusicPlayerBackend.Data.Entities;
 using MusicPlayerBackend.Data.Repositories;
 using MusicPlayerBackend.Services;
+using MusicPlayerBackend.TransferObjects;
 
 namespace MusicPlayerBackend.Controllers;
 
@@ -33,7 +34,7 @@ public sealed class TrackCreateRequest
 [Consumes(MediaTypeNames.Application.Json)]
 [Produces(MediaTypeNames.Application.Json)]
 [ProducesResponseType(StatusCodes.Status400BadRequest)]
-[ProducesResponseType(StatusCodes.Status401Unauthorized)]
+[ProducesResponseType(typeof(UnauthorizedResponse), StatusCodes.Status401Unauthorized)]
 [Authorize]
 [Route("[controller]")]
 public sealed class TrackController(ITrackRepository trackRepository, IS3Service s3Service, IUnitOfWork unitOfWork, IUserResolver userResolver) : ControllerBase
