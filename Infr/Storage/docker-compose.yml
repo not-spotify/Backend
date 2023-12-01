@@ -1,3 +1,5 @@
+name: music_player_backend_storage
+
 services:
   postgres:
     container_name: postgres
