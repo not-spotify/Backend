@@ -57,13 +57,7 @@ public enum VisibilityLevel
     Public
 }
 
-public sealed class PlaylistListRequest
-{
-    public int Page { get; set; }
-
-    [Range(5, 20)]
-    public int PageSize { get; set; }
-}
+public sealed class PlaylistListRequest : PaginationRequestBase;
 
 public sealed class PlaylistListResponse
 {

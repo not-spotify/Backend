@@ -13,4 +13,5 @@ public sealed class AppDbContext(DbContextOptions options) : DbContext(options)
     public DbSet<Track> Tracks { get; set; } = null!;
     public DbSet<AlbumTrack> AlbumTracks { get; set; } = null!;
     public DbSet<User> Users { get; set; } = null!;
+    public DbSet<LikedTrack> LikedTracks { get; set; } = null!;
 }

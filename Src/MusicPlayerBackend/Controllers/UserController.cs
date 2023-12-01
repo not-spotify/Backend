@@ -114,12 +114,12 @@ public sealed class UserController(ILogger<UserController> logger, UserManager<U
         var user = await userManager.FindByEmailAsync(request.Email);
 
         if (user == default)
-            return BadRequest(new { Error = "Can't find user or wrong password" });
+            return BadRequest(new UnauthorizedResponse { Error = "Can't find user or wrong password" });
 
         var signInResult = await signInManager.CheckPasswordSignInAsync(user, request.Password, true);
 
         if (!signInResult.Succeeded)
-            return BadRequest(new { Error = signInResult });
+            return BadRequest(new UnauthorizedResponse { Error = signInResult.ToString() });
 
         var tokenDescriptor = new SecurityTokenDescriptor
         {
