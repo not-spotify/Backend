@@ -21,7 +21,11 @@ public sealed class LoginRequest
 
 public sealed class LoginResponse
 {
+    public Guid UserId { get; set; }
     public string JwtBearer { get; set; } = null!;
+    public string RefreshToken { get; set; } = null!;
+    public DateTimeOffset RefreshTokenValidDue { get; set; }
+    public DateTimeOffset JwtBearerValidDue { get; set; }
 }
 
 public sealed class UserResponse
@@ -29,4 +33,11 @@ public sealed class UserResponse
     public Guid Id { get; set; }
     public string? UserName { get; set; }
     public string Email { get; set; } = null!;
+}
+
+public sealed class RefreshRequest
+{
+    public Guid Jti { get; set; }
+    public string RefreshToken { get; set; } = null!;
+    public Guid UserId { get; set; }
 }

@@ -7,7 +7,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using MusicPlayerBackend.Common;
+using MusicPlayerBackend.Data;
 using MusicPlayerBackend.Data.Entities;
+using MusicPlayerBackend.Data.Repositories;
 using MusicPlayerBackend.Services;
 using MusicPlayerBackend.TransferObjects;
 using MusicPlayerBackend.TransferObjects.User;
@@ -19,7 +21,14 @@ namespace MusicPlayerBackend.Controllers;
 [Produces(MediaTypeNames.Application.Json)]
 [ProducesResponseType(StatusCodes.Status400BadRequest)]
 [Route("[controller]/[action]")]
-public sealed class UserController(ILogger<UserController> logger, UserManager<User> userManager, SignInManager<User> signInManager, IUserResolver userResolver, IOptions<TokenConfig> tokenConfig) : ControllerBase
+public sealed class UserController(ILogger<UserController> logger,
+    UserManager<User> userManager,
+    SignInManager<User> signInManager,
+    IUserResolver userResolver,
+    IRefreshTokenRepository refreshTokenRepository,
+    IUserRepository userRepository,
+    IUnitOfWork unitOfWork,
+    IOptions<TokenConfig> tokenConfig) : ControllerBase
 {
     private readonly TokenConfig _tokenConfig = tokenConfig.Value;
 
@@ -106,34 +115,111 @@ public sealed class UserController(ILogger<UserController> logger, UserManager<U
     ///
     /// </remarks>
     /// <response code="200">Returns JWT Bearer</response>
-    /// <response code="400">Wrong email or password</response>
+    /// <response code="401">Wrong email or password</response>
     [HttpPost]
     [ProducesResponseType(typeof(LoginResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(LoginResponse), StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Login(LoginRequest request)
     {
         var user = await userManager.FindByEmailAsync(request.Email);
 
         if (user == default)
-            return BadRequest(new UnauthorizedResponse { Error = "Can't find user or wrong password" });
+            return Unauthorized(new UnauthorizedResponse { Error = "Can't find user or wrong password" });
 
         var signInResult = await signInManager.CheckPasswordSignInAsync(user, request.Password, true);
 
         if (!signInResult.Succeeded)
-            return BadRequest(new UnauthorizedResponse { Error = signInResult.ToString() });
+            return Unauthorized(new UnauthorizedResponse { Error = signInResult.ToString() });
+
+        var jti = Guid.NewGuid();
+        var refreshTokenValue = Guid.NewGuid();
+        var jwtValidDue = DateTimeOffset.UtcNow.AddDays(1);
+        var refreshValidDue = jwtValidDue.AddDays(7);
 
         var tokenDescriptor = new SecurityTokenDescriptor
         {
             Subject = new ClaimsIdentity(new[]
             {
-                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString())
+                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                new Claim(JwtRegisteredClaimNames.Jti, jti.ToString()),
             }),
-            Expires = DateTime.UtcNow.AddMinutes(40),
+            Expires = jwtValidDue.DateTime,
             SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(_tokenConfig.SigningKey)), SecurityAlgorithms.HmacSha256Signature)
         };
 
         var tokenHandler = new JwtSecurityTokenHandler();
         var token = tokenHandler.CreateToken(tokenDescriptor);
 
-        return Ok(new LoginResponse { JwtBearer = tokenHandler.WriteToken(token) });
+        var refreshToken = new RefreshToken
+        {
+            ValidDue = refreshValidDue,
+            Jti = jti,
+            UserId = user.Id,
+            Token = refreshTokenValue
+        };
+        refreshTokenRepository.Save(refreshToken);
+        await unitOfWork.SaveChangesAsync();
+
+        return Ok(new LoginResponse
+        {
+            JwtBearer = tokenHandler.WriteToken(token),
+            RefreshToken = refreshTokenValue.ToString(),
+            RefreshTokenValidDue = refreshValidDue,
+            JwtBearerValidDue = jwtValidDue,
+            UserId = user.Id
+        });
+    }
+
+    [HttpPost]
+    [ProducesResponseType(typeof(LoginResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(LoginResponse), StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> Refresh(RefreshRequest request)
+    {
+        var existingRefreshToken = await refreshTokenRepository.SingleOrDefaultAsync(rt => rt.UserId == request.UserId && rt.Jti == request.Jti && rt.Revoked == false && rt.ValidDue < DateTimeOffset.UtcNow);
+        if (existingRefreshToken == default)
+            return Unauthorized(new UnauthorizedResponse { Error = "Can't refresh Jwt Bearer" });
+
+        existingRefreshToken.Revoked = true;
+        refreshTokenRepository.Save(existingRefreshToken);
+
+        var user = await userRepository.GetByIdAsync(request.UserId);
+
+        var jti = Guid.NewGuid();
+        var refreshTokenValue = Guid.NewGuid();
+        var jwtValidDue = DateTimeOffset.UtcNow.AddDays(1);
+        var refreshValidDue = jwtValidDue.AddDays(7);
+
+        var tokenDescriptor = new SecurityTokenDescriptor
+        {
+            Subject = new ClaimsIdentity(new[]
+            {
+                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                new Claim(JwtRegisteredClaimNames.Jti, jti.ToString()),
+            }),
+            Expires = jwtValidDue.DateTime,
+            SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(_tokenConfig.SigningKey)), SecurityAlgorithms.HmacSha256Signature)
+        };
+
+        var tokenHandler = new JwtSecurityTokenHandler();
+        var token = tokenHandler.CreateToken(tokenDescriptor);
+
+        var refreshToken = new RefreshToken
+        {
+            ValidDue = refreshValidDue,
+            Jti = jti,
+            UserId = user.Id,
+            Token = refreshTokenValue
+        };
+        refreshTokenRepository.Save(refreshToken);
+        await unitOfWork.SaveChangesAsync();
+
+        return Ok(new LoginResponse
+        {
+            JwtBearer = tokenHandler.WriteToken(token),
+            RefreshToken = refreshTokenValue.ToString(),
+            RefreshTokenValidDue = refreshValidDue,
+            JwtBearerValidDue = jwtValidDue,
+            UserId = user.Id
+        });
     }
 }
