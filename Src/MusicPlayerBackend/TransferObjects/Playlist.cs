@@ -63,6 +63,8 @@ public sealed class PlaylistListResponse
 {
     [Required]
     public IEnumerable<PlaylistListItemResponse> Items { get; set; } = null!;
+
+    public int TotalCount { get; set; }
 }
 
 public sealed class PlaylistListItemResponse

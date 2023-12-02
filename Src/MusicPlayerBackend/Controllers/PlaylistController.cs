@@ -28,17 +28,19 @@ public sealed class PlaylistController(IPlaylistRepository playlistRepository, I
     {
         var userId = await userResolver.GetUserIdAsync();
 
-        var playlists = await playlistRepository.QueryAll()
-            .Where(p => p.Visibility == PlaylistVisibility.Public || p.OwnerUserId == userId || p.Permissions.Any(np => np.UserId == userId && np.PlaylistId == p.Id))
-            .OrderBy(p => p.CreatedAt)
-            .Select(p => new PlaylistListItemResponse
+        var visiblePlaylistsQuery = playlistRepository.QueryAll()
+            .Where(p => p.Visibility == PlaylistVisibility.Public || p.OwnerUserId == userId || p.Permissions.Any(np => np.UserId == userId && np.PlaylistId == p.Id));
+
+        var totalCount = await visiblePlaylistsQuery.CountAsync(ct);
+
+        var playlists = await visiblePlaylistsQuery.OrderBy(p => p.CreatedAt).Select(p => new PlaylistListItemResponse
             {
                 CoverUri = p.CoverUri,
                 Id = p.Id,
                 Name = p.Name
             }).Skip(request.PageSize * request.PageSize).Take(request.PageSize).ToArrayAsync(ct);
 
-        return Ok(new PlaylistListResponse { Items = playlists });
+        return Ok(new PlaylistListResponse { Items = playlists, TotalCount = totalCount });
     }
 
     [HttpPost]
