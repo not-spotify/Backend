@@ -113,7 +113,7 @@ public sealed class Startup(IConfiguration configuration)
             app.UseSwaggerUI();
         }
 
-        app.UseMiddleware<UnauthorizedMiddleware>();
+        // app.UseMiddleware<UnauthorizedMiddleware>();
         app.UseAuthentication();
         app.UseRouting();
         app.UseAuthorization();

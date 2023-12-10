@@ -1,5 +1,9 @@
-﻿namespace MusicPlayerBackend.Data.Entities;
+﻿using Microsoft.EntityFrameworkCore;
 
+namespace MusicPlayerBackend.Data.Entities;
+
+[Index(nameof(NormalizedEmail))]
+[Index(nameof(UserName))]
 public sealed record User : EntityBase
 {
     public string? UserName { get; set; }
