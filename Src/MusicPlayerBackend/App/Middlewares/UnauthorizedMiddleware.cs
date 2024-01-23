@@ -9,8 +9,10 @@ internal sealed class UnauthorizedMiddleware(RequestDelegate next)
 {
     public async Task InvokeAsync(HttpContext context)
     {
-        if (context.Response.StatusCode == StatusCodes.Status401Unauthorized)
-            await next(context);
+        await next(context);
+
+        if (context.Response.StatusCode != StatusCodes.Status401Unauthorized)
+            return;
 
         context.Response.ContentType = "application/json";
 

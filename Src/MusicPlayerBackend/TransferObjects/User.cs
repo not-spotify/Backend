@@ -38,6 +38,6 @@ public sealed class UserResponse
 public sealed class RefreshRequest
 {
     public Guid Jti { get; set; }
-    public string RefreshToken { get; set; } = null!;
+    public Guid RefreshToken { get; set; }
     public Guid UserId { get; set; }
 }

@@ -172,10 +172,10 @@ public sealed class UserController(ILogger<UserController> logger,
 
     [HttpPost]
     [ProducesResponseType(typeof(LoginResponse), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(LoginResponse), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(UnauthorizedResponse), StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Refresh(RefreshRequest request)
     {
-        var existingRefreshToken = await refreshTokenRepository.GetValidTokenOrDefault(request.UserId, request.Jti, Guid.Parse(request.RefreshToken));
+        var existingRefreshToken = await refreshTokenRepository.GetValidTokenOrDefault(request.UserId, request.Jti, request.RefreshToken);
         if (existingRefreshToken == default)
             return Unauthorized(new UnauthorizedResponse { Error = "Can't refresh Jwt Bearer" });
 

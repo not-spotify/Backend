@@ -12,7 +12,9 @@ services:
        - postgres:/data/postgres
     ports:
       - "9732:5432"
-  
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
   pgadmin:
     container_name: pgadmin_container
     image: dpage/pgadmin4
@@ -24,6 +26,8 @@ services:
        - pgadmin:/var/lib/pgadmin
     ports:
       - "9750:80"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   minio:
     image: minio/minio
@@ -41,6 +45,8 @@ services:
     secrets:
     - minioaccess
     - miniosecret
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
   
   minio_default_bucket:
     image: minio/mc

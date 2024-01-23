@@ -49,11 +49,11 @@ public sealed class Startup(IConfiguration configuration)
         services.AddTransient<IS3Service, S3Service>();
         services.AddTransient<IUserResolver, UserResolver>();
 
-        services.AddControllers().AddControllersAsServices().AddJsonOptions(opts =>
-        {
-            var enumConverter = new JsonStringEnumConverter();
-            opts.JsonSerializerOptions.Converters.Add(enumConverter);
-        });
+        services
+            .AddControllers()
+            .AddControllersAsServices()
+            .AddJsonOptions(opts =>
+                opts.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 
         services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         .AddJwtBearer(options =>
@@ -104,7 +104,7 @@ public sealed class Startup(IConfiguration configuration)
     public void Configure(IApplicationBuilder app, IWebHostEnvironment env, AppDbContext ctx, IOptions<AppConfig> appConfig)
     {
         if (appConfig.Value.MigrateDatabaseOnStartup)
-            ctx.Database.MigrateAsync().GetAwaiter().GetResult();
+            ctx.Database.Migrate();
 
         app.UseSerilogRequestLogging();
         if (env.IsDevelopment())
@@ -113,12 +113,12 @@ public sealed class Startup(IConfiguration configuration)
             app.UseSwaggerUI();
         }
 
-        // app.UseMiddleware<UnauthorizedMiddleware>();
+        app.UseMiddleware<UnauthorizedMiddleware>();
         app.UseAuthentication();
         app.UseRouting();
         app.UseAuthorization();
 
-        app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
+        app.UseEndpoints(endpoints => endpoints.MapControllers());
     }
 
     public void ConfigureContainer(ContainerBuilder builder)
