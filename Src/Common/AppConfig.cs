@@ -12,6 +12,7 @@ public sealed class Minio
     public string? AccessKey { get; set; }
     public string? SecretKey { get; set; }
     public int Port { get; set; }
+    public bool UseSsl { get; set; }
 }
 
 public sealed class TokenConfig

@@ -5,7 +5,6 @@ using System.Text.Json.Serialization;
 using Autofac;
 using Autofac.Builder;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
@@ -15,8 +14,6 @@ using Minio.DataModel.Args;
 using MusicPlayerBackend.App.Middlewares;
 using MusicPlayerBackend.Common;
 using MusicPlayerBackend.Data;
-using MusicPlayerBackend.Data.Entities;
-using MusicPlayerBackend.Data.Identity.Stores;
 using MusicPlayerBackend.Data.Infr;
 using MusicPlayerBackend.Services;
 using MusicPlayerBackend.Services.Identity;
@@ -31,35 +28,24 @@ public sealed class Startup(IConfiguration configuration)
 
     public void ConfigureServices(IServiceCollection services)
     {
-        services.AddSerilog();
-        services.Configure<AppConfig>(configuration);
-        services.Configure<Common.Minio>(configuration.GetSection(nameof(Common.Minio)));
-        services.Configure<TokenConfig>(configuration.GetSection(nameof(TokenConfig)));
-        services.AddHttpContextAccessor();
+        services.AddSerilog()
+            .AddHttpContextAccessor();
 
         services.AddMinio(o =>
         {
-            var minioConfig = configuration.GetRequiredSection("Minio").Get<Common.Minio>();
-            if (minioConfig == null)
-                throw new Exception();
+            var minioConfig = configuration.GetSection("Minio").Get<Common.Minio>();
+            ArgumentNullException.ThrowIfNull(minioConfig);
 
             o
-                .WithSSL(false)
+                .WithSSL(minioConfig.UseSsl)
                 .WithEndpoint(minioConfig.Endpoint, minioConfig.Port)
                 .WithCredentials(minioConfig.AccessKey, minioConfig.SecretKey);
         });
 
-        services.AddTransient<IdentityErrorDescriber>();
-        services.AddTransient<ILookupNormalizer, LookupNormalizer>();
-        services.AddTransient<IPasswordHasher<User>, PasswordHasher>();
-        services.AddTransient<IUserClaimsPrincipalFactory<User>, UserClaimsPrincipalFactory<User>>();
-        services.AddTransient<IUserConfirmation<User>, UserConfirmation>();
-        services.AddTransient<IUserStore<User>, UserStore>();
-        services.AddTransient<IUserValidator<User>, UserValidator>();
-        services.AddTransient<UserManager<User>, UserManager>();
-        services.AddTransient<SignInManager<User>, SignInManager>();
-        services.AddTransient<IS3Service, S3Service>();
-        services.AddTransient<IUserResolver, UserResolver>();
+        services
+            .AddCustomIdentity()
+            .AddTransient<IS3Service, S3Service>()
+            .AddTransient<IUserResolver, UserResolver>();
 
         services
             .AddControllers()
@@ -106,13 +92,13 @@ public sealed class Startup(IConfiguration configuration)
                             Type = ReferenceType.SecurityScheme,
                             Id = "Bearer"
                         }
-                    },
-                    Array.Empty<string>()
+                    }, []
                 }
             });
 
             var xmlFilename = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
             c.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFilename));
+            c.EnableAnnotations();
         });
     }
 
@@ -131,10 +117,10 @@ public sealed class Startup(IConfiguration configuration)
         if (env.IsDevelopment())
         {
             app.UseSwagger();
-            app.UseSwaggerUI();
+            app.UseSwaggerUI(o => o.DisplayOperationId());
         }
 
-        // app.UseMiddleware<UnauthorizedMiddleware>();
+        app.UseMiddleware<UnauthorizedMiddleware>();
         app.UseAuthentication();
         app.UseRouting();
         app.UseAuthorization();
