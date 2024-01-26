@@ -3,8 +3,13 @@ namespace MusicPlayerBackend.TransferObjects.User;
 
 public sealed class RegisterRequest
 {
+    /// <example>metauser</example>
     public string? UserName { get; set; }
+
+    /// <example>meta@mail.local</example>
     public string Email { get; set; }  = null!;
+
+    /// <example>somesecurepassword</example>
     public string Password { get; set; } = null!;
 }
 
@@ -15,7 +20,10 @@ public sealed class RegisterResponse
 
 public sealed class LoginRequest
 {
+    /// <example>meta@mail.local</example>
     public string Email { get; set; } = null!;
+
+    /// <example>somesecurepassword</example>
     public string Password { get; set; } = null!;
 }
 

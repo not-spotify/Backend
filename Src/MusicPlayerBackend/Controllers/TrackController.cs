@@ -8,6 +8,7 @@ using MusicPlayerBackend.Data.Repositories;
 using MusicPlayerBackend.Services;
 using MusicPlayerBackend.TransferObjects;
 using MusicPlayerBackend.TransferObjects.Track;
+using TrackListItem = MusicPlayerBackend.TransferObjects.Track.TrackListItem;
 using TrackVisibility = MusicPlayerBackend.Data.Entities.TrackVisibility;
 
 namespace MusicPlayerBackend.Controllers;
@@ -23,19 +24,19 @@ public sealed class TrackController(
     ITrackRepository trackRepository,
     IS3Service s3Service,
     IUnitOfWork unitOfWork,
-    IUserResolver userResolver) : ControllerBase
+    IUserProvider userProvider) : ControllerBase
 {
     /// <summary>
-    /// Show track uploaded by authorized user
+    /// Gets track list
     /// </summary>
     /// <param name="request"></param>
     /// <param name="ct"></param>
     /// <returns></returns>
-    [HttpGet]
+    [HttpGet(Name = "GetTracks")]
     [ProducesResponseType(typeof(TrackListResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> List([FromQuery] PlaylistListRequest request, CancellationToken ct)
     {
-        var userId = await userResolver.GetUserIdAsync();
+        var userId = await userProvider.GetUserIdAsync();
 
         var tracks = await trackRepository.QueryAll()
             .Where(t => t.OwnerUserId == userId)
@@ -50,26 +51,26 @@ public sealed class TrackController(
                 TrackUri = t.TrackUri,
                 Visibility = (MusicPlayerBackend.TransferObjects.Track.TrackVisibility)(int)t.Visibility
             })
-            .ToArrayAsync(cancellationToken: ct);
+            .ToArrayAsync(ct);
 
         var trackCount = await trackRepository.QueryAll()
             .Where(t => t.OwnerUserId == userId)
-            .CountAsync(cancellationToken: ct);
+            .CountAsync(ct);
 
-        return Ok(new TrackListResponse { Items = tracks, TotalCount = trackCount });
+        return Ok(new TrackListResponse { Items = tracks, Count = trackCount });
     }
 
     /// <summary>
     ///     Get track by Id
     /// </summary>
     /// <param name="id"></param>
-    /// <param name="cancellationToken"></param>
+    /// <param name="ct"></param>
     /// <returns></returns>
-    [HttpGet("{id:guid}")]
-    public async Task<IActionResult> Get(Guid id, CancellationToken cancellationToken)
+    [HttpGet("{id:guid}", Name = "GetTrack")]
+    public async Task<IActionResult> Get(Guid id, CancellationToken ct)
     {
-        var userId = await userResolver.GetUserIdAsync();
-        var track = await trackRepository.GetByIdVisibleForOrDefault(id, userId, cancellationToken);
+        var userId = await userProvider.GetUserIdAsync();
+        var track = await trackRepository.GetByIdIfVisibleOrDefault(id, userId, ct);
 
         if (track == default)
             return BadRequest();
@@ -77,11 +78,11 @@ public sealed class TrackController(
         return Ok(track);
     }
 
-    [HttpPut("{id:guid}")]
-    public async Task<IActionResult> Update(Guid id, TrackUpdateRequest request, CancellationToken cancellationToken)
+    [HttpPut("{id:guid}", Name = "UpdateTrack")]
+    public async Task<IActionResult> Update(Guid id, TrackUpdateRequest request, CancellationToken ct)
     {
-        var userId = await userResolver.GetUserIdAsync();
-        var track = await trackRepository.GetByIdAllowedForFullAccessOrDefault(userId, id, cancellationToken);
+        var userId = await userProvider.GetUserIdAsync();
+        var track = await trackRepository.GetByIdIfOwnerOrDefault(userId, id, ct);
 
         if (track == default)
             return BadRequest();
@@ -90,32 +91,32 @@ public sealed class TrackController(
         track.CoverUri = request.CoverUri;
 
         trackRepository.Save(track);
-        await unitOfWork.SaveChangesAsync(cancellationToken);
+        await unitOfWork.SaveChangesAsync(ct);
 
         return NoContent();
     }
 
-    [HttpDelete("{id:guid}")]
-    public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)
+    [HttpDelete("{id:guid}", Name = "DeleteTrack")]
+    public async Task<IActionResult> Delete(Guid id, CancellationToken ct)
     {
-        var userId = await userResolver.GetUserIdAsync();
-        var track = await trackRepository.GetByIdAllowedForFullAccessOrDefault(id, userId, cancellationToken);
+        var userId = await userProvider.GetUserIdAsync();
+        var track = await trackRepository.GetByIdIfOwnerOrDefault(id, userId, ct);
 
         if (track == default)
             return BadRequest();
 
         trackRepository.Delete(track);
-        await unitOfWork.SaveChangesAsync(cancellationToken);
+        await unitOfWork.SaveChangesAsync(ct);
 
         return NoContent();
     }
 
     [Consumes(MediaTypeNames.Multipart.FormData)]
     [Produces(MediaTypeNames.Application.Json)]
-    [HttpPost]
-    public async Task<IActionResult> Create([FromForm] TrackCreateRequest request, CancellationToken cancellationToken = default)
+    [HttpPost(Name = "CreateTrack")]
+    public async Task<IActionResult> Create([FromForm] TrackCreateRequest request, CancellationToken ct = default)
     {
-        var uploadedTrackUri = await s3Service.TryUploadFileStream("tracks", Guid.NewGuid().ToString(), request.Track.OpenReadStream(), Path.GetExtension(request.Track.FileName), cancellationToken);
+        var uploadedTrackUri = await s3Service.TryUploadFileStream("tracks", request.Name, request.Track.OpenReadStream(), Path.GetExtension(request.Track.FileName), ct);
 
         if (uploadedTrackUri == default)
             return BadRequest(new { Error = "Failed to upload track" });
@@ -123,7 +124,7 @@ public sealed class TrackController(
         string? coverUri = default;
         if (request.Cover is not null)
         {
-            var uploadedCoverUri = await s3Service.TryUploadFileStream("covers", Guid.NewGuid().ToString(), request.Cover.OpenReadStream(), Path.GetExtension(request.Cover.FileName), cancellationToken);
+            var uploadedCoverUri = await s3Service.TryUploadFileStream("covers", request.Name, request.Cover.OpenReadStream(), Path.GetExtension(request.Cover.FileName), ct);
             if (uploadedCoverUri == default)
                 return BadRequest("Failed to upload cover");
 
@@ -137,11 +138,11 @@ public sealed class TrackController(
             Author = request.Author,
             Visibility = (TrackVisibility)request.Visibility,
             TrackUri = uploadedTrackUri,
-            OwnerUserId = await userResolver.GetUserIdAsync(),
+            OwnerUserId = await userProvider.GetUserIdAsync(),
         };
 
         trackRepository.Save(trackEntity);
-        await unitOfWork.SaveChangesAsync(cancellationToken);
+        await unitOfWork.SaveChangesAsync(ct);
 
         return Ok(trackEntity);
     }

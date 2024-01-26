@@ -4,25 +4,25 @@ namespace MusicPlayerBackend.Data.Repositories;
 
 public interface ITrackRepository : IEntityRepository<Guid, Track>
 {
-    Task<Track?> GetByIdVisibleForOrDefault(Guid id, Guid userId, CancellationToken cancellationToken = default);
-    Task<Track?> GetByIdAllowedForChangeOrDefault(Guid id, Guid userId, CancellationToken cancellationToken = default);
-    Task<Track?> GetByIdAllowedForFullAccessOrDefault(Guid id, Guid userId, CancellationToken cancellationToken = default);
+    Task<Track?> GetByIdIfVisibleOrDefault(Guid id, Guid userId, CancellationToken ct = default);
+    Task<Track?> GetByIdIfCanChangeOrDefault(Guid id, Guid userId, CancellationToken ct = default);
+    Task<Track?> GetByIdIfOwnerOrDefault(Guid id, Guid userId, CancellationToken ct = default);
 }
 
 public sealed class TrackRepository(AppDbContext dbContext) : EntityRepositoryBase<Guid, Track>(dbContext), ITrackRepository
 {
-    public Task<Track?> GetByIdVisibleForOrDefault(Guid id, Guid userId, CancellationToken cancellationToken = default)
+    public Task<Track?> GetByIdIfVisibleOrDefault(Guid id, Guid userId, CancellationToken ct = default)
     {
-        return SingleOrDefaultAsync(t => t.Id == id && (t.Visibility == TrackVisibility.Visible || t.OwnerUserId == userId), cancellationToken);
+        return SingleOrDefaultAsync(t => t.Id == id && (t.Visibility == TrackVisibility.Visible || t.OwnerUserId == userId), ct);
     }
 
-    public Task<Track?> GetByIdAllowedForChangeOrDefault(Guid id, Guid userId, CancellationToken cancellationToken = default)
+    public Task<Track?> GetByIdIfCanChangeOrDefault(Guid id, Guid userId, CancellationToken ct = default)
     {
-        return SingleOrDefaultAsync(t => t.Id == id && t.OwnerUserId == userId, cancellationToken); // TODO: Implement permissions
+        return SingleOrDefaultAsync(t => t.Id == id && t.OwnerUserId == userId, ct); // TODO: Implement permissions
     }
 
-    public Task<Track?> GetByIdAllowedForFullAccessOrDefault(Guid id, Guid userId, CancellationToken cancellationToken = default)
+    public Task<Track?> GetByIdIfOwnerOrDefault(Guid id, Guid userId, CancellationToken ct = default)
     {
-        return SingleOrDefaultAsync(t => t.Id == id && t.OwnerUserId == userId, cancellationToken);
+        return SingleOrDefaultAsync(t => t.Id == id && t.OwnerUserId == userId, ct);
     }
 }

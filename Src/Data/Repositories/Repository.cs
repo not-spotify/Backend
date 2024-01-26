@@ -8,14 +8,14 @@ public interface IEntityRepository<in TKey, TEntity> where TEntity : class, IEnt
     void Save(TEntity entity);
     void Delete(TEntity entity);
 
-    Task<TEntity> GetByIdAsync(TKey id, CancellationToken cancellationToken = default);
-    Task<IReadOnlyCollection<TEntity>> GetByIdsAsync(IEnumerable<TKey> ids, CancellationToken cancellationToken = default);
+    Task<TEntity> GetByIdAsync(TKey id, CancellationToken ct = default);
+    Task<TEntity[]> GetByIdsAsync(IEnumerable<TKey> ids, CancellationToken ct = default);
 
-    Task<TResult> GetByIdAsync<TResult>(TKey id, Expression<Func<TEntity, TResult>> selector, CancellationToken cancellationToken = default);
+    Task<TResult> GetByIdAsync<TResult>(TKey id, Expression<Func<TEntity, TResult>> selector, CancellationToken ct = default);
 
-    Task<TEntity?> GetByIdOrDefaultAsync(TKey id, CancellationToken cancellationToken = default);
+    Task<TEntity?> GetByIdOrDefaultAsync(TKey id, CancellationToken ct = default);
 
-    Task<TResult?> GetByIdOrDefaultAsync<TResult>(TKey id, Expression<Func<TEntity, TResult>> selector, CancellationToken cancellationToken = default);
+    Task<TResult?> GetByIdOrDefaultAsync<TResult>(TKey id, Expression<Func<TEntity, TResult>> selector, CancellationToken ct = default);
 
     IQueryable<TEntity> QueryAll();
     IQueryable<TResult> QueryAll<TResult>(Expression<Func<TEntity, TResult>> selector);
@@ -23,37 +23,37 @@ public interface IEntityRepository<in TKey, TEntity> where TEntity : class, IEnt
 
     IQueryable<TResult> QueryMany<TResult>(Expression<Func<TEntity, bool>> predicate, Expression<Func<TEntity, TResult>> selector);
 
-    Task<IReadOnlyCollection<TEntity>> GetAllAsync(CancellationToken cancellationToken = default);
-    Task<IReadOnlyCollection<TResult>> GetAllAsync<TResult>(Expression<Func<TEntity, TResult>> selector, CancellationToken cancellationToken = default);
+    Task<TEntity[]> GetAllAsync(CancellationToken ct = default);
+    Task<TResult[]> GetAllAsync<TResult>(Expression<Func<TEntity, TResult>> selector, CancellationToken ct = default);
 
-    Task<IReadOnlyCollection<TEntity>> GetManyAsync(Expression<Func<TEntity, bool>> predicate, CancellationToken cancellationToken = default);
-    Task<IReadOnlyCollection<TResult>> GetManyAsync<TResult>(Expression<Func<TEntity, bool>> predicate, Expression<Func<TEntity, TResult>> selector, CancellationToken cancellationToken = default);
+    Task<TEntity[]> GetManyAsync(Expression<Func<TEntity, bool>> predicate, CancellationToken ct = default);
+    Task<TResult[]> GetManyAsync<TResult>(Expression<Func<TEntity, bool>> predicate, Expression<Func<TEntity, TResult>> selector, CancellationToken ct = default);
 
-    Task<TEntity?> FirstOrDefaultAsync(CancellationToken cancellationToken = default);
-    Task<TEntity?> FirstOrDefaultAsync(Expression<Func<TEntity?, bool>> where, CancellationToken cancellationToken = default);
-    Task<TEntity> FirstAsync(CancellationToken cancellationToken = default);
-    Task<TEntity> FirstAsync(Expression<Func<TEntity, bool>> where, CancellationToken cancellationToken = default);
-    Task<TEntity?> SingleOrDefaultAsync(CancellationToken cancellationToken = default);
-    Task<TEntity?> SingleOrDefaultAsync(Expression<Func<TEntity, bool>> where, CancellationToken cancellationToken = default);
-    Task<TEntity> SingleAsync(CancellationToken cancellationToken = default);
-    Task<TEntity> SingleAsync(Expression<Func<TEntity, bool>> where, CancellationToken cancellationToken = default);
+    Task<TEntity?> FirstOrDefaultAsync(CancellationToken ct = default);
+    Task<TEntity?> FirstOrDefaultAsync(Expression<Func<TEntity?, bool>> where, CancellationToken ct = default);
+    Task<TEntity> FirstAsync(CancellationToken ct = default);
+    Task<TEntity> FirstAsync(Expression<Func<TEntity, bool>> where, CancellationToken ct = default);
+    Task<TEntity?> SingleOrDefaultAsync(CancellationToken ct = default);
+    Task<TEntity?> SingleOrDefaultAsync(Expression<Func<TEntity, bool>> where, CancellationToken ct = default);
+    Task<TEntity> SingleAsync(CancellationToken ct = default);
+    Task<TEntity> SingleAsync(Expression<Func<TEntity, bool>> where, CancellationToken ct = default);
 
-    Task<TResult?> FirstOrDefaultAsync<TResult>(Expression<Func<TEntity, TResult>> selector, CancellationToken cancellationToken = default);
-    Task<TResult?> FirstOrDefaultAsync<TResult>(Expression<Func<TEntity, bool>> where, Expression<Func<TEntity, TResult?>> selector, CancellationToken cancellationToken = default);
+    Task<TResult?> FirstOrDefaultAsync<TResult>(Expression<Func<TEntity, TResult>> selector, CancellationToken ct = default);
+    Task<TResult?> FirstOrDefaultAsync<TResult>(Expression<Func<TEntity, bool>> where, Expression<Func<TEntity, TResult?>> selector, CancellationToken ct = default);
 
-    Task<TResult> FirstAsync<TResult>(Expression<Func<TEntity, TResult>> selector, CancellationToken cancellationToken = default);
-    Task<TResult> FirstAsync<TResult>(Expression<Func<TEntity, bool>> where, Expression<Func<TEntity, TResult>> selector, CancellationToken cancellationToken = default);
+    Task<TResult> FirstAsync<TResult>(Expression<Func<TEntity, TResult>> selector, CancellationToken ct = default);
+    Task<TResult> FirstAsync<TResult>(Expression<Func<TEntity, bool>> where, Expression<Func<TEntity, TResult>> selector, CancellationToken ct = default);
 
-    Task<TResult?> SingleOrDefaultAsync<TResult>(Expression<Func<TEntity, TResult>> selector, CancellationToken cancellationToken = default);
-    Task<TResult?> SingleOrDefaultAsync<TResult>(Expression<Func<TEntity, bool>> where, Expression<Func<TEntity, TResult>> selector, CancellationToken cancellationToken = default);
+    Task<TResult?> SingleOrDefaultAsync<TResult>(Expression<Func<TEntity, TResult>> selector, CancellationToken ct = default);
+    Task<TResult?> SingleOrDefaultAsync<TResult>(Expression<Func<TEntity, bool>> where, Expression<Func<TEntity, TResult>> selector, CancellationToken ct = default);
 
-    Task<TResult> SingleAsync<TResult>(Expression<Func<TEntity, TResult>> selector, CancellationToken cancellationToken = default);
-    Task<TResult> SingleAsync<TResult>(Expression<Func<TEntity, bool>> where, Expression<Func<TEntity, TResult>> selector, CancellationToken cancellationToken = default);
+    Task<TResult> SingleAsync<TResult>(Expression<Func<TEntity, TResult>> selector, CancellationToken ct = default);
+    Task<TResult> SingleAsync<TResult>(Expression<Func<TEntity, bool>> where, Expression<Func<TEntity, TResult>> selector, CancellationToken ct = default);
 
-    Task<bool> AnyAsync(CancellationToken cancellationToken = default);
-    Task<bool> AnyAsync(Expression<Func<TEntity, bool>> predicate, CancellationToken cancellationToken = default);
-    Task<int> CountAsync(CancellationToken cancellationToken = default);
-    Task<int> CountAsync(Expression<Func<TEntity, bool>> predicate, CancellationToken cancellationToken = default);
+    Task<bool> AnyAsync(CancellationToken ct = default);
+    Task<bool> AnyAsync(Expression<Func<TEntity, bool>> predicate, CancellationToken ct = default);
+    Task<int> CountAsync(CancellationToken ct = default);
+    Task<int> CountAsync(Expression<Func<TEntity, bool>> predicate, CancellationToken ct = default);
 }
 
 public abstract class EntityRepositoryBase<TKey, TEntity>(AppDbContext dbContext) : IEntityRepository<TKey, TEntity>
@@ -87,24 +87,24 @@ public abstract class EntityRepositoryBase<TKey, TEntity>(AppDbContext dbContext
         DbSet.Remove(entity);
     }
 
-    public async Task<TEntity> GetByIdAsync(TKey id, CancellationToken cancellationToken = default)
+    public async Task<TEntity> GetByIdAsync(TKey id, CancellationToken ct = default)
     {
-        var result = await DbSet.FindAsync(new object?[] { id }, cancellationToken: cancellationToken);
+        var result = await DbSet.FindAsync(new object?[] { id }, ct);
         if (result == default)
             ThrowEntityNotFoundException(id);
 
         return result!;
     }
 
-    public async Task<IReadOnlyCollection<TEntity>> GetByIdsAsync(IEnumerable<TKey> ids, CancellationToken cancellationToken = default)
+    public async Task<TEntity[]> GetByIdsAsync(IEnumerable<TKey> ids, CancellationToken ct = default)
     {
-        var result = await QueryAll().Where(e => ids.Contains(e.Id)).ToArrayAsync(cancellationToken);
+        var result = await QueryAll().Where(e => ids.Contains(e.Id)).ToArrayAsync(ct);
         return result;
     }
 
-    public async Task<TResult> GetByIdAsync<TResult>(TKey id, Expression<Func<TEntity, TResult>> selector, CancellationToken cancellationToken = default)
+    public async Task<TResult> GetByIdAsync<TResult>(TKey id, Expression<Func<TEntity, TResult>> selector, CancellationToken ct = default)
     {
-        var result = await QueryMany(e => e.Id.Equals(id), selector).Take(1).ToArrayAsync(cancellationToken);
+        var result = await QueryMany(e => e.Id.Equals(id), selector).Take(1).ToArrayAsync(ct);
 
         if (result.Length == 0)
             ThrowEntityNotFoundException(id);
@@ -112,15 +112,15 @@ public abstract class EntityRepositoryBase<TKey, TEntity>(AppDbContext dbContext
         return result.Single();
     }
 
-    public async Task<TEntity?> GetByIdOrDefaultAsync(TKey id, CancellationToken cancellationToken = default)
+    public async Task<TEntity?> GetByIdOrDefaultAsync(TKey id, CancellationToken ct = default)
     {
-        var result = await DbSet.FindAsync(new object?[] { id }, cancellationToken: cancellationToken);
+        var result = await DbSet.FindAsync(new object?[] { id }, ct);
         return result;
     }
 
-    public async Task<TResult?> GetByIdOrDefaultAsync<TResult>(TKey id, Expression<Func<TEntity, TResult>> selector, CancellationToken cancellationToken = default)
+    public async Task<TResult?> GetByIdOrDefaultAsync<TResult>(TKey id, Expression<Func<TEntity, TResult>> selector, CancellationToken ct = default)
     {
-        var result = await QueryMany(e => e.Id.Equals(id), selector).Take(1).ToArrayAsync(cancellationToken);
+        var result = await QueryMany(e => e.Id.Equals(id), selector).Take(1).ToArrayAsync(ct);
         return result.SingleOrDefault();
     }
 
@@ -144,124 +144,124 @@ public abstract class EntityRepositoryBase<TKey, TEntity>(AppDbContext dbContext
         return QueryMany(predicate).Select(selector);
     }
 
-    public async Task<IReadOnlyCollection<TEntity>> GetAllAsync(CancellationToken cancellationToken = default)
+    public async Task<TEntity[]> GetAllAsync(CancellationToken ct = default)
     {
-        return await QueryAll().ToArrayAsync(cancellationToken: cancellationToken);
+        return await QueryAll().ToArrayAsync(ct);
     }
 
-    public async Task<IReadOnlyCollection<TResult>> GetAllAsync<TResult>(Expression<Func<TEntity, TResult>> selector, CancellationToken cancellationToken = default)
+    public async Task<TResult[]> GetAllAsync<TResult>(Expression<Func<TEntity, TResult>> selector, CancellationToken ct = default)
     {
-        return await QueryAll(selector).ToArrayAsync(cancellationToken: cancellationToken);
+        return await QueryAll(selector).ToArrayAsync(ct);
     }
 
-    public async Task<IReadOnlyCollection<TEntity>> GetManyAsync(Expression<Func<TEntity, bool>> predicate, CancellationToken cancellationToken = default)
+    public async Task<TEntity[]> GetManyAsync(Expression<Func<TEntity, bool>> predicate, CancellationToken ct = default)
     {
-        return await QueryMany(predicate).ToArrayAsync(cancellationToken: cancellationToken);
+        return await QueryMany(predicate).ToArrayAsync(ct);
     }
 
-    public async Task<IReadOnlyCollection<TResult>> GetManyAsync<TResult>(Expression<Func<TEntity, bool>> predicate, Expression<Func<TEntity, TResult>> selector, CancellationToken cancellationToken = default)
+    public async Task<TResult[]> GetManyAsync<TResult>(Expression<Func<TEntity, bool>> predicate, Expression<Func<TEntity, TResult>> selector, CancellationToken ct = default)
     {
-        return await QueryMany(predicate, selector).ToArrayAsync(cancellationToken: cancellationToken);
+        return await QueryMany(predicate, selector).ToArrayAsync(ct);
     }
 
-    public async Task<TEntity?> FirstOrDefaultAsync(CancellationToken cancellationToken = default)
+    public async Task<TEntity?> FirstOrDefaultAsync(CancellationToken ct = default)
     {
-        return await QueryAll().FirstOrDefaultAsync(cancellationToken: cancellationToken);
+        return await QueryAll().FirstOrDefaultAsync(ct);
     }
 
-    public async Task<TEntity?> FirstOrDefaultAsync(Expression<Func<TEntity?, bool>> where, CancellationToken cancellationToken = default)
+    public async Task<TEntity?> FirstOrDefaultAsync(Expression<Func<TEntity?, bool>> where, CancellationToken ct = default)
     {
-        return await QueryAll().FirstOrDefaultAsync(where, cancellationToken: cancellationToken);
+        return await QueryAll().FirstOrDefaultAsync(where, ct);
     }
 
-    public async Task<TEntity> FirstAsync(CancellationToken cancellationToken = default)
+    public async Task<TEntity> FirstAsync(CancellationToken ct = default)
     {
-        return await QueryAll().FirstAsync(cancellationToken: cancellationToken);
+        return await QueryAll().FirstAsync(ct);
     }
 
-    public async Task<TEntity> FirstAsync(Expression<Func<TEntity, bool>> where, CancellationToken cancellationToken = default)
+    public async Task<TEntity> FirstAsync(Expression<Func<TEntity, bool>> where, CancellationToken ct = default)
     {
-        return await QueryAll().FirstAsync(where, cancellationToken: cancellationToken);
+        return await QueryAll().FirstAsync(where, ct);
     }
 
-    public async Task<TEntity?> SingleOrDefaultAsync(CancellationToken cancellationToken = default)
+    public async Task<TEntity?> SingleOrDefaultAsync(CancellationToken ct = default)
     {
-        return await QueryAll().SingleOrDefaultAsync(cancellationToken: cancellationToken);
+        return await QueryAll().SingleOrDefaultAsync(ct);
     }
 
-    public async Task<TEntity?> SingleOrDefaultAsync(Expression<Func<TEntity, bool>> where, CancellationToken cancellationToken = default)
+    public async Task<TEntity?> SingleOrDefaultAsync(Expression<Func<TEntity, bool>> where, CancellationToken ct = default)
     {
-        return await QueryAll().SingleOrDefaultAsync(where, cancellationToken: cancellationToken);
+        return await QueryAll().SingleOrDefaultAsync(where, ct);
     }
 
-    public async Task<TEntity> SingleAsync(CancellationToken cancellationToken = default)
+    public async Task<TEntity> SingleAsync(CancellationToken ct = default)
     {
-        return await QueryAll().SingleAsync(cancellationToken: cancellationToken);
+        return await QueryAll().SingleAsync(ct);
     }
 
-    public async Task<TEntity> SingleAsync(Expression<Func<TEntity, bool>> where, CancellationToken cancellationToken = default)
+    public async Task<TEntity> SingleAsync(Expression<Func<TEntity, bool>> where, CancellationToken ct = default)
     {
-        return await QueryAll().SingleAsync(where, cancellationToken: cancellationToken);
+        return await QueryAll().SingleAsync(where, ct);
     }
 
-    public async Task<TResult?> FirstOrDefaultAsync<TResult>(Expression<Func<TEntity, TResult>> selector, CancellationToken cancellationToken = default)
+    public async Task<TResult?> FirstOrDefaultAsync<TResult>(Expression<Func<TEntity, TResult>> selector, CancellationToken ct = default)
     {
-        return await QueryAll(selector).FirstOrDefaultAsync(cancellationToken: cancellationToken);
+        return await QueryAll(selector).FirstOrDefaultAsync(ct);
     }
 
-    public async Task<TResult?> FirstOrDefaultAsync<TResult>(Expression<Func<TEntity, bool>> where, Expression<Func<TEntity, TResult?>> selector, CancellationToken cancellationToken = default)
+    public async Task<TResult?> FirstOrDefaultAsync<TResult>(Expression<Func<TEntity, bool>> where, Expression<Func<TEntity, TResult?>> selector, CancellationToken ct = default)
     {
-        return await QueryMany(where, selector).FirstOrDefaultAsync(cancellationToken: cancellationToken);
+        return await QueryMany(where, selector).FirstOrDefaultAsync(ct);
     }
 
-    public async Task<TResult> FirstAsync<TResult>(Expression<Func<TEntity, TResult>> selector, CancellationToken cancellationToken = default)
+    public async Task<TResult> FirstAsync<TResult>(Expression<Func<TEntity, TResult>> selector, CancellationToken ct = default)
     {
-        return await QueryAll(selector).FirstAsync(cancellationToken: cancellationToken);
+        return await QueryAll(selector).FirstAsync(ct);
     }
 
-    public async Task<TResult> FirstAsync<TResult>(Expression<Func<TEntity, bool>> where, Expression<Func<TEntity, TResult>> selector, CancellationToken cancellationToken = default)
+    public async Task<TResult> FirstAsync<TResult>(Expression<Func<TEntity, bool>> where, Expression<Func<TEntity, TResult>> selector, CancellationToken ct = default)
     {
-        return await QueryMany(where, selector).FirstAsync(cancellationToken: cancellationToken);
+        return await QueryMany(where, selector).FirstAsync(ct);
     }
 
-    public async Task<TResult?> SingleOrDefaultAsync<TResult>(Expression<Func<TEntity, TResult>> selector, CancellationToken cancellationToken = default)
+    public async Task<TResult?> SingleOrDefaultAsync<TResult>(Expression<Func<TEntity, TResult>> selector, CancellationToken ct = default)
     {
-        return await QueryAll(selector).SingleOrDefaultAsync(cancellationToken: cancellationToken);
+        return await QueryAll(selector).SingleOrDefaultAsync(ct);
     }
 
-    public async Task<TResult?> SingleOrDefaultAsync<TResult>(Expression<Func<TEntity, bool>> where, Expression<Func<TEntity, TResult>> selector, CancellationToken cancellationToken = default)
+    public async Task<TResult?> SingleOrDefaultAsync<TResult>(Expression<Func<TEntity, bool>> where, Expression<Func<TEntity, TResult>> selector, CancellationToken ct = default)
     {
-        return await QueryMany(where, selector).SingleOrDefaultAsync(cancellationToken: cancellationToken);
+        return await QueryMany(where, selector).SingleOrDefaultAsync(ct);
     }
 
-    public async Task<TResult> SingleAsync<TResult>(Expression<Func<TEntity, TResult>> selector, CancellationToken cancellationToken = default)
+    public async Task<TResult> SingleAsync<TResult>(Expression<Func<TEntity, TResult>> selector, CancellationToken ct = default)
     {
-        return await QueryAll(selector).SingleAsync(cancellationToken);
+        return await QueryAll(selector).SingleAsync(ct);
     }
 
-    public async Task<TResult> SingleAsync<TResult>(Expression<Func<TEntity, bool>> where, Expression<Func<TEntity, TResult>> selector, CancellationToken cancellationToken = default)
+    public async Task<TResult> SingleAsync<TResult>(Expression<Func<TEntity, bool>> where, Expression<Func<TEntity, TResult>> selector, CancellationToken ct = default)
     {
-        return await QueryMany(where, selector).SingleAsync(cancellationToken);
+        return await QueryMany(where, selector).SingleAsync(ct);
     }
 
-    public async Task<bool> AnyAsync(CancellationToken cancellationToken = default)
+    public async Task<bool> AnyAsync(CancellationToken ct = default)
     {
-        return await QueryAll().AnyAsync(cancellationToken: cancellationToken);
+        return await QueryAll().AnyAsync(ct);
     }
 
-    public async Task<bool> AnyAsync(Expression<Func<TEntity, bool>> predicate, CancellationToken cancellationToken = default)
+    public async Task<bool> AnyAsync(Expression<Func<TEntity, bool>> predicate, CancellationToken ct = default)
     {
-        return await QueryAll().AnyAsync(predicate, cancellationToken: cancellationToken);
+        return await QueryAll().AnyAsync(predicate, ct);
     }
 
-    public async Task<int> CountAsync(CancellationToken cancellationToken = default)
+    public async Task<int> CountAsync(CancellationToken ct = default)
     {
-        return await QueryAll().CountAsync(cancellationToken: cancellationToken);
+        return await QueryAll().CountAsync(ct);
     }
 
-    public async Task<int> CountAsync(Expression<Func<TEntity, bool>> predicate, CancellationToken cancellationToken = default)
+    public async Task<int> CountAsync(Expression<Func<TEntity, bool>> predicate, CancellationToken ct = default)
     {
-        return await QueryMany(predicate).CountAsync(cancellationToken: cancellationToken);
+        return await QueryMany(predicate).CountAsync(ct);
     }
 
     #region Helpers

@@ -14,55 +14,73 @@ namespace MusicPlayerBackend.Controllers;
 [Produces(MediaTypeNames.Application.Json)]
 [ProducesResponseType(StatusCodes.Status400BadRequest)]
 [ProducesResponseType(typeof(UnauthorizedResponse), StatusCodes.Status401Unauthorized)]
-[Route("Track/[action]")]
-public sealed class LikedTrackController(IUserResolver userResolver, ILikedTrackRepository likedTrackRepository, IUnitOfWork unitOfWork) : ControllerBase
+[Route("Track/")]
+public sealed class LikedTrackController(
+    IUserProvider userProvider,
+    ITrackRepository trackRepository,
+    ITrackPlaylistRepository trackPlaylistRepository,
+    IUnitOfWork unitOfWork) : ControllerBase
 {
-    [HttpPut("{trackId:guid}/Like")]
+    /// <summary>
+    ///     Adds track to "liked" playlist
+    /// </summary>
+    [HttpPut("{trackId:guid}/Like", Name = "LikeTrack")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> Like(Guid trackId)
     {
-        var userId = await userResolver.GetUserIdAsync();
-        var likedTrackEntity = await likedTrackRepository.GetOrDefault(userId, trackId);
+        var user = await userProvider.GetUserAsync();
+        var userId = user.Id;
 
-        if (likedTrackEntity != default)
+        var track = await trackRepository.GetByIdIfVisibleOrDefault(trackId, userId);
+        if (track == default)
             return NoContent();
 
-        likedTrackEntity = new LikedTrack { UserId = userId, TrackId = trackId };
-        likedTrackRepository.Delete(likedTrackEntity);
+        await trackPlaylistRepository.AddTrackIfNotAdded(user.FavoriteTracksPlaylistId, trackId);
         await unitOfWork.SaveChangesAsync();
 
         return NoContent();
     }
 
-    [HttpDelete("{trackId:guid}/Like")]
+    /// <summary>
+    ///     Removes track to "liked" playlist
+    /// </summary>
+    [HttpDelete("{trackId:guid}/Like", Name = "DislikeTrack")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> RemoveLike(Guid trackId)
     {
-        var userId = await userResolver.GetUserIdAsync();
-        var likedTrackEntity = await likedTrackRepository.GetOrDefault(userId, trackId);
+        var user = await userProvider.GetUserAsync();
 
-        if (likedTrackEntity == default)
-            return NoContent();
-
-        likedTrackRepository.Delete(likedTrackEntity);
+        await trackPlaylistRepository.AddTrackIfNotAdded(user.FavoriteTracksPlaylistId, trackId);
         await unitOfWork.SaveChangesAsync();
 
         return NoContent();
     }
 
+    /// <summary>
+    ///     Get liked tracks
+    /// </summary>
+    [HttpGet("LikedList", Name = "LikedTrackList")]
     [ProducesResponseType(typeof(LikedTrackListResponse), StatusCodes.Status200OK)]
-    public async Task<IActionResult> List([FromBody] LikedTrackListRequest request, CancellationToken cancellationToken)
+    public async Task<IActionResult> List([FromBody] LikedTrackListRequest request, CancellationToken ct)
     {
-        var userId = await userResolver.GetUserIdAsync();
-        var trackIds = await likedTrackRepository
-            .QueryAll()
-            .Where(lt => lt.UserId == userId)
-            .OrderBy(lt => lt.CreatedAt)
-            .Skip(request.Page + request.PageSize)
-            .Take(request.PageSize)
-            .Select(lt => lt.Id)
-            .ToArrayAsync(cancellationToken);
+        var user = await userProvider.GetUserAsync();
+        var playlistItemsQuery = trackPlaylistRepository
+            .QueryMany(tp => tp.PlaylistId == user.FavoriteTracksPlaylistId, tp =>
 
-        return Ok(new LikedTrackListResponse { TrackIds = trackIds });
+                new LikedTrackListItem
+                {
+                    CoverUri = tp.Track.CoverUri,
+                    TrackUri = tp.Track.TrackUri,
+                    Name = tp.Track.Name,
+                    Author = tp.Track.Author,
+                    IsAvailable = tp.Playlist.OwnerUserId == user.Id || tp.Playlist.Visibility == PlaylistVisibility.Public
+            });
+
+        var playlistItems = await playlistItemsQuery
+            .Skip(request.PageSize * request.PageSize)
+            .Take(request.PageSize)
+            .ToArrayAsync(ct);
+
+        return Ok(new LikedTrackListResponse { Items = playlistItems, Count = await playlistItemsQuery.CountAsync(ct) });
     }
 }

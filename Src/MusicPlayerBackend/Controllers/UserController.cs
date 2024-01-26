@@ -24,7 +24,7 @@ namespace MusicPlayerBackend.Controllers;
 public sealed class UserController(ILogger<UserController> logger,
     UserManager<User> userManager,
     SignInManager<User> signInManager,
-    IUserResolver userResolver,
+    IUserProvider userProvider,
     IRefreshTokenRepository refreshTokenRepository,
     IUserRepository userRepository,
     IUnitOfWork unitOfWork,
@@ -33,19 +33,19 @@ public sealed class UserController(ILogger<UserController> logger,
     private readonly TokenConfig _tokenConfig = tokenConfig.Value;
 
     /// <summary>
-    /// Gets authorized User.
+    ///     Gets authorized User.
     /// </summary>
     /// <returns>Authorized User</returns>
     /// <response code="200">Returns User</response>
     /// <response code="400">Wrong schema</response>
     /// <response code="401">Not authorized</response>
     [Authorize]
-    [HttpGet]
+    [HttpGet(Name = "GetMe")]
     [ProducesResponseType(typeof(UserResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(UnauthorizedResponse), StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Me()
     {
-        var user = await userResolver.GetUserAsync();
+        var user = await userProvider.GetUserAsync();
         var response = new UserResponse
         {
             Id = user.Id,
@@ -57,30 +57,18 @@ public sealed class UserController(ILogger<UserController> logger,
     }
 
     /// <summary>
-    /// Creates User.
+    ///     Creates User.
     /// </summary>
-    /// <param name="request"></param>
-    /// <returns>Jwt Bearer</returns>
-    /// <remarks>
-    /// Sample request:
-    ///
-    ///     POST /User/Register
-    ///     {
-    ///       "userName": "metauser",
-    ///       "email": "meta@mail.local",
-    ///       "password": "somesecurepassword"
-    ///     }
-    ///
-    /// </remarks>
+    /// <returns>User identifier and JWT Bearer</returns>
     /// <response code="200">Returns User identifier</response>
     /// <response code="400">Wrong schema</response>
-    [HttpPost]
+    [HttpPost(Name = "RegisterUser")]
     [ProducesResponseType(typeof(RegisterResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> Register(RegisterRequest request)
     {
         if (User.Identity?.IsAuthenticated == true)
         {
-            logger.LogWarning("User {user} tried to register again", await userResolver.GetUserIdAsync());
+            logger.LogWarning("User {user} tried to register again", await userProvider.GetUserIdAsync());
             return BadRequest("You're already registered");
         }
 
@@ -100,23 +88,13 @@ public sealed class UserController(ILogger<UserController> logger,
     }
 
     /// <summary>
-    /// Get Jwt Bearer for using secure actions.
+    /// Get JWT Bearer for using secure actions.
     /// </summary>
     /// <param name="request"></param>
-    /// <returns>Jwt Bearer</returns>
-    /// <remarks>
-    /// Sample request:
-    ///
-    ///     POST /User/Login
-    ///     {
-    ///       "email": "meta@mail.local",
-    ///       "password": "somesecurepassword"
-    ///     }
-    ///
-    /// </remarks>
+    /// <returns>JWT Bearer</returns>
     /// <response code="200">Returns JWT Bearer</response>
     /// <response code="401">Wrong email or password</response>
-    [HttpPost]
+    [HttpPost(Name = "LogInUser")]
     [ProducesResponseType(typeof(LoginResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(LoginResponse), StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Login(LoginRequest request)
@@ -170,7 +148,10 @@ public sealed class UserController(ILogger<UserController> logger,
         });
     }
 
-    [HttpPost]
+    /// <summary>
+    ///     Gets new JWT Bearer by RefreshToken.
+    /// </summary>
+    [HttpPost(Name = "RefreshUserToken")]
     [ProducesResponseType(typeof(LoginResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(UnauthorizedResponse), StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Refresh(RefreshRequest request)

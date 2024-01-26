@@ -6,11 +6,11 @@ public interface IUnitOfWork
 {
     void Commit();
     Task CommitAsync();
-    Task CommitAsync(CancellationToken cancellationToken);
+    Task CommitAsync(CancellationToken ct);
 
     void SaveChanges();
     Task SaveChangesAsync();
-    Task SaveChangesAsync(CancellationToken cancellationToken);
+    Task SaveChangesAsync(CancellationToken ct);
 
     bool HasActiveTransaction { get; }
     IDbContextTransaction? GetCurrentTransaction();
@@ -32,9 +32,9 @@ public sealed class UnitOfWork(AppDbContext dbContext) : IUnitOfWork
         return _dbContextTransaction.CommitAsync();
     }
 
-    public Task CommitAsync(CancellationToken cancellationToken)
+    public Task CommitAsync(CancellationToken ct)
     {
-        return _dbContextTransaction.CommitAsync(cancellationToken);
+        return _dbContextTransaction.CommitAsync(ct);
     }
 
     public void SaveChanges()
@@ -47,9 +47,9 @@ public sealed class UnitOfWork(AppDbContext dbContext) : IUnitOfWork
         await dbContext.SaveChangesAsync();
     }
 
-    public async Task SaveChangesAsync(CancellationToken cancellationToken)
+    public async Task SaveChangesAsync(CancellationToken ct)
     {
-        await dbContext.SaveChangesAsync(cancellationToken);
+        await dbContext.SaveChangesAsync(ct);
     }
 
     public bool HasActiveTransaction => ReferenceEquals(_dbContextTransaction, null);

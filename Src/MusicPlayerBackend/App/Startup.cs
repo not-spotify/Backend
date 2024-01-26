@@ -10,7 +10,6 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Minio;
-using Minio.DataModel.Args;
 using MusicPlayerBackend.App.Middlewares;
 using MusicPlayerBackend.Common;
 using MusicPlayerBackend.Data;
@@ -45,7 +44,7 @@ public sealed class Startup(IConfiguration configuration)
         services
             .AddCustomIdentity()
             .AddTransient<IS3Service, S3Service>()
-            .AddTransient<IUserResolver, UserResolver>();
+            .AddTransient<IUserProvider, UserProvider>();
 
         services
             .AddControllers()
@@ -67,8 +66,8 @@ public sealed class Startup(IConfiguration configuration)
                 };
             });
 
-        services.AddSession();
-        services.AddAuthorization();
+        services.AddSession()
+            .AddAuthorization();
         services.AddEndpointsApiExplorer();
         services.AddSwaggerGen(c =>
         {
@@ -77,7 +76,7 @@ public sealed class Startup(IConfiguration configuration)
                 Type = SecuritySchemeType.Http,
                 BearerFormat = JwtConstants.TokenType,
                 In = ParameterLocation.Header,
-                Scheme = "Bearer",
+                Scheme = JwtBearerDefaults.AuthenticationScheme,
                 Name = "Authorization",
                 Description = "Please insert JWT into field"
             });
@@ -90,7 +89,7 @@ public sealed class Startup(IConfiguration configuration)
                         Reference = new OpenApiReference
                         {
                             Type = ReferenceType.SecurityScheme,
-                            Id = "Bearer"
+                            Id = JwtBearerDefaults.AuthenticationScheme
                         }
                     }, []
                 }
@@ -104,11 +103,9 @@ public sealed class Startup(IConfiguration configuration)
 
     public void Configure(IApplicationBuilder app, IWebHostEnvironment env, AppDbContext ctx, IOptions<AppConfig> appConfig, IMinioClient minioClient)
     {
-        if (!minioClient.BucketExistsAsync(new BucketExistsArgs().WithBucket("tracks")).ConfigureAwait(false).GetAwaiter().GetResult())
-            minioClient.MakeBucketAsync(new MakeBucketArgs().WithBucket("tracks")).ConfigureAwait(false).GetAwaiter().GetResult();
-
-        if (!minioClient.BucketExistsAsync(new BucketExistsArgs().WithBucket("covers")).ConfigureAwait(false).GetAwaiter().GetResult())
-            minioClient.MakeBucketAsync(new MakeBucketArgs().WithBucket("covers")).ConfigureAwait(false).GetAwaiter().GetResult();
+        minioClient
+            .CreateBucketIfNotExists("tracks")
+            .CreateBucketIfNotExists("covers");
 
         if (appConfig.Value.MigrateDatabaseOnStartup)
             ctx.Database.Migrate();
@@ -121,9 +118,9 @@ public sealed class Startup(IConfiguration configuration)
         }
 
         app.UseMiddleware<UnauthorizedMiddleware>();
-        app.UseAuthentication();
-        app.UseRouting();
-        app.UseAuthorization();
+        app.UseAuthentication()
+            .UseAuthorization()
+            .UseRouting();
 
         app.UseEndpoints(endpoints => endpoints.MapControllers());
     }

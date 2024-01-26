@@ -25,24 +25,37 @@ public sealed class PlaylistController(
     IPlaylistUserPermissionRepository playlistUserPermissionRepository,
     IUnitOfWork unitOfWork,
     IS3Service s3Service,
-    IUserResolver userResolver) : ControllerBase
+    IUserProvider userProvider) : ControllerBase
 {
-    [HttpGet]
-    [ActionName("List")]
+    /// <summary>
+    ///     Get visible to user playlists if authorized
+    ///     For unauthorized only visible playlists will be returned
+    /// </summary>
+    [AllowAnonymous]
+    [HttpGet("List", Name = "GetPlaylists")]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(PlaylistListResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> List([FromQuery] PlaylistListRequest request, CancellationToken ct)
     {
-        var userId = await userResolver.GetUserIdAsync();
+        var userId = await userProvider.GetUserIdOrDefaultAsync();
 
-        var visiblePlaylistsQuery = playlistRepository.QueryAll()
-            .Where(p =>
-                p.Visibility == PlaylistVisibility.Public
-                || p.OwnerUserId == userId
-                || p.Permissions.Any(np => np.UserId == userId && np.PlaylistId == p.Id));
+        IQueryable<Playlist> visiblePlaylistsQuery;
+
+        if (userId != default)
+        {
+            visiblePlaylistsQuery = playlistRepository.QueryAll()
+                .Where(p =>
+                    p.Visibility == PlaylistVisibility.Public
+                    || p.OwnerUserId == userId
+                    || p.Permissions.Any(np => np.UserId == userId && np.PlaylistId == p.Id));
+        }
+        else
+        {
+            visiblePlaylistsQuery = playlistRepository.QueryAll()
+                .Where(p => p.Visibility == PlaylistVisibility.Public);
+        }
 
         var totalCount = await visiblePlaylistsQuery.CountAsync(ct);
-
         var playlists = await visiblePlaylistsQuery.OrderBy(p => p.CreatedAt).Select(p => new PlaylistListItemResponse
             {
                 CoverUri = p.CoverUri,
@@ -53,18 +66,20 @@ public sealed class PlaylistController(
         return Ok(new PlaylistListResponse { Items = playlists, TotalCount = totalCount });
     }
 
-    [HttpGet("{id:guid}")]
-    [ActionName("GetPlaylist")]
+    /// <summary>
+    ///     Gets playlist information
+    /// </summary>
+    [HttpGet("{id:guid}", Name = "GetPlaylist")]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(PlaylistListResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> Get(Guid id, CancellationToken ct)
     {
-        var userId = await userResolver.GetUserIdAsync();
+        var userId = await userProvider.GetUserIdAsync();
 
         var visiblePlaylistsQuery = playlistRepository.QueryAll()
             .Where(p => p.Visibility == PlaylistVisibility.Public || p.OwnerUserId == userId || p.Permissions.Any(np => np.UserId == userId && np.PlaylistId == p.Id));
 
-        var playlist = await visiblePlaylistsQuery.SingleOrDefaultAsync(p => p.Id == id, cancellationToken: ct);
+        var playlist = await visiblePlaylistsQuery.SingleOrDefaultAsync(p => p.Id == id, ct);
 
         if (playlist == default)
             return NotFound();
@@ -72,13 +87,13 @@ public sealed class PlaylistController(
         return Ok(playlist);
     }
 
-    [HttpPost]
+    [HttpPost(Name = "CreatePlaylist")]
     [Authorize]
     [ProducesResponseType(typeof(PlaylistResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Create([FromBody] CreatePlaylistRequest request)
     {
-        var userId = await userResolver.GetUserIdAsync();
+        var userId = await userProvider.GetUserIdAsync();
 
         var playlist = new Playlist
         {
@@ -94,27 +109,35 @@ public sealed class PlaylistController(
         return Ok(playlist);
     }
 
-    [HttpPut("{id:guid}/Clone")]
+    /// <summary>
+    ///     Creates clone of existing playlist
+    /// </summary>
+    [HttpPost("{id:guid}/Clone", Name = "ClonePlaylist")]
     [ProducesResponseType(typeof(PlaylistResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> Clone(Guid id, ClonePlaylistRequest request, CancellationToken cancellationToken)
+    public async Task<IActionResult> Clone(Guid id, ClonePlaylistRequest request, CancellationToken ct)
     {
-        var playlist = await playlistRepository.GetByIdOrDefaultAsync(id, cancellationToken);
+        var user = await userProvider.GetUserAsync();
+
+        if (user.FavoriteTracksPlaylistId == id)
+            return BadRequest(new { Error = "You can't create copy of liked playlist" });
+
+        var playlist = await playlistRepository.GetByIdOrDefaultAsync(id, ct);
         if (playlist == default)
             return BadRequest(new { Error = $"Can't find playlist with id {id}" });
 
-        var currentUserId = await userResolver.GetUserIdAsync();
-        var createdPlaylistNames = await playlistRepository.GetManyAsync(p => p.OwnerUserId == currentUserId, p => p.Name, cancellationToken);
+        var currentUserId = await userProvider.GetUserIdAsync();
+        var createdPlaylistNames = await playlistRepository.GetManyAsync(p => p.OwnerUserId == currentUserId, p => p.Name, ct);
 
-        if (createdPlaylistNames.Count >= 10)
+        if (createdPlaylistNames.Length >= 10)
             return BadRequest(new { Error = "Current limit of playlists is 10. Sorry." });
 
         var originalPlaylistId = playlist.Id;
 
-        if (playlist.OwnerUserId != currentUserId && !await playlistUserPermissionRepository.HasAccessForView(originalPlaylistId, currentUserId, cancellationToken))
+        if (playlist.OwnerUserId != currentUserId && !await playlistUserPermissionRepository.HasAccessForView(originalPlaylistId, currentUserId, ct))
             return BadRequest(new { Error = $"Can't find playlist with id {originalPlaylistId}" });
 
-        await unitOfWork.BeginTransactionAsync(cancellationToken);
+        await unitOfWork.BeginTransactionAsync(ct);
 
         var playlistName = playlist.Name;
         if (!string.IsNullOrWhiteSpace(request.Name?.Trim()))
@@ -130,22 +153,29 @@ public sealed class PlaylistController(
         playlist.Name = playlistName;
         playlistRepository.Save(playlist);
 
-        await unitOfWork.SaveChangesAsync(cancellationToken);
+        await unitOfWork.SaveChangesAsync(ct);
 
-        var tracks = await trackPlaylistRepository.QueryMany(tp => tp.PlaylistId == originalPlaylistId).ToArrayAsync(cancellationToken);
+        var tracks =
+            await trackPlaylistRepository
+                .QueryMany(tp => tp.PlaylistId == originalPlaylistId)
+                .Where(tp => tp.Track.Visibility == TrackVisibility.Visible || tp.Track.OwnerUserId == user.Id)
+                .AsNoTracking()
+            .ToArrayAsync(ct);
+
         foreach (var trackPlaylist in tracks)
         {
             trackPlaylist.Id = Guid.Empty;
             trackPlaylist.PlaylistId = playlist.Id;
             trackPlaylistRepository.Save(trackPlaylist);
         }
-        await unitOfWork.SaveChangesAsync(cancellationToken);
-        await unitOfWork.CommitAsync(cancellationToken);
+
+        await unitOfWork.SaveChangesAsync(ct);
+        await unitOfWork.CommitAsync(ct);
 
         return Ok(playlist);
     }
 
-    [HttpDelete("{id:guid}")]
+    [HttpDelete("{id:guid}", Name = "DeletePlaylist")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Delete(Guid id)
@@ -160,22 +190,24 @@ public sealed class PlaylistController(
         return NoContent();
     }
 
-    [HttpPost("{playlistId:guid}/Tracks")]
+    [HttpPost("{playlistId:guid}/Tracks", Name = "EditTracks")]
     [ProducesResponseType(typeof(BulkTrackActionResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> BulkTrackActions(Guid playlistId, BulkTrackActionRequest request, CancellationToken cancellationToken)
+    public async Task<IActionResult> BulkTrackActions(Guid playlistId, BulkTrackActionRequest request, CancellationToken ct)
     {
-        var playlist = await playlistRepository.GetByIdOrDefaultAsync(playlistId, cancellationToken);
+        var playlist = await playlistRepository.GetByIdOrDefaultAsync(playlistId, ct);
         if (playlist == default)
             return BadRequest(new { Error = $"Can't find playlist with id {playlistId}" });
 
-        var userId = await userResolver.GetUserIdAsync();
-        if (playlist.OwnerUserId != userId && !await playlistUserPermissionRepository.HasAccessForChange(playlist.Id, userId, cancellationToken))
+        var userId = await userProvider.GetUserIdAsync();
+        if (playlist.OwnerUserId != userId && !await playlistUserPermissionRepository.HasAccessForChange(playlist.Id, userId, ct))
             return BadRequest(new { Error = $"Can't find playlist with id {playlistId}" });
 
         var trackIds = request.Tracks.Select(t => t.Id).Distinct();
-        var tracks = (await trackRepository.GetByIdsAsync(trackIds, cancellationToken)).ToDictionary(t => t.Id);
-        var addedTracks = await trackPlaylistRepository.QueryAll().Where(tp => tp.PlaylistId == playlistId).Select(tp => tp.TrackId).ToListAsync(cancellationToken: cancellationToken);
+        var tracks = (await trackRepository.GetByIdsAsync(trackIds, ct)).ToDictionary(t => t.Id);
+        var addedTracks = await trackPlaylistRepository
+                                .QueryMany(tp => tp.PlaylistId == playlistId, tp => tp.TrackId)
+                                .ToListAsync(ct);
 
         var responseTrackItems = new List<TrackResponseItem>(request.Tracks.Length);
         foreach (var track in request.Tracks)
@@ -189,7 +221,7 @@ public sealed class PlaylistController(
             {
                 case TrackActionRequest.Delete:
                 {
-                    var trackPlaylist = await trackPlaylistRepository.SingleAsync(tp => tp.PlaylistId == playlistId && tp.TrackId == id, cancellationToken);
+                    var trackPlaylist = await trackPlaylistRepository.SingleAsync(tp => tp.PlaylistId == playlistId && tp.TrackId == id, ct);
                     trackPlaylistRepository.Delete(trackPlaylist);
                     addedTracks.Remove(id);
 
@@ -211,15 +243,14 @@ public sealed class PlaylistController(
             }
         }
 
-        await unitOfWork.SaveChangesAsync(cancellationToken);
+        await unitOfWork.SaveChangesAsync(ct);
         return Ok(new BulkTrackActionResponse { Tracks = responseTrackItems.ToArray() });
     }
 
-    [HttpPut("{playlistId:guid}")]
+    [HttpPut("{playlistId:guid}", Name = "EditPlaylist")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(typeof(UpdatePlaylistErrorResponse), StatusCodes.Status400BadRequest)]
     [Consumes(MediaTypeNames.Application.FormUrlEncoded)]
-    [Produces(MediaTypeNames.Application.FormUrlEncoded)]
     public async Task<IActionResult> Update(Guid playlistId, UpdatePlaylistRequest request, CancellationToken ct = default)
     {
         var playlist = await playlistRepository.GetByIdOrDefaultAsync(playlistId, ct);
@@ -231,7 +262,7 @@ public sealed class PlaylistController(
 
         if (request.Cover != default)
         {
-            var coverUri = await s3Service.TryUploadFileStream("covers", Guid.NewGuid().ToString(), request.Cover.OpenReadStream(), Path.GetExtension(request.Cover.FileName), ct);
+            var coverUri = await s3Service.TryUploadFileStream("covers", Path.GetFileNameWithoutExtension(request.Cover.Name), request.Cover.OpenReadStream(), Path.GetExtension(request.Cover.FileName), ct);
             playlist.CoverUri = coverUri;
 
             if (coverUri == default)

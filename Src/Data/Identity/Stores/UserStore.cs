@@ -12,17 +12,17 @@ public sealed class UserStore(ILogger<UserStore> logger, IUserRepository userRep
         logger.LogDebug("Called Dispose");
     }
 
-    public Task<string> GetUserIdAsync(User user, CancellationToken cancellationToken)
+    public Task<string> GetUserIdAsync(User user, CancellationToken ct)
     {
         return Task.FromResult(user.Id.ToString());
     }
 
-    public Task<string?> GetUserNameAsync(User user, CancellationToken cancellationToken)
+    public Task<string?> GetUserNameAsync(User user, CancellationToken ct)
     {
         return Task.FromResult(user.Email)!;
     }
 
-    public Task SetUserNameAsync(User user, string? userName, CancellationToken cancellationToken)
+    public Task SetUserNameAsync(User user, string? userName, CancellationToken ct)
     {
         if (userName == default)
             throw new ArgumentException("Can't set username to null", nameof(userName));
@@ -31,12 +31,12 @@ public sealed class UserStore(ILogger<UserStore> logger, IUserRepository userRep
         return Task.CompletedTask;
     }
 
-    public Task<string?> GetNormalizedUserNameAsync(User user, CancellationToken cancellationToken)
+    public Task<string?> GetNormalizedUserNameAsync(User user, CancellationToken ct)
     {
         return Task.FromResult(user.NormalizedUserName);
     }
 
-    public Task SetNormalizedUserNameAsync(User user, string? normalizedName, CancellationToken cancellationToken)
+    public Task SetNormalizedUserNameAsync(User user, string? normalizedName, CancellationToken ct)
     {
         if (normalizedName == default)
             throw new ArgumentException("Can't set username to null", nameof(normalizedName));
@@ -45,20 +45,20 @@ public sealed class UserStore(ILogger<UserStore> logger, IUserRepository userRep
         return Task.CompletedTask;
     }
 
-    public async Task<IdentityResult> CreateAsync(User user, CancellationToken cancellationToken)
+    public async Task<IdentityResult> CreateAsync(User user, CancellationToken ct)
     {
         try
         {
             var normalizedUserName = lookupNormalizer.NormalizeName(user.UserName);
             if (normalizedUserName != default)
             {
-                var userByNormalizedUserName = await FindByNameAsync(normalizedUserName, cancellationToken);
+                var userByNormalizedUserName = await FindByNameAsync(normalizedUserName, ct);
                 if (userByNormalizedUserName != default)
                     return IdentityResult.Failed(new IdentityErrorDescriber().DuplicateUserName(normalizedUserName));
             }
 
             var normalizedEmail = lookupNormalizer.NormalizeEmail(user.Email);
-            var userByNormalizedEmail = await FindByEmailAsync(normalizedEmail, cancellationToken);
+            var userByNormalizedEmail = await FindByEmailAsync(normalizedEmail, ct);
             if (userByNormalizedEmail != default)
                 return IdentityResult.Failed(new IdentityErrorDescriber().DuplicateEmail(user.Email));
 
@@ -66,7 +66,7 @@ public sealed class UserStore(ILogger<UserStore> logger, IUserRepository userRep
             user.NormalizedEmail = normalizedEmail;
 
             userRepository.Save(user);
-            await unitOfWork.SaveChangesAsync(cancellationToken);
+            await unitOfWork.SaveChangesAsync(ct);
 
             return IdentityResult.Success;
         }
@@ -77,7 +77,7 @@ public sealed class UserStore(ILogger<UserStore> logger, IUserRepository userRep
         }
     }
 
-    public async Task<IdentityResult> UpdateAsync(User user, CancellationToken cancellationToken)
+    public async Task<IdentityResult> UpdateAsync(User user, CancellationToken ct)
     {
         try
         {
@@ -85,7 +85,7 @@ public sealed class UserStore(ILogger<UserStore> logger, IUserRepository userRep
             user.NormalizedEmail = lookupNormalizer.NormalizeEmail(user.Email);
 
             userRepository.Save(user);
-            await unitOfWork.SaveChangesAsync(cancellationToken);
+            await unitOfWork.SaveChangesAsync(ct);
 
             return IdentityResult.Success;
         }
@@ -96,12 +96,12 @@ public sealed class UserStore(ILogger<UserStore> logger, IUserRepository userRep
         }
     }
 
-    public async Task<IdentityResult> DeleteAsync(User user, CancellationToken cancellationToken)
+    public async Task<IdentityResult> DeleteAsync(User user, CancellationToken ct)
     {
         try
         {
             userRepository.Delete(user);
-            await unitOfWork.SaveChangesAsync(cancellationToken);
+            await unitOfWork.SaveChangesAsync(ct);
 
             return IdentityResult.Success;
         }
@@ -112,72 +112,72 @@ public sealed class UserStore(ILogger<UserStore> logger, IUserRepository userRep
         }
     }
 
-    public async Task<User?> FindByIdAsync(string userId, CancellationToken cancellationToken)
+    public async Task<User?> FindByIdAsync(string userId, CancellationToken ct)
     {
-        return await userRepository.GetByIdOrDefaultAsync(Guid.Parse(userId), cancellationToken);
+        return await userRepository.GetByIdOrDefaultAsync(Guid.Parse(userId), ct);
     }
 
-    public async Task<User?> FindByNameAsync(string normalizedUserName, CancellationToken cancellationToken)
+    public async Task<User?> FindByNameAsync(string normalizedUserName, CancellationToken ct)
     {
-        return await userRepository.FindByNormalizedEmailOrDefaultAsync(normalizedUserName, cancellationToken);
+        return await userRepository.FindByNormalizedEmailOrDefaultAsync(normalizedUserName, ct);
     }
 
-    public async Task SetPasswordHashAsync(User user, string? passwordHash, CancellationToken cancellationToken)
+    public async Task SetPasswordHashAsync(User user, string? passwordHash, CancellationToken ct)
     {
         if (passwordHash == default)
             throw new ArgumentException("Password hash can't be null", nameof(passwordHash));
 
         user.HashedPassword = passwordHash;
         userRepository.Save(user);
-        await unitOfWork.SaveChangesAsync(cancellationToken);
+        await unitOfWork.SaveChangesAsync(ct);
     }
 
-    public Task<string?> GetPasswordHashAsync(User user, CancellationToken cancellationToken)
+    public Task<string?> GetPasswordHashAsync(User user, CancellationToken ct)
     {
         return Task.FromResult(user.HashedPassword)!;
     }
 
-    public Task<bool> HasPasswordAsync(User user, CancellationToken cancellationToken)
+    public Task<bool> HasPasswordAsync(User user, CancellationToken ct)
     {
         return Task.FromResult(true);
     }
 
-    public async Task SetEmailAsync(User user, string? email, CancellationToken cancellationToken)
+    public async Task SetEmailAsync(User user, string? email, CancellationToken ct)
     {
         if (email == default)
             throw new ArgumentException("Email can't be null!", nameof(email));
 
         user.Email = email;
         userRepository.Save(user);
-        await unitOfWork.SaveChangesAsync(cancellationToken);
+        await unitOfWork.SaveChangesAsync(ct);
     }
 
-    public Task<string?> GetEmailAsync(User user, CancellationToken cancellationToken)
+    public Task<string?> GetEmailAsync(User user, CancellationToken ct)
     {
         return Task.FromResult(user.Email)!;
     }
 
-    public Task<bool> GetEmailConfirmedAsync(User user, CancellationToken cancellationToken)
+    public Task<bool> GetEmailConfirmedAsync(User user, CancellationToken ct)
     {
         return Task.FromResult(true);
     }
 
-    public Task SetEmailConfirmedAsync(User user, bool confirmed, CancellationToken cancellationToken)
+    public Task SetEmailConfirmedAsync(User user, bool confirmed, CancellationToken ct)
     {
         return Task.FromResult(true);
     }
 
-    public async Task<User?> FindByEmailAsync(string normalizedEmail, CancellationToken cancellationToken)
+    public async Task<User?> FindByEmailAsync(string normalizedEmail, CancellationToken ct)
     {
-        return await userRepository.FindByNormalizedEmailOrDefaultAsync(normalizedEmail, cancellationToken);
+        return await userRepository.FindByNormalizedEmailOrDefaultAsync(normalizedEmail, ct);
     }
 
-    public Task<string?> GetNormalizedEmailAsync(User user, CancellationToken cancellationToken)
+    public Task<string?> GetNormalizedEmailAsync(User user, CancellationToken ct)
     {
         return Task.FromResult(user.NormalizedEmail)!;
     }
 
-    public Task SetNormalizedEmailAsync(User user, string? normalizedEmail, CancellationToken cancellationToken)
+    public Task SetNormalizedEmailAsync(User user, string? normalizedEmail, CancellationToken ct)
     {
         if (normalizedEmail == default)
             throw new ArgumentException("Email can't be null!", nameof(normalizedEmail));

@@ -1,6 +1,5 @@
 ﻿// ReSharper disable CheckNamespace
 using System.ComponentModel.DataAnnotations;
-using Microsoft.AspNetCore.Mvc;
 
 namespace MusicPlayerBackend.TransferObjects.Playlist;
 
@@ -86,17 +85,13 @@ public sealed class CreatePlaylistRequest
 
 public sealed class UpdatePlaylistRequest
 {
-    [FromBody, FromForm]
     public string? Name { get; set; }
 
-    [FromBody, FromForm]
     public VisibilityLevel? Visibility { get; set; }
 
     /// Removes existing cover. Provided cover with true value produce error.
-    [FromQuery]
     public bool RemoveCover { get; set; }
 
-    [FromForm]
     public IFormFile? Cover { get; set; }
 }
 
