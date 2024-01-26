@@ -18,10 +18,17 @@ namespace MusicPlayerBackend.Controllers;
 [ProducesResponseType(typeof(UnauthorizedResponse), StatusCodes.Status401Unauthorized)]
 [Authorize]
 [Route("[controller]")]
-public sealed class PlaylistController(IPlaylistRepository playlistRepository, ITrackRepository trackRepository, ITrackPlaylistRepository trackPlaylistRepository,
-    IPlaylistUserPermissionRepository playlistUserPermissionRepository, IUnitOfWork unitOfWork, IS3Service s3Service, IUserResolver userResolver) : ControllerBase
+public sealed class PlaylistController(
+    IPlaylistRepository playlistRepository,
+    ITrackRepository trackRepository,
+    ITrackPlaylistRepository trackPlaylistRepository,
+    IPlaylistUserPermissionRepository playlistUserPermissionRepository,
+    IUnitOfWork unitOfWork,
+    IS3Service s3Service,
+    IUserResolver userResolver) : ControllerBase
 {
     [HttpGet]
+    [ActionName("List")]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(PlaylistListResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> List([FromQuery] PlaylistListRequest request, CancellationToken ct)
@@ -29,7 +36,10 @@ public sealed class PlaylistController(IPlaylistRepository playlistRepository, I
         var userId = await userResolver.GetUserIdAsync();
 
         var visiblePlaylistsQuery = playlistRepository.QueryAll()
-            .Where(p => p.Visibility == PlaylistVisibility.Public || p.OwnerUserId == userId || p.Permissions.Any(np => np.UserId == userId && np.PlaylistId == p.Id));
+            .Where(p =>
+                p.Visibility == PlaylistVisibility.Public
+                || p.OwnerUserId == userId
+                || p.Permissions.Any(np => np.UserId == userId && np.PlaylistId == p.Id));
 
         var totalCount = await visiblePlaylistsQuery.CountAsync(ct);
 
@@ -38,9 +48,28 @@ public sealed class PlaylistController(IPlaylistRepository playlistRepository, I
                 CoverUri = p.CoverUri,
                 Id = p.Id,
                 Name = p.Name
-            }).Skip(request.PageSize * request.PageSize).Take(request.PageSize).ToArrayAsync(ct);
+            }).Skip(request.PageSize * request.Page).Take(request.PageSize).ToArrayAsync(ct);
 
         return Ok(new PlaylistListResponse { Items = playlists, TotalCount = totalCount });
+    }
+
+    [HttpGet("{id:guid}")]
+    [ActionName("GetPlaylist")]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(PlaylistListResponse), StatusCodes.Status200OK)]
+    public async Task<IActionResult> Get(Guid id, CancellationToken ct)
+    {
+        var userId = await userResolver.GetUserIdAsync();
+
+        var visiblePlaylistsQuery = playlistRepository.QueryAll()
+            .Where(p => p.Visibility == PlaylistVisibility.Public || p.OwnerUserId == userId || p.Permissions.Any(np => np.UserId == userId && np.PlaylistId == p.Id));
+
+        var playlist = await visiblePlaylistsQuery.SingleOrDefaultAsync(p => p.Id == id, cancellationToken: ct);
+
+        if (playlist == default)
+            return NotFound();
+
+        return Ok(playlist);
     }
 
     [HttpPost]
