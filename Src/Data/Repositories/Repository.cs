@@ -65,10 +65,8 @@ public abstract class EntityRepositoryBase<TKey, TEntity>(AppDbContext dbContext
 
     public void Save(TEntity entity)
     {
-        if (entity.IsNew() && entity.CreatedAt == DateTimeOffset.MinValue)
-        {
+        if (entity.IsNew() && entity.CreatedAt == default)
             entity.CreatedAt = DateTimeOffset.UtcNow;
-        }
         else if (!entity.IsNew())
         {
             var entityEntry = DbContext.Entry(entity);

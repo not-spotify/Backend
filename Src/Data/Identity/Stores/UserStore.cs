@@ -22,14 +22,13 @@ public sealed class UserStore(ILogger<UserStore> logger, IUserRepository userRep
         return Task.FromResult(user.Email)!;
     }
 
-    public async Task SetUserNameAsync(User user, string? userName, CancellationToken cancellationToken)
+    public Task SetUserNameAsync(User user, string? userName, CancellationToken cancellationToken)
     {
         if (userName == default)
             throw new ArgumentException("Can't set username to null", nameof(userName));
 
         user.Email = userName;
-        userRepository.Save(user);
-        await unitOfWork.SaveChangesAsync(cancellationToken);
+        return Task.CompletedTask;
     }
 
     public Task<string?> GetNormalizedUserNameAsync(User user, CancellationToken cancellationToken)
@@ -37,25 +36,38 @@ public sealed class UserStore(ILogger<UserStore> logger, IUserRepository userRep
         return Task.FromResult(user.NormalizedUserName);
     }
 
-    public async Task SetNormalizedUserNameAsync(User user, string? normalizedName, CancellationToken cancellationToken)
+    public Task SetNormalizedUserNameAsync(User user, string? normalizedName, CancellationToken cancellationToken)
     {
         if (normalizedName == default)
             throw new ArgumentException("Can't set username to null", nameof(normalizedName));
 
         user.NormalizedEmail = normalizedName;
-        userRepository.Save(user);
-        await unitOfWork.SaveChangesAsync(cancellationToken);
+        return Task.CompletedTask;
     }
 
     public async Task<IdentityResult> CreateAsync(User user, CancellationToken cancellationToken)
     {
         try
         {
-            user.NormalizedUserName = lookupNormalizer.NormalizeName(user.UserName);
-            user.NormalizedEmail = lookupNormalizer.NormalizeEmail(user.Email);
+            var normalizedUserName = lookupNormalizer.NormalizeName(user.UserName);
+            if (normalizedUserName != default)
+            {
+                var userByNormalizedUserName = await FindByNameAsync(normalizedUserName, cancellationToken);
+                if (userByNormalizedUserName != default)
+                    return IdentityResult.Failed(new IdentityErrorDescriber().DuplicateUserName(normalizedUserName));
+            }
+
+            var normalizedEmail = lookupNormalizer.NormalizeEmail(user.Email);
+            var userByNormalizedEmail = await FindByEmailAsync(normalizedEmail, cancellationToken);
+            if (userByNormalizedEmail != default)
+                return IdentityResult.Failed(new IdentityErrorDescriber().DuplicateEmail(user.Email));
+
+            user.NormalizedUserName = normalizedUserName;
+            user.NormalizedEmail = normalizedEmail;
 
             userRepository.Save(user);
             await unitOfWork.SaveChangesAsync(cancellationToken);
+
             return IdentityResult.Success;
         }
         catch (Exception e)
@@ -165,13 +177,12 @@ public sealed class UserStore(ILogger<UserStore> logger, IUserRepository userRep
         return Task.FromResult(user.NormalizedEmail)!;
     }
 
-    public async Task SetNormalizedEmailAsync(User user, string? normalizedEmail, CancellationToken cancellationToken)
+    public Task SetNormalizedEmailAsync(User user, string? normalizedEmail, CancellationToken cancellationToken)
     {
         if (normalizedEmail == default)
             throw new ArgumentException("Email can't be null!", nameof(normalizedEmail));
 
         user.NormalizedEmail = normalizedEmail;
-        userRepository.Save(user);
-        await unitOfWork.SaveChangesAsync(cancellationToken);
+        return Task.CompletedTask;
     }
 }
