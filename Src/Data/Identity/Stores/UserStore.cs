@@ -5,7 +5,12 @@ using Microsoft.AspNetCore.Identity;
 
 namespace MusicPlayerBackend.Data.Identity.Stores;
 
-public sealed class UserStore(ILogger<UserStore> logger, IUserRepository userRepository, ILookupNormalizer lookupNormalizer, IUnitOfWork unitOfWork) : IUserPasswordStore<User>, IUserEmailStore<User>
+public sealed class UserStore(
+    ILogger<UserStore> logger,
+    IUserRepository userRepository,
+    IUnitOfWork unitOfWork,
+    ILookupNormalizer lookupNormalizer,
+    IPasswordHasher<User> passwordHasher) : IUserPasswordStore<User>, IUserEmailStore<User>
 {
     public void Dispose()
     {
@@ -64,8 +69,6 @@ public sealed class UserStore(ILogger<UserStore> logger, IUserRepository userRep
 
             user.NormalizedUserName = normalizedUserName;
             user.NormalizedEmail = normalizedEmail;
-
-            userRepository.Save(user);
             await unitOfWork.SaveChangesAsync(ct);
 
             return IdentityResult.Success;
@@ -84,31 +87,26 @@ public sealed class UserStore(ILogger<UserStore> logger, IUserRepository userRep
             user.NormalizedUserName = lookupNormalizer.NormalizeName(user.UserName);
             user.NormalizedEmail = lookupNormalizer.NormalizeEmail(user.Email);
 
-            userRepository.Save(user);
-            await unitOfWork.SaveChangesAsync(ct);
-
-            return IdentityResult.Success;
+            return await Task.FromResult(IdentityResult.Success);
         }
         catch (Exception e)
         {
             logger.LogError(e, "Failed to update user: {user}", user);
-            return IdentityResult.Failed();
+            return await Task.FromResult(IdentityResult.Failed());
         }
     }
 
-    public async Task<IdentityResult> DeleteAsync(User user, CancellationToken ct)
+    public Task<IdentityResult> DeleteAsync(User user, CancellationToken ct)
     {
         try
         {
             userRepository.Delete(user);
-            await unitOfWork.SaveChangesAsync(ct);
-
-            return IdentityResult.Success;
+            return Task.FromResult(IdentityResult.Success);
         }
         catch (Exception e)
         {
             logger.LogError(e, "Failed to delete user: {user}", user);
-            return IdentityResult.Failed();
+            return Task.FromResult(IdentityResult.Failed());
         }
     }
 
@@ -122,14 +120,13 @@ public sealed class UserStore(ILogger<UserStore> logger, IUserRepository userRep
         return await userRepository.FindByNormalizedEmailOrDefaultAsync(normalizedUserName, ct);
     }
 
-    public async Task SetPasswordHashAsync(User user, string? passwordHash, CancellationToken ct)
+    public Task SetPasswordHashAsync(User user, string? passwordHash, CancellationToken ct)
     {
         if (passwordHash == default)
             throw new ArgumentException("Password hash can't be null", nameof(passwordHash));
 
-        user.HashedPassword = passwordHash;
-        userRepository.Save(user);
-        await unitOfWork.SaveChangesAsync(ct);
+        user.HashedPassword = passwordHasher.HashPassword(user, passwordHash);
+        return Task.CompletedTask;
     }
 
     public Task<string?> GetPasswordHashAsync(User user, CancellationToken ct)
@@ -139,17 +136,16 @@ public sealed class UserStore(ILogger<UserStore> logger, IUserRepository userRep
 
     public Task<bool> HasPasswordAsync(User user, CancellationToken ct)
     {
-        return Task.FromResult(true);
+        return Task.FromResult(!string.IsNullOrEmpty(user.HashedPassword));
     }
 
-    public async Task SetEmailAsync(User user, string? email, CancellationToken ct)
+    public Task SetEmailAsync(User user, string? email, CancellationToken ct)
     {
         if (email == default)
             throw new ArgumentException("Email can't be null!", nameof(email));
 
         user.Email = email;
-        userRepository.Save(user);
-        await unitOfWork.SaveChangesAsync(ct);
+        return Task.CompletedTask;
     }
 
     public Task<string?> GetEmailAsync(User user, CancellationToken ct)

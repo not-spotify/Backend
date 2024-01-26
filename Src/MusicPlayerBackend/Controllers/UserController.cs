@@ -26,6 +26,7 @@ public sealed class UserController(ILogger<UserController> logger,
     SignInManager<User> signInManager,
     IUserProvider userProvider,
     IRefreshTokenRepository refreshTokenRepository,
+    IPlaylistRepository playlistRepository,
     IUserRepository userRepository,
     IUnitOfWork unitOfWork,
     IOptions<TokenConfig> tokenConfig) : ControllerBase
@@ -76,13 +77,29 @@ public sealed class UserController(ILogger<UserController> logger,
         {
             UserName = request.UserName,
             Email = request.Email,
-            HashedPassword = request.Password
         };
-
-        var result = await userManager.CreateAsync(user);
-
+        var result = await userManager.CreateAsync(user, password: request.Password);
         if (result != IdentityResult.Success)
             return BadRequest(new { result.Errors });
+
+        await unitOfWork.BeginTransactionAsync();
+
+        userRepository.Save(user);
+        await unitOfWork.SaveChangesAsync();
+
+        var playlist = new Playlist
+        {
+            Visibility = PlaylistVisibility.Private,
+            Name = request.UserName + "'s Favorites",
+            OwnerUserId = user.Id
+        };
+        playlistRepository.Save(playlist);
+        await unitOfWork.SaveChangesAsync();
+
+        user.FavoritePlaylistId = playlist.Id;
+        await unitOfWork.SaveChangesAsync();
+
+        await unitOfWork.CommitAsync();
 
         return Ok(new RegisterResponse { Id = user.Id });
     }

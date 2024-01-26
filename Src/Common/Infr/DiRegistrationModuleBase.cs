@@ -13,8 +13,5 @@ public abstract class DiRegistrationModuleBase(Func<IRegistrationBuilder<object,
         }
     }
 
-    protected virtual IEnumerable<IRegistrationBuilder<object, object, object>> RegisterTypesWithDefaultLifetimeScope(ContainerBuilder builder)
-    {
-        return Enumerable.Empty<IRegistrationBuilder<object, object, object>>();
-    }
+    protected abstract IEnumerable<IRegistrationBuilder<object, object, object>> RegisterTypesWithDefaultLifetimeScope(ContainerBuilder builder);
 }

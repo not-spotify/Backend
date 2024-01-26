@@ -13,7 +13,6 @@ public sealed class AppDbContext(DbContextOptions options) : DbContext(options)
     public DbSet<Track> Tracks { get; set; } = null!;
     public DbSet<AlbumTrack> AlbumTracks { get; set; } = null!;
     public DbSet<User> Users { get; set; } = null!;
-    public DbSet<LikedTrack> LikedTracks { get; set; } = null!;
     public DbSet<RefreshToken> RefreshTokens { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -21,10 +20,8 @@ public sealed class AppDbContext(DbContextOptions options) : DbContext(options)
         modelBuilder.Entity<User>().HasIndex(s => s.NormalizedUserName).IsUnique();
         modelBuilder.Entity<User>().HasIndex(s => s.NormalizedEmail).IsUnique();
 
-        modelBuilder
-            .Entity<User>()
-            .HasOne(a => a.FavoritePlaylist)
-            .WithOne(a => a.OwnerUser)
+        modelBuilder.Entity<User>()
+            .HasOne(a => a.FavoritePlaylist).WithOne(a => a.OwnerUser)
             .HasForeignKey<Playlist>(c => c.OwnerUserId);
     }
 }

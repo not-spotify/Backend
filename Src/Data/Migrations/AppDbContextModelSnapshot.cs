@@ -69,33 +69,6 @@ namespace MusicPlayerBackend.Data.Migrations
                     b.ToTable("AlbumTracks");
                 });
 
-            modelBuilder.Entity("MusicPlayerBackend.Data.Entities.LikedTrack", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("TrackId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("TrackId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("LikedTracks");
-                });
-
             modelBuilder.Entity("MusicPlayerBackend.Data.Entities.Playlist", b =>
                 {
                     b.Property<Guid>("Id")
@@ -290,25 +263,6 @@ namespace MusicPlayerBackend.Data.Migrations
                     b.Navigation("Album");
 
                     b.Navigation("Track");
-                });
-
-            modelBuilder.Entity("MusicPlayerBackend.Data.Entities.LikedTrack", b =>
-                {
-                    b.HasOne("MusicPlayerBackend.Data.Entities.Track", "Track")
-                        .WithMany()
-                        .HasForeignKey("TrackId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("MusicPlayerBackend.Data.Entities.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Track");
-
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("MusicPlayerBackend.Data.Entities.Playlist", b =>

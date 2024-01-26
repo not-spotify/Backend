@@ -27,6 +27,10 @@ public sealed class Startup(IConfiguration configuration)
 
     public void ConfigureServices(IServiceCollection services)
     {
+        services.Configure<AppConfig>(configuration);
+        services.Configure<Common.Minio>(configuration.GetSection(nameof(Minio)));
+        services.Configure<TokenConfig>(configuration.GetSection(nameof(TokenConfig)));
+
         services.AddSerilog()
             .AddHttpContextAccessor();
 
@@ -40,6 +44,17 @@ public sealed class Startup(IConfiguration configuration)
                 .WithEndpoint(minioConfig.Endpoint, minioConfig.Port)
                 .WithCredentials(minioConfig.AccessKey, minioConfig.SecretKey);
         });
+
+        services.AddScoped<AppDbContext>(c =>
+        {
+            var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
+            optionsBuilder.UseNpgsql(c.GetRequiredService<IConfiguration>().GetConnectionString(AppDbContext.ConnectionStringName),
+                b => b.MigrationsAssembly(typeof(AppDbContext).Assembly.GetName().Name));
+
+
+            return new AppDbContext(optionsBuilder.Options);
+        });
+        services.AddScoped<IUnitOfWork, UnitOfWork>();
 
         services
             .AddCustomIdentity()

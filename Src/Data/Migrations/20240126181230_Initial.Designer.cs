@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace MusicPlayerBackend.Data.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20240126023702_FixedUserUniqueEmailAndUserName")]
-    partial class FixedUserUniqueEmailAndUserName
+    [Migration("20240126181230_Initial")]
+    partial class Initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -72,33 +72,6 @@ namespace MusicPlayerBackend.Data.Migrations
                     b.ToTable("AlbumTracks");
                 });
 
-            modelBuilder.Entity("MusicPlayerBackend.Data.Entities.LikedTrack", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("TrackId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("TrackId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("LikedTracks");
-                });
-
             modelBuilder.Entity("MusicPlayerBackend.Data.Entities.Playlist", b =>
                 {
                     b.Property<Guid>("Id")
@@ -126,7 +99,8 @@ namespace MusicPlayerBackend.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("OwnerUserId");
+                    b.HasIndex("OwnerUserId")
+                        .IsUnique();
 
                     b.ToTable("Playlists");
                 });
@@ -244,6 +218,9 @@ namespace MusicPlayerBackend.Data.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<Guid>("FavoritePlaylistId")
+                        .HasColumnType("uuid");
+
                     b.Property<string>("HashedPassword")
                         .IsRequired()
                         .HasColumnType("text");
@@ -291,30 +268,11 @@ namespace MusicPlayerBackend.Data.Migrations
                     b.Navigation("Track");
                 });
 
-            modelBuilder.Entity("MusicPlayerBackend.Data.Entities.LikedTrack", b =>
-                {
-                    b.HasOne("MusicPlayerBackend.Data.Entities.Track", "Track")
-                        .WithMany()
-                        .HasForeignKey("TrackId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("MusicPlayerBackend.Data.Entities.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Track");
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("MusicPlayerBackend.Data.Entities.Playlist", b =>
                 {
                     b.HasOne("MusicPlayerBackend.Data.Entities.User", "OwnerUser")
-                        .WithMany()
-                        .HasForeignKey("OwnerUserId")
+                        .WithOne("FavoritePlaylist")
+                        .HasForeignKey("MusicPlayerBackend.Data.Entities.Playlist", "OwnerUserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -374,6 +332,9 @@ namespace MusicPlayerBackend.Data.Migrations
 
             modelBuilder.Entity("MusicPlayerBackend.Data.Entities.User", b =>
                 {
+                    b.Navigation("FavoritePlaylist")
+                        .IsRequired();
+
                     b.Navigation("Permissions");
                 });
 #pragma warning restore 612, 618
