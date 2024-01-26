@@ -1,11 +1,13 @@
-﻿// ReSharper disable CheckNamespace
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
+using MusicPlayerBackend.TransferObjects.Track;
 
+// ReSharper disable CheckNamespace
 namespace MusicPlayerBackend.TransferObjects.Playlist;
 
 public enum TrackActionRequest
 {
-    Add, Delete
+    Add = 0,
+    Delete = 1
 }
 
 public enum TrackActionResponse
@@ -99,3 +101,7 @@ public sealed class UpdatePlaylistErrorResponse
 {
     public string Error { get; set; } = null!;
 }
+
+public sealed class TrackInPlaylistListItem : TrackListItem;
+
+public sealed class TrackInPlaylistListResponse : ItemsResponseAbstract<TrackInPlaylistListItem>;

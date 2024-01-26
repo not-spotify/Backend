@@ -7,8 +7,10 @@ public sealed record User : EntityBase
     public string Email { get; set; } = null!;
     public string NormalizedEmail { get; set; } = null!;
     public string HashedPassword { get; set; } = null!;
-    public Guid FavoriteTracksPlaylistId { get; set; }
 
-    public Playlist LickedTracksPlaylist { get; set; } = null!;
+    public Guid FavoritePlaylistId { get; set; }
+
+    public Playlist FavoritePlaylist { get; set; } = null!;
+
     public IEnumerable<PlaylistUserPermission> Permissions { get; set; } = null!;
 }

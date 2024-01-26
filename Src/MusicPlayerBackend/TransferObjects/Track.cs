@@ -5,6 +5,8 @@ namespace MusicPlayerBackend.TransferObjects.Track;
 
 public sealed class PlaylistListRequest : PaginationRequestBase;
 
+public sealed class GetTracksInPlaylistRequest : PaginationRequestBase;
+
 public enum TrackVisibility
 {
     Hidden = 0,
@@ -13,8 +15,12 @@ public enum TrackVisibility
 
 public sealed class TrackUpdateRequest
 {
-    public TrackVisibility Visibility { get; set; }
-    public string? CoverUri { get; set; }
+    public TrackVisibility? Visibility { get; set; }
+
+    /// Removes existing cover. Provided cover with true value produce error.
+    public bool RemoveCover { get; set; }
+
+    public IFormFile? Cover { get; set; }
     public string? Name { get; set; }
 }
 
@@ -34,13 +40,28 @@ public sealed class TrackCreateRequest
 public class TrackListItem
 {
     public string? CoverUri { get; set; }
-    public virtual string? TrackUri { get; set; }
+
+    /// Track hidden or deleted. TrackUri will be empty if false.
+    public bool IsAvailable { get; set; }
+
+    private string? _trackUri;
+
+    /// Empty if IsAvailable equal false
+    public string? TrackUri
+    {
+        get => IsAvailable ? _trackUri : null;
+        set => _trackUri = value;
+    }
+
     public TrackVisibility Visibility { get; set; }
 
     public string Name { get; set; } = null!;
     public string Author { get; set; } = null!;
-
-    public Guid OwnerUserId { get; set; }
 }
 
 public sealed class TrackListResponse : ItemsResponseAbstract<TrackListItem>;
+
+public sealed class UpdateTrackErrorResponse
+{
+    public string Error { get; set; } = null!;
+}

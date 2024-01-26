@@ -20,5 +20,11 @@ public sealed class AppDbContext(DbContextOptions options) : DbContext(options)
     {
         modelBuilder.Entity<User>().HasIndex(s => s.NormalizedUserName).IsUnique();
         modelBuilder.Entity<User>().HasIndex(s => s.NormalizedEmail).IsUnique();
+
+        modelBuilder
+            .Entity<User>()
+            .HasOne(a => a.FavoritePlaylist)
+            .WithOne(a => a.OwnerUser)
+            .HasForeignKey<Playlist>(c => c.OwnerUserId);
     }
 }
