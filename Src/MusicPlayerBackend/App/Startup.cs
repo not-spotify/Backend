@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System.IdentityModel.Tokens.Jwt;
+using System.Reflection;
 using System.Text;
 using System.Text.Json.Serialization;
 using Autofac;
@@ -10,6 +11,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Minio;
+using Minio.DataModel.Args;
 using MusicPlayerBackend.App.Middlewares;
 using MusicPlayerBackend.Common;
 using MusicPlayerBackend.Data;
@@ -35,6 +37,18 @@ public sealed class Startup(IConfiguration configuration)
         services.Configure<TokenConfig>(configuration.GetSection(nameof(TokenConfig)));
         services.AddHttpContextAccessor();
 
+        services.AddMinio(o =>
+        {
+            var minioConfig = configuration.GetRequiredSection("Minio").Get<Common.Minio>();
+            if (minioConfig == null)
+                throw new Exception();
+
+            o
+                .WithSSL(false)
+                .WithEndpoint(minioConfig.Endpoint, minioConfig.Port)
+                .WithCredentials(minioConfig.AccessKey, minioConfig.SecretKey);
+        });
+
         services.AddTransient<IdentityErrorDescriber>();
         services.AddTransient<ILookupNormalizer, LookupNormalizer>();
         services.AddTransient<IPasswordHasher<User>, PasswordHasher>();
@@ -44,8 +58,6 @@ public sealed class Startup(IConfiguration configuration)
         services.AddTransient<IUserValidator<User>, UserValidator>();
         services.AddTransient<UserManager<User>, UserManager>();
         services.AddTransient<SignInManager<User>, SignInManager>();
-
-        services.AddTransient<IMinioClient, MinioClient>();
         services.AddTransient<IS3Service, S3Service>();
         services.AddTransient<IUserResolver, UserResolver>();
 
@@ -53,7 +65,8 @@ public sealed class Startup(IConfiguration configuration)
             .AddControllers()
             .AddControllersAsServices()
             .AddJsonOptions(opts =>
-                opts.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
+                opts.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()))
+            .AddXmlSerializerFormatters();
 
         services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         .AddJwtBearer(options =>
@@ -75,10 +88,12 @@ public sealed class Startup(IConfiguration configuration)
         {
             c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
             {
+                Type = SecuritySchemeType.Http,
+                BearerFormat = JwtConstants.TokenType,
                 In = ParameterLocation.Header,
-                Description = "Please insert JWT with Bearer into field",
+                Scheme = "Bearer",
                 Name = "Authorization",
-                Type = SecuritySchemeType.ApiKey
+                Description = "Please insert JWT into field"
             });
 
             c.AddSecurityRequirement(new OpenApiSecurityRequirement
@@ -101,8 +116,14 @@ public sealed class Startup(IConfiguration configuration)
         });
     }
 
-    public void Configure(IApplicationBuilder app, IWebHostEnvironment env, AppDbContext ctx, IOptions<AppConfig> appConfig)
+    public void Configure(IApplicationBuilder app, IWebHostEnvironment env, AppDbContext ctx, IOptions<AppConfig> appConfig, IMinioClient minioClient)
     {
+        if (!minioClient.BucketExistsAsync(new BucketExistsArgs().WithBucket("tracks")).ConfigureAwait(false).GetAwaiter().GetResult())
+            minioClient.MakeBucketAsync(new MakeBucketArgs().WithBucket("tracks")).ConfigureAwait(false).GetAwaiter().GetResult();
+
+        if (!minioClient.BucketExistsAsync(new BucketExistsArgs().WithBucket("covers")).ConfigureAwait(false).GetAwaiter().GetResult())
+            minioClient.MakeBucketAsync(new MakeBucketArgs().WithBucket("covers")).ConfigureAwait(false).GetAwaiter().GetResult();
+
         if (appConfig.Value.MigrateDatabaseOnStartup)
             ctx.Database.Migrate();
 
@@ -113,7 +134,7 @@ public sealed class Startup(IConfiguration configuration)
             app.UseSwaggerUI();
         }
 
-        app.UseMiddleware<UnauthorizedMiddleware>();
+        // app.UseMiddleware<UnauthorizedMiddleware>();
         app.UseAuthentication();
         app.UseRouting();
         app.UseAuthorization();

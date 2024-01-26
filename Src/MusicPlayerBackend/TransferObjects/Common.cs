@@ -9,8 +9,8 @@ public sealed class UnauthorizedResponse
 
 public abstract class PaginationRequestBase
 {
-    public int Page { get; set; }
+    public int Page { get; set; } = 0;
 
     [Range(5, 20)]
-    public int PageSize { get; set; }
+    public int PageSize { get; set; } = 10;
 }

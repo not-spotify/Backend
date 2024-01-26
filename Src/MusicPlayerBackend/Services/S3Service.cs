@@ -1,4 +1,5 @@
-﻿using Minio;
+﻿using Microsoft.AspNetCore.StaticFiles;
+using Minio;
 using Minio.DataModel.Args;
 
 namespace MusicPlayerBackend.Services;
@@ -6,7 +7,7 @@ namespace MusicPlayerBackend.Services;
 public interface IS3Service
 {
     ValueTask<string?> TryGetFileUri(string bucket, string key);
-    ValueTask<string?> TryUploadFileStream(string bucket, string key, Stream stream, CancellationToken ct = default);
+    ValueTask<string?> TryUploadFileStream(string bucket, string key, Stream stream, string extension, CancellationToken ct = default);
 }
 
 public sealed class S3Service(ILogger<S3Service> logger, IMinioClient minioClient) : IS3Service
@@ -21,14 +22,21 @@ public sealed class S3Service(ILogger<S3Service> logger, IMinioClient minioClien
         return await minioClient.PresignedGetObjectAsync(args);
     }
 
-    public async ValueTask<string?> TryUploadFileStream(string bucket, string key, Stream stream, CancellationToken ct = default)
+    public async ValueTask<string?> TryUploadFileStream(string bucket, string key, Stream stream, string extension, CancellationToken ct = default)
     {
         try
         {
+            using var ms = new MemoryStream();
+            await stream.CopyToAsync(ms, ct);
+            ms.Position = 0;
+            var audioName = key + extension;
+
             var args = new PutObjectArgs()
                 .WithBucket(bucket)
-                .WithObject(key)
-                .WithStreamData(stream);
+                .WithObject(audioName)
+                .WithContentType(new FileExtensionContentTypeProvider().Mappings[extension])
+                .WithObjectSize(ms.Capacity)
+                .WithStreamData(ms);
 
             await minioClient.PutObjectAsync(args, ct);
             return await TryGetFileUri(bucket, key);

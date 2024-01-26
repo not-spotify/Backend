@@ -47,19 +47,6 @@ services:
     - miniosecret
     extra_hosts:
       - "host.docker.internal:host-gateway"
-  
-  minio_default_bucket:
-    image: minio/mc
-    depends_on:
-      - minio
-    entrypoint: >
-      /bin/sh -c "
-      /usr/bin/mc config host add myminio http://minio:9000 minio_access_key minio_secret_key;
-      /usr/bin/mc rm -r --force myminio/devbucket;
-      /usr/bin/mc mb myminio/devbucket;
-      /usr/bin/mc anonymous download myminio/devbucket;
-      exit 0;
-      "
 
 volumes:
     postgres:

@@ -1,5 +1,6 @@
 ﻿// ReSharper disable CheckNamespace
 using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Mvc;
 
 namespace MusicPlayerBackend.TransferObjects.Playlist;
 
@@ -27,12 +28,12 @@ public sealed class TrackResponseItem
 
 public sealed class BulkTrackActionRequest
 {
-    public required IEnumerable<TrackRequestItem> Tracks { get; set; }
+    public required TrackRequestItem[] Tracks { get; set; }
 }
 
 public sealed class BulkTrackActionResponse
 {
-    public required IEnumerable<TrackResponseItem> Tracks { get; set; }
+    public required TrackResponseItem[] Tracks { get; set; }
 }
 
 public sealed class ClonePlaylistRequest
@@ -48,7 +49,7 @@ public sealed class PlaylistResponse
     public required Guid Id { get; set; }
     public required string Name { get; set; }
     public string? CoverUri { get; set; }
-    public IEnumerable<Guid>? TrackIds { get; set; }
+    public Guid[]? TrackIds { get; set; }
 }
 
 public enum VisibilityLevel
@@ -62,7 +63,7 @@ public sealed class PlaylistListRequest : PaginationRequestBase;
 public sealed class PlaylistListResponse
 {
     [Required]
-    public IEnumerable<PlaylistListItemResponse> Items { get; set; } = null!;
+    public PlaylistListItemResponse[] Items { get; set; } = null!;
 
     public int TotalCount { get; set; }
 }
@@ -81,4 +82,25 @@ public sealed class CreatePlaylistRequest
     public string Name { get; set; } = null!;
 
     public VisibilityLevel? Visibility { get; set; } = VisibilityLevel.Private;
+}
+
+public sealed class UpdatePlaylistRequest
+{
+    [FromBody, FromForm]
+    public string? Name { get; set; }
+
+    [FromBody, FromForm]
+    public VisibilityLevel? Visibility { get; set; }
+
+    /// Removes existing cover. Provided cover with true value produce error.
+    [FromQuery]
+    public bool RemoveCover { get; set; }
+
+    [FromForm]
+    public IFormFile? Cover { get; set; }
+}
+
+public sealed class UpdatePlaylistErrorResponse
+{
+    public string Error { get; set; } = null!;
 }

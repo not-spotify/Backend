@@ -145,17 +145,6 @@ public sealed class PlaylistController(
         return Ok(playlist);
     }
 
-    [HttpPut("{id:guid}")]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
-    public async Task<IActionResult> Update(Guid id)
-    {
-        var playlist = await playlistRepository.GetByIdOrDefaultAsync(id);
-        if (playlist == default)
-            return BadRequest(new { Error = $"Can't find playlist with id {id}" });
-
-        return NoContent();
-    }
-
     [HttpDelete("{id:guid}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -188,7 +177,7 @@ public sealed class PlaylistController(
         var tracks = (await trackRepository.GetByIdsAsync(trackIds, cancellationToken)).ToDictionary(t => t.Id);
         var addedTracks = await trackPlaylistRepository.QueryAll().Where(tp => tp.PlaylistId == playlistId).Select(tp => tp.TrackId).ToListAsync(cancellationToken: cancellationToken);
 
-        var responseTrackItems = new List<TrackResponseItem>(request.Tracks.Count());
+        var responseTrackItems = new List<TrackResponseItem>(request.Tracks.Length);
         foreach (var track in request.Tracks)
         {
             var id = track.Id;
@@ -223,23 +212,35 @@ public sealed class PlaylistController(
         }
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
-        return Ok(new BulkTrackActionResponse { Tracks = responseTrackItems });
+        return Ok(new BulkTrackActionResponse { Tracks = responseTrackItems.ToArray() });
     }
 
-    [HttpPut("{playlistId:guid}/Cover")]
+    [HttpPut("{playlistId:guid}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> UpdateCover(Guid playlistId, IFormFile cover, CancellationToken ct)
+    [ProducesResponseType(typeof(UpdatePlaylistErrorResponse), StatusCodes.Status400BadRequest)]
+    [Consumes(MediaTypeNames.Application.FormUrlEncoded)]
+    [Produces(MediaTypeNames.Application.FormUrlEncoded)]
+    public async Task<IActionResult> Update(Guid playlistId, UpdatePlaylistRequest request, CancellationToken ct = default)
     {
         var playlist = await playlistRepository.GetByIdOrDefaultAsync(playlistId, ct);
         if (playlist == default)
-            return BadRequest();
+            return BadRequest(new UpdatePlaylistErrorResponse { Error = "Can't find playlist" });
 
-        var coverUri = await s3Service.TryUploadFileStream("covers", Guid.NewGuid().ToString(), cover.OpenReadStream(), ct);
-        if (coverUri == default)
-            return BadRequest();
+        if (request is { RemoveCover: true, Cover: not null })
+            return BadRequest(new UpdatePlaylistErrorResponse { Error = $"{nameof(request.RemoveCover)} is true" });
 
-        playlist.CoverUri = coverUri;
+        if (request.Cover != default)
+        {
+            var coverUri = await s3Service.TryUploadFileStream("covers", Guid.NewGuid().ToString(), request.Cover.OpenReadStream(), Path.GetExtension(request.Cover.FileName), ct);
+            playlist.CoverUri = coverUri;
+
+            if (coverUri == default)
+                return BadRequest(new UpdatePlaylistErrorResponse { Error = "Can't update cover" });
+        }
+
+        if (request.Name != default)
+            playlist.Name = request.Name;
+
         playlistRepository.Save(playlist);
         await unitOfWork.SaveChangesAsync(ct);
 
