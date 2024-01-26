@@ -5,6 +5,7 @@ using System.Text.Json.Serialization;
 using Autofac;
 using Autofac.Builder;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
@@ -30,6 +31,7 @@ public sealed class Startup(IConfiguration configuration)
         services.Configure<AppConfig>(configuration);
         services.Configure<Common.Minio>(configuration.GetSection(nameof(Minio)));
         services.Configure<TokenConfig>(configuration.GetSection(nameof(TokenConfig)));
+        services.Configure<PasswordHasherOptions>(opt => opt.IterationCount = 600_000);
 
         services.AddSerilog()
             .AddHttpContextAccessor();

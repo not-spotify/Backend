@@ -121,7 +121,7 @@ public sealed class UserController(ILogger<UserController> logger,
         if (user == default)
             return Unauthorized(new UnauthorizedResponse { Error = "Can't find user or wrong password" });
 
-        var signInResult = await signInManager.CheckPasswordSignInAsync(user, request.Password, true);
+        var signInResult = await signInManager.CheckPasswordSignInAsync(user, request.Password, false);
 
         if (!signInResult.Succeeded)
             return Unauthorized(new UnauthorizedResponse { Error = signInResult.ToString() });
