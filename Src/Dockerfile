@@ -8,9 +8,9 @@ COPY Common/*.csproj ./Common/
 COPY Data/*.csproj ./Data/
 COPY MusicPlayerBackend/*.csproj ./MusicPlayerBackend/
 COPY Services/*.csproj ./Services/
+COPY Tests/*.csproj ./Tests/
 
 RUN dotnet restore
-RUN ls -lah
 
 COPY Common/. ./Common/
 COPY Data/. ./Data/
