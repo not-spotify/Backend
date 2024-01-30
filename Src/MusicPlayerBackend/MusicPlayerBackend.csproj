@@ -21,6 +21,8 @@
   <ItemGroup>
     <PackageReference Include="Autofac"/>
     <PackageReference Include="Autofac.Extensions.DependencyInjection"/>
+    <PackageReference Include="CliWrap" />
+    <PackageReference Include="FSharp.Core" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer"/>
     <PackageReference Include="Microsoft.AspNetCore.Identity.UI" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi"/>
@@ -42,11 +44,17 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Data\Data.csproj"/>
-    <ProjectReference Include="..\Services\Services.csproj" />
+    <ProjectReference Include="..\MusicPlayerBackend.Identity\MusicPlayerBackend.Identity.fsproj" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Data\Data.csproj"/>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="Services">
+      <HintPath>bin\Debug\net8.0\Services.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
 </Project>

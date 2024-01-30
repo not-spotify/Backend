@@ -52,7 +52,7 @@ public class FfprobeDevTests
                 Assert.Fail("Where's cover");
 
             trackMs.Position = 0;
-            var coverMemoryStream = await ffprobeService.ExtractCover(trackMs, ffprobeMetadata);
+            var coverMemoryStream = await ffprobeService.ExtractCover(trackMs, ffprobeMetadata!);
 
             if (coverMemoryStream == null)
             {
@@ -62,8 +62,8 @@ public class FfprobeDevTests
 
             coverMemoryStream.Position = 0;
 
-            var name = ffprobeMetadata.Title ?? Guid.NewGuid().ToString();
-            var fileName = $"{name}.{ffprobeMetadata.CoverInfo.CodecName}";
+            var name = ffprobeMetadata!.Title ?? Guid.NewGuid().ToString();
+            var fileName = $"{name}.{ffprobeMetadata!.CoverInfo!.CodecName}";
 
             Directory.GetFiles(outPath)
                 .ToList()

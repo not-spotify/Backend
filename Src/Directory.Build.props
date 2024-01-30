@@ -1,0 +1,11 @@
+<Project>
+    <PropertyGroup>
+        <dotNetTFM>net8.0</dotNetTFM>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>false</ImplicitUsings>
+        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    </PropertyGroup>
+</Project>

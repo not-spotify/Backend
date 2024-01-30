@@ -11,13 +11,14 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Minio;
+using Serilog;
+
 using MusicPlayerBackend.App.Middlewares;
 using MusicPlayerBackend.Common;
 using MusicPlayerBackend.Data;
 using MusicPlayerBackend.Data.Infr;
 using MusicPlayerBackend.Services;
 using MusicPlayerBackend.Services.Identity;
-using Serilog;
 
 namespace MusicPlayerBackend.App;
 
