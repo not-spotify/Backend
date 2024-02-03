@@ -1,8 +1,15 @@
 ﻿[<AutoOpen>]
 module MusicPlayerBackend.Common.TypeExtensions
 
+open System
+
 // By default, function should pass value without modification
 // For example, "ToUpper" on null string should return null
+
+// module Actions =
+//     let inline fromFun f = Action<'a> f
+//     let inline fromFun2 f = Action<'a, 'b> f
+//     let inline fromFun3 f = Action<'a, 'b, 'c> f
 
 module Option =
     let unionUnit = Some ()

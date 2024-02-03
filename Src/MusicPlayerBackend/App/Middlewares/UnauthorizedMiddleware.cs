@@ -6,7 +6,7 @@ using MusicPlayerBackend.TransferObjects;
 
 namespace MusicPlayerBackend.App.Middlewares;
 
-internal sealed class UnauthorizedMiddleware(RequestDelegate next)
+public sealed class UnauthorizedMiddleware(RequestDelegate next)
 {
     public async Task InvokeAsync(HttpContext context)
     {

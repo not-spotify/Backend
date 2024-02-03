@@ -8,7 +8,7 @@
       <Compile Include="LookupNormalizer.fs" />
       <Compile Include="UserConfirmation.fs" />
       <Compile Include="UserValidator.fs" />
-      <Compile Include="ServiceCollectionExtensions.fs" />
+      <Compile Include="UserManager.fs" />
     </ItemGroup>
 
     <ItemGroup>

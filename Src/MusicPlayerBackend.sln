@@ -12,6 +12,8 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "MusicPlayerBackend.Common",
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Options", "Options\Options.fsproj", "{C686B948-1D79-47A0-9CA8-D12239149D71}"
 EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "MusicPlayerBackend.Host", "MusicPlayerBackend.Host\MusicPlayerBackend.Host.fsproj", "{751DF391-2844-43E2-89DA-DD5BD35D4FC3}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -42,5 +44,9 @@ Global
 		{C686B948-1D79-47A0-9CA8-D12239149D71}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C686B948-1D79-47A0-9CA8-D12239149D71}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C686B948-1D79-47A0-9CA8-D12239149D71}.Release|Any CPU.Build.0 = Release|Any CPU
+		{751DF391-2844-43E2-89DA-DD5BD35D4FC3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{751DF391-2844-43E2-89DA-DD5BD35D4FC3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{751DF391-2844-43E2-89DA-DD5BD35D4FC3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{751DF391-2844-43E2-89DA-DD5BD35D4FC3}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
