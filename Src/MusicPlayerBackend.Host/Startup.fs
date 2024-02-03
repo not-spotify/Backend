@@ -14,8 +14,6 @@ open Microsoft.IdentityModel.Tokens
 open Microsoft.OpenApi.Models
 open MusicPlayerBackend.App.Middlewares
 open MusicPlayerBackend.Data
-open MusicPlayerBackend.Data.Entities
-open MusicPlayerBackend.Data.Identity.Stores
 open MusicPlayerBackend.Data.Repositories
 open MusicPlayerBackend.Identity
 open MusicPlayerBackend.Services
@@ -91,16 +89,7 @@ type Startup(config: IConfiguration) =
             )
         )
 
-        %services.AddScoped<IdentityErrorDescriber>()
-        %services.AddScoped<ILookupNormalizer, LookupNormalizer>()
-        %services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>()
-        %services.AddScoped<IUserClaimsPrincipalFactory<User>, UserClaimsPrincipalFactory<User>>()
-        %services.AddScoped<IUserConfirmation<User>, UserConfirmation>()
-        %services.AddScoped<IUserStore<User>, UserStore>()
-        %services.AddScoped<IUserValidator<User>, UserValidator<User>>()
-        %services.AddScoped<UserManager<User>>()
-        %services.AddScoped<SignInManager<User>>()
-
+        %services.AddCustomIdentity()
         %services.AddAuthorization()
         %services.AddTransient<IUserProvider, UserProvider>()
 
@@ -123,9 +112,7 @@ type Startup(config: IConfiguration) =
             securityRequirement.Add(openApiSecurityScheme, Array.empty)
 
             c.AddSecurityRequirement(securityRequirement)
-
-            let xmlFilename = "MusicPlayerBackend.xml"
-            c.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFilename))
+            c.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, "MusicPlayerBackend.xml"))
             c.EnableAnnotations()
         )
 

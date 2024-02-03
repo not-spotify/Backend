@@ -9,6 +9,8 @@
       <Compile Include="UserConfirmation.fs" />
       <Compile Include="UserValidator.fs" />
       <Compile Include="UserManager.fs" />
+      <Compile Include="PasswordHasher.fs" />
+      <Compile Include="ServiceCollectionExtesions.fs" />
     </ItemGroup>
 
     <ItemGroup>
