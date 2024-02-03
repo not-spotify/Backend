@@ -1,4 +1,3 @@
-using Autofac.Extensions.DependencyInjection;
 using Serilog;
 
 namespace MusicPlayerBackend.App;
@@ -17,7 +16,6 @@ public static class Program
     public static IHostBuilder CreateHostBuilder(string[] args)
     {
         return Host.CreateDefaultBuilder(args)
-            .UseServiceProviderFactory(new AutofacServiceProviderFactory())
             .ConfigureWebHostDefaults(webBuilder => webBuilder.UseStartup<Startup>());
     }
 }

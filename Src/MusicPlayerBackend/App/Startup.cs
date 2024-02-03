@@ -2,8 +2,6 @@
 using System.Reflection;
 using System.Text;
 using System.Text.Json.Serialization;
-using Autofac;
-using Autofac.Builder;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -14,23 +12,19 @@ using Minio;
 using Serilog;
 
 using MusicPlayerBackend.App.Middlewares;
-using MusicPlayerBackend.Common;
+using MusicPlayerBackend.Options;
 using MusicPlayerBackend.Data;
-using MusicPlayerBackend.Data.Infr;
+using MusicPlayerBackend.Data.Repositories;
 using MusicPlayerBackend.Services;
-using MusicPlayerBackend.Services.Identity;
 
 namespace MusicPlayerBackend.App;
 
 public sealed class Startup(IConfiguration configuration)
 {
-    public Func<IRegistrationBuilder<object, object, object>, IRegistrationBuilder<object, object, object>> LifetimeScopeConfigurator { get; } =
-        registrationBuilder => registrationBuilder.InstancePerLifetimeScope();
-
     public void ConfigureServices(IServiceCollection services)
     {
         services.Configure<AppConfig>(configuration);
-        services.Configure<Common.Minio>(configuration.GetSection(nameof(Minio)));
+        services.Configure<Options.Minio>(configuration.GetSection(nameof(Minio)));
         services.Configure<TokenConfig>(configuration.GetSection(nameof(TokenConfig)));
         services.Configure<PasswordHasherOptions>(opt => opt.IterationCount = 600_000);
 
@@ -39,7 +33,7 @@ public sealed class Startup(IConfiguration configuration)
 
         services.AddMinio(o =>
         {
-            var minioConfig = configuration.GetSection("Minio").Get<Common.Minio>();
+            var minioConfig = configuration.GetSection("Minio").Get<Options.Minio>();
             ArgumentNullException.ThrowIfNull(minioConfig);
 
             o
@@ -57,10 +51,17 @@ public sealed class Startup(IConfiguration configuration)
 
             return new AppDbContext(optionsBuilder.Options);
         });
-        services.AddScoped<IUnitOfWork, UnitOfWork>();
+        services
+            .AddScoped<IUnitOfWork, UnitOfWork>()
+            .AddScoped<IAlbumRepository, AlbumRepository>()
+            .AddScoped<IPlaylistRepository, PlaylistRepository>()
+            .AddScoped<IPlaylistUserPermissionRepository, PlaylistUserPermissionRepository>()
+            .AddScoped<IRefreshTokenRepository, RefreshTokenRepository>()
+            .AddScoped<ITrackPlaylistRepository, TrackPlaylistRepository>()
+            .AddScoped<ITrackRepository, TrackRepository>()
+            .AddScoped<IUserRepository, UserRepository>();
 
         services
-            .AddCustomIdentity()
             .AddTransient<IS3Service, S3Service>()
             .AddTransient<IUserProvider, UserProvider>();
 
@@ -72,10 +73,8 @@ public sealed class Startup(IConfiguration configuration)
             .AddXmlSerializerFormatters();
 
         services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-        .AddJwtBearer(options =>
-            {
-                options.TokenValidationParameters = new TokenValidationParameters
-                {
+        .AddJwtBearer(options => {
+                options.TokenValidationParameters = new TokenValidationParameters {
                     ValidateIssuerSigningKey = false,
                     IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration.GetSection(nameof(TokenConfig)).Get<TokenConfig>()!.SigningKey)),
                     ValidateIssuer = false,
@@ -84,12 +83,13 @@ public sealed class Startup(IConfiguration configuration)
                 };
             });
 
-        services.AddSession()
+        services
+            .AddSession()
             .AddAuthorization();
         services.AddEndpointsApiExplorer();
         services.AddSwaggerGen(c =>
         {
-            c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+            c.AddSecurityDefinition(JwtBearerDefaults.AuthenticationScheme, new OpenApiSecurityScheme
             {
                 Type = SecuritySchemeType.Http,
                 BearerFormat = JwtConstants.TokenType,
@@ -136,15 +136,10 @@ public sealed class Startup(IConfiguration configuration)
         }
 
         app.UseMiddleware<UnauthorizedMiddleware>();
-        app.UseAuthentication()
+        app
+            .UseRouting()
             .UseAuthorization()
-            .UseRouting();
-
-        app.UseEndpoints(endpoints => endpoints.MapControllers());
-    }
-
-    public void ConfigureContainer(ContainerBuilder builder)
-    {
-        builder.RegisterModule(new DataDiRegistrationModule(LifetimeScopeConfigurator));
+            .UseAuthentication()
+            .UseEndpoints(endpoints => endpoints.MapControllers());
     }
 }

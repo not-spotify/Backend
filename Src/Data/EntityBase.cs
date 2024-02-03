@@ -1,4 +1,6 @@
-﻿namespace MusicPlayerBackend.Data;
+﻿using System;
+
+namespace MusicPlayerBackend.Data;
 
 public interface IEntity<TKey> where TKey : IEquatable<TKey>
 {

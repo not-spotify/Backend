@@ -1,0 +1,11 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <RootNamespace>MusicPlayerBackend.Options</RootNamespace>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <Compile Include="Library.fs"/>
+    </ItemGroup>
+
+</Project>

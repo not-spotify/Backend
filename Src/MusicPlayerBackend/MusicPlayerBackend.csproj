@@ -19,22 +19,14 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Autofac"/>
-    <PackageReference Include="Autofac.Extensions.DependencyInjection"/>
     <PackageReference Include="CliWrap" />
     <PackageReference Include="FSharp.Core" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer"/>
     <PackageReference Include="Microsoft.AspNetCore.Identity.UI" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi"/>
-    <PackageReference Include="Microsoft.CodeAnalysis.Analyzers">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
+    <PackageReference Include="Microsoft.CodeAnalysis.Analyzers"/>
     <PackageReference Include="Microsoft.EntityFrameworkCore"/>
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design"/>
     <PackageReference Include="Minio"/>
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL"/>
     <PackageReference Include="Serilog.AspNetCore" />
@@ -45,16 +37,11 @@
   <ItemGroup>
     <ProjectReference Include="..\Data\Data.csproj"/>
     <ProjectReference Include="..\MusicPlayerBackend.Identity\MusicPlayerBackend.Identity.fsproj" />
+    <ProjectReference Include="..\Options\Options.fsproj" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Data\Data.csproj"/>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Reference Include="Services">
-      <HintPath>bin\Debug\net8.0\Services.dll</HintPath>
-    </Reference>
   </ItemGroup>
 
 </Project>

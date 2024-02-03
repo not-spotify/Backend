@@ -1,4 +1,7 @@
-﻿namespace MusicPlayerBackend.Data.Entities;
+﻿using System;
+using System.Collections.Generic;
+
+namespace MusicPlayerBackend.Data.Entities;
 
 public sealed record User : EntityBase
 {

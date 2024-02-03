@@ -1,4 +1,6 @@
-﻿namespace MusicPlayerBackend.Data.Entities;
+﻿using System;
+
+namespace MusicPlayerBackend.Data.Entities;
 
 public sealed record RefreshToken : EntityBase
 {

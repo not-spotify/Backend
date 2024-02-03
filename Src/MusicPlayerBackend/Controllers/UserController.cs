@@ -6,10 +6,11 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
-using MusicPlayerBackend.Common;
+
 using MusicPlayerBackend.Data;
 using MusicPlayerBackend.Data.Entities;
 using MusicPlayerBackend.Data.Repositories;
+using MusicPlayerBackend.Options;
 using MusicPlayerBackend.Services;
 using MusicPlayerBackend.TransferObjects;
 using MusicPlayerBackend.TransferObjects.User;

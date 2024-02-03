@@ -1,6 +1,7 @@
 <Project>
     <PropertyGroup>
-        <dotNetTFM>net8.0</dotNetTFM>
+        <TargetFramework>net8.0</TargetFramework>
+        <OutputType>Library</OutputType>
     </PropertyGroup>
 
     <PropertyGroup>

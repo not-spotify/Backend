@@ -1,8 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
     <PropertyGroup>
-        <TargetFramework>net8.0</TargetFramework>
-        <OutputType>Library</OutputType>
+      <OutputType>Library</OutputType>
     </PropertyGroup>
 
     <ItemGroup>
