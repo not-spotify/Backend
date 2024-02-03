@@ -7,4 +7,6 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
     ports:
-      - "9780:8080"
+      - "9780:9780"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"

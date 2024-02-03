@@ -5,35 +5,22 @@ services:
     container_name: postgres
     image: postgres
     environment:
+      PGPORT: 9732
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       PGDATA: /data/postgres
     volumes:
        - postgres:/data/postgres
     ports:
-      - "9732:5432"
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
-
-  pgadmin:
-    container_name: pgadmin_container
-    image: dpage/pgadmin4
-    environment:
-      PGADMIN_DEFAULT_EMAIL: pgadmin@pgadmin.org
-      PGADMIN_DEFAULT_PASSWORD: postgres
-      PGADMIN_CONFIG_SERVER_MODE: 'False'
-    volumes:
-       - pgadmin:/var/lib/pgadmin
-    ports:
-      - "9750:80"
+      - "9732:9732"
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
   minio:
     image: minio/minio
     ports:
-      - "9700:9000"
-      - "9701:9001"
+      - "9700:9700"
+      - "9701:9701"
     volumes:
       - minio:/data
     environment:
@@ -41,7 +28,7 @@ services:
       MINIO_ROOT_PASSWORD: minioadmin
       MINIO_ACCESS_KEY_FILE: /run/secrets/minioaccess
       MINIO_SECRET_KEY_FILE: /run/secrets/miniosecret
-    command: server --console-address ":9001" /data
+    command: server --address ":9700" --console-address ":9701" /data
     secrets:
     - minioaccess
     - miniosecret
