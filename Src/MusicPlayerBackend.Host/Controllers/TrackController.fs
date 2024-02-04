@@ -4,11 +4,12 @@ open System
 open System.IO
 open System.Net.Mime
 open System.Threading
-open System.Linq
 open Microsoft.AspNetCore.Authorization
 open Microsoft.AspNetCore.Http
 open Microsoft.AspNetCore.Mvc
 open Microsoft.EntityFrameworkCore
+
+open MusicPlayerBackend.Common
 open MusicPlayerBackend.Data
 open MusicPlayerBackend.Data.Entities
 open MusicPlayerBackend.Data.Repositories
@@ -47,7 +48,8 @@ type TrackController(trackRepository: ITrackRepository, s3Service: IS3Service, u
                         CoverUri = t.CoverUri,
                         Name = t.Name,
                         TrackUri = (if t.OwnerUserId = userId || t.Visibility = TrackVisibility.Visible then t.TrackUri else null),
-                        Visibility = (int t.Visibility |> LanguagePrimitives.EnumOfValue)))
+                        Visibility = (int t.Visibility |> enum))
+                    )
 
             } |> _.ToArrayAsync(ct)
         let! trackCount = trackRepository.CountAsync((fun t -> t.OwnerUserId = userId), ct)
@@ -70,7 +72,7 @@ type TrackController(trackRepository: ITrackRepository, s3Service: IS3Service, u
                 CoverUri = track.CoverUri,
                 IsAvailable = (track.OwnerUserId = userId || track.Visibility = TrackVisibility.Visible),
                 TrackUri = track.TrackUri,
-                Visibility = (int track.Visibility |> LanguagePrimitives.EnumOfValue),
+                Visibility = ucast track.Visibility,
                 Name = track.Name,
                 Author = track.Author
             )
@@ -88,7 +90,7 @@ type TrackController(trackRepository: ITrackRepository, s3Service: IS3Service, u
         if track = null then
             return this.NotFound() :> IActionResult
         elif request.Visibility.HasValue then
-            track.Visibility <- (int request.Visibility.Value |> LanguagePrimitives.EnumOfValue)
+            track.Visibility <- ucast request.Visibility.Value
             return this.NoContent() :> IActionResult
         elif request.Cover <> null then
             if request.RemoveCover then
@@ -149,7 +151,7 @@ type TrackController(trackRepository: ITrackRepository, s3Service: IS3Service, u
                         CoverUri = coverUri,
                         Name = request.Name,
                         Author = request.Author,
-                        Visibility = (int request.Visibility |> LanguagePrimitives.EnumOfValue),
+                        Visibility = ucast request.Visibility,
                         TrackUri = uploadedTrackUri,
                         OwnerUserId = ownerUserId)
 
@@ -160,7 +162,7 @@ type TrackController(trackRepository: ITrackRepository, s3Service: IS3Service, u
                         CoverUri = track.CoverUri,
                         IsAvailable = true,
                         TrackUri = track.TrackUri,
-                        Visibility = (int track.Visibility |> LanguagePrimitives.EnumOfValue),
+                        Visibility = ucast track.Visibility,
                         Name = track.Name,
                         Author = track.Author
                     )

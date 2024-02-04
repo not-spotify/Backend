@@ -75,7 +75,7 @@ type PlaylistController(
                         Id = playlist.Id,
                         CoverUri = playlist.CoverUri,
                         Name = playlist.Name,
-                        Visibility = (int playlist.Visibility |> LanguagePrimitives.EnumOfValue)))
+                        Visibility = ucast playlist.Visibility))
                 }
             let! playlists = playlists.ToArrayAsync(ct)
 
@@ -93,7 +93,11 @@ type PlaylistController(
         let visiblePlaylistsQuery =
             query {
                 for p in playlistRepository.QueryAll() do
-                where (p.Visibility = PlaylistVisibility.Public || p.OwnerUserId = userId || p.Permissions.Any(fun np -> np.UserId = userId && np.PlaylistId = p.Id))
+                where (
+                    p.Visibility = PlaylistVisibility.Public
+                    || p.OwnerUserId = userId
+                    || p.Permissions.Any(fun np -> np.UserId = userId && np.PlaylistId = p.Id)
+                )
             }
 
         let! playlist = visiblePlaylistsQuery.SingleOrDefaultAsync((fun p -> p.Id = id), cancellationToken = ct)
@@ -120,7 +124,7 @@ type PlaylistController(
         let playlist =
             Playlist(
                 Name = request.Name,
-                Visibility = (int request.Visibility.Value |> LanguagePrimitives.EnumOfValue<_, PlaylistVisibility>),
+                Visibility = ucast request.Visibility.Value,
                 OwnerUserId = userId
             )
         request.Visibility <- request.Visibility
@@ -131,7 +135,7 @@ type PlaylistController(
             Id = playlist.Id,
             Name = playlist.Name,
             CoverUri = playlist.CoverUri,
-            Visibility = (int playlist.Visibility |> LanguagePrimitives.EnumOfValue)
+            Visibility = ucast playlist.Visibility
         )
 
         return this.Ok(playlist) :> IActionResult
@@ -312,6 +316,7 @@ type PlaylistController(
                     for t in trackPlaylistRepository.QueryAll() do
                     where (t.PlaylistId = playlistId)
                 }
+
             let! tracks =
                 query {
                     for tp in tracksQuery do
@@ -322,7 +327,7 @@ type PlaylistController(
                             CoverUri = tp.Track.CoverUri,
                             Name = tp.Track.Name,
                             TrackUri = tp.Track.TrackUri,
-                            Visibility = (int tp.Track.Visibility |> LanguagePrimitives.EnumOfValue)))
+                            Visibility = ucast tp.Track.Visibility))
                 } |> _.ToArrayAsync(ct)
 
             let! trackCount = tracksQuery.CountAsync(ct)

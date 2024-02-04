@@ -3,6 +3,9 @@ module MusicPlayerBackend.Common.TypeExtensions
 
 open System.Threading.Tasks
 
+#nowarn "0077"
+#nowarn "0042"
+
 // By default, function should pass value without modification
 // For example, "ToUpper" on null string should return null
 
@@ -30,6 +33,7 @@ let inline isNotNull value =
 
 let inline (^) f x = f x
 let inline (~%) x = ignore x
+let inline ucast<'a, 'b> (a: 'a): 'b = (# "" a: 'b #)
 
 let inline (|NotNull|_|) value =
     value

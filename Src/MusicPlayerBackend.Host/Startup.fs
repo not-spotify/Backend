@@ -12,6 +12,7 @@ open Microsoft.Extensions.Options
 open Microsoft.IdentityModel.JsonWebTokens
 open Microsoft.IdentityModel.Tokens
 open Microsoft.OpenApi.Models
+open MusicPlayerBackend.Host.Services
 open Npgsql.EntityFrameworkCore.PostgreSQL.Infrastructure
 open Serilog
 open Microsoft.AspNetCore.Identity
@@ -92,6 +93,7 @@ type Startup(config: IConfiguration) =
         %services.AddCustomIdentity()
         %services.AddAuthorization()
         %services.AddTransient<IUserProvider, UserProvider>()
+        %services.AddTransient<JwtService>()
 
         %services.AddEndpointsApiExplorer()
 

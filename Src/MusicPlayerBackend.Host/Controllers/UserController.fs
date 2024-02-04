@@ -1,23 +1,17 @@
 ﻿namespace MusicPlayerBackend.Host.Controllers
 
-open System
-open System.IdentityModel.Tokens.Jwt
 open System.Net.Mime
-open System.Security.Claims
 open Microsoft.AspNetCore.Authorization
 open Microsoft.AspNetCore.Http
 open Microsoft.AspNetCore.Identity
 open Microsoft.AspNetCore.Mvc
-open Microsoft.Extensions.Options
 
-open Microsoft.IdentityModel.JsonWebTokens
-open Microsoft.IdentityModel.Tokens
 open MusicPlayerBackend.Data
 open MusicPlayerBackend.Data.Entities
 open MusicPlayerBackend.Data.Repositories
 open MusicPlayerBackend.Common.TypeExtensions
 open MusicPlayerBackend.Host
-open MusicPlayerBackend.Options
+open MusicPlayerBackend.Host.Services
 open MusicPlayerBackend.TransferObjects
 open MusicPlayerBackend.TransferObjects.User
 
@@ -27,18 +21,16 @@ open MusicPlayerBackend.TransferObjects.User
 [<ProducesResponseType(StatusCodes.Status400BadRequest)>]
 [<Route("[controller]/[action]")>]
 type UserController(
-    userManager: UserManager<User>,
-    signInManager: SignInManager<User>,
-    userProvider: IUserProvider,
-    refreshTokenRepository: IRefreshTokenRepository,
-    playlistRepository: IPlaylistRepository,
-    userRepository: IUserRepository,
-    unitOfWork: IUnitOfWork,
-    tokenConfig: IOptions<TokenConfig>
-    ) =
-    inherit ControllerBase()
+        userManager: UserManager<User>,
+        signInManager: SignInManager<User>,
+        userProvider: IUserProvider,
+        refreshTokenRepository: IRefreshTokenRepository,
+        playlistRepository: IPlaylistRepository,
+        userRepository: IUserRepository,
+        unitOfWork: IUnitOfWork,
+        jwtService: JwtService) =
 
-    let tokenConfig = tokenConfig.Value
+    inherit ControllerBase()
 
     /// <summary>
     ///     Gets authorized User.
@@ -113,36 +105,15 @@ type UserController(
         | Some user ->
             let! signInResult = signInManager.CheckPasswordSignInAsync(user, request.Password, false)
             if not signInResult.Succeeded then
-                return this.Unauthorized(UnauthorizedResponse(Error = signInResult.ToString())) :> IActionResult
+                return this.Unauthorized(UnauthorizedResponse(Error = string signInResult)) :> IActionResult
             else
-                let jti = Guid.NewGuid()
-                let refreshTokenValue = Guid.NewGuid()
-                let jwtValidDue = DateTimeOffset.UtcNow.AddDays(1)
-                let refreshValidDue = jwtValidDue.AddDays(7)
-                let tokenDescriptor = SecurityTokenDescriptor(Subject = ClaimsIdentity([|
-                    Claim(ClaimTypes.NameIdentifier, string user.Id)
-                    Claim(JwtRegisteredClaimNames.Jti, string jti)
-                |]), Expires = jwtValidDue.DateTime,
-                     SigningCredentials = SigningCredentials(
-                         SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(tokenConfig.SigningKey)),
-                         SecurityAlgorithms.HmacSha256Signature)
-                )
-                let tokenHandler = JwtSecurityTokenHandler()
-                let token = tokenHandler.CreateToken(tokenDescriptor)
-                let refreshToken = RefreshToken(
-                    ValidDue = refreshValidDue,
-                    Jti = jti,
-                    UserId = user.Id,
-                    Token = refreshTokenValue)
-
-                refreshTokenRepository.Save(refreshToken)
-                do! unitOfWork.SaveChangesAsync()
+                let! jwtResponse = jwtService.Generate(user.Id)
 
                 return this.Ok ^ LoginResponse(
-                    JwtBearer = tokenHandler.WriteToken(token),
-                    RefreshToken = string refreshTokenValue,
-                    RefreshTokenValidDue = refreshValidDue,
-                    JwtBearerValidDue = jwtValidDue,
+                    JwtBearer = jwtResponse.JwtBearer,
+                    RefreshToken = jwtResponse.RefreshToken,
+                    RefreshTokenValidDue = jwtResponse.RefreshTokenValidDue,
+                    JwtBearerValidDue = jwtResponse.JwtBearerValidDue,
                     UserId = user.Id) :> IActionResult
         }
 
@@ -157,29 +128,17 @@ type UserController(
         if isNull existingRefreshToken then
             return this.Unauthorized(UnauthorizedResponse(Error = "Can't refresh Jwt Bearer")) :> IActionResult
         else
+            let! _ = unitOfWork.BeginTransactionAsync()
             existingRefreshToken.Revoked <- true
             refreshTokenRepository.Save(existingRefreshToken)
 
-            let! user = userRepository.GetByIdAsync(request.UserId)
-            let jti = Guid.NewGuid()
-            let refreshTokenValue = Guid.NewGuid()
-            let jwtValidDue = DateTimeOffset.UtcNow.AddDays(1)
-            let refreshValidDue = jwtValidDue.AddDays(7)
-            let tokenDescriptor = SecurityTokenDescriptor(Subject = ClaimsIdentity([|
-                Claim(ClaimTypes.NameIdentifier, string user.Id)
-                Claim(JwtRegisteredClaimNames.Jti, string jti)
-            |]), Expires = jwtValidDue.DateTime, SigningCredentials =
-                SigningCredentials(SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(tokenConfig.SigningKey)), SecurityAlgorithms.HmacSha256Signature))
-            let tokenHandler = JwtSecurityTokenHandler()
-            let token = tokenHandler.CreateToken(tokenDescriptor)
-            let refreshToken = RefreshToken(ValidDue = refreshValidDue, Jti = jti, UserId = user.Id, Token = refreshTokenValue)
-            refreshTokenRepository.Save(refreshToken)
-            do! unitOfWork.SaveChangesAsync()
+            let! jwtResponse = jwtService.Generate(existingRefreshToken.UserId)
+            do! unitOfWork.CommitAsync()
 
-            return this.Ok(
-                LoginResponse(JwtBearer = tokenHandler.WriteToken(token),
-                              RefreshToken = string refreshTokenValue,
-                              RefreshTokenValidDue = refreshValidDue,
-                              JwtBearerValidDue = jwtValidDue,
-                              UserId = user.Id)) :> IActionResult
+            return this.Ok ^ LoginResponse(
+                JwtBearer = jwtResponse.JwtBearer,
+                RefreshToken = jwtResponse.RefreshToken,
+                RefreshTokenValidDue = jwtResponse.RefreshTokenValidDue,
+                JwtBearerValidDue = jwtResponse.JwtBearerValidDue,
+                UserId = existingRefreshToken.UserId) :> IActionResult
         }
