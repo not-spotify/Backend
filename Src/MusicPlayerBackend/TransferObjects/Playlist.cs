@@ -74,6 +74,7 @@ public sealed class PlaylistListItemResponse
     public Guid Id { get; set; }
     public string Name { get; set; } = null!;
     public string? CoverUri { get; set; }
+    public VisibilityLevel Visibility { get; set; }
 }
 
 public sealed class CreatePlaylistRequest

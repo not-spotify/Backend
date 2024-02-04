@@ -71,7 +71,11 @@ type PlaylistController(
                     for playlist in visiblePlaylistsQuery do
                     skip (request.PageSize * request.Page)
                     take request.PageSize
-                    select (PlaylistListItemResponse(Id = playlist.Id, CoverUri = playlist.CoverUri, Name = playlist.Name))
+                    select (PlaylistListItemResponse(
+                        Id = playlist.Id,
+                        CoverUri = playlist.CoverUri,
+                        Name = playlist.Name,
+                        Visibility = (int playlist.Visibility |> LanguagePrimitives.EnumOfValue)))
                 }
             let! playlists = playlists.ToArrayAsync(ct)
 
