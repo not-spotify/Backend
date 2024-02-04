@@ -12,7 +12,7 @@ type UnauthorizedMiddleware(next: RequestDelegate) =
     member _.InvokeAsync(context: HttpContext) = task {
         do! next.Invoke(context)
 
-        if context.Response.HasStarted = false && context.Response.StatusCode <> StatusCodes.Status401Unauthorized then
+        if context.Response.HasStarted = false && context.Response.StatusCode = StatusCodes.Status401Unauthorized then
             context.Response.ContentType <- MediaTypeNames.Application.Json
 
             let jsonOptions = context.RequestServices.GetRequiredService<IOptions<JsonOptions>>().Value.SerializerOptions

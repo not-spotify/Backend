@@ -135,7 +135,6 @@ type Startup(config: IConfiguration) =
             %app.UseSwagger()
             %app.UseSwaggerUI(fun o -> o.DisplayOperationId())
 
-        %app.UseMiddleware<AnonymousOnlyMiddleware>()
         %app.UseMiddleware<UnauthorizedMiddleware>()
         %app
             .UseAuthentication()

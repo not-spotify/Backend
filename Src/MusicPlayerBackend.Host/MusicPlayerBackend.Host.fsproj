@@ -39,9 +39,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <Compile Include="Attributes\AllowAnonymousOnlyAttribute.fs" />
         <Compile Include="Middlewares\UnauthorizedMiddleware.fs" />
-        <Compile Include="Middlewares\AnonymousOnlyMiddleware.fs" />
         <Compile Include="UserResolver.fs" />
         <Compile Include="MinioExtensions.fs" />
         <Compile Include="Controllers\UserController.fs" />

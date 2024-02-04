@@ -67,7 +67,6 @@ type UserController(
     /// <returns>User identifier and JWT Bearer</returns>
     /// <response code="200">Returns User identifier</response>
     /// <response code="400">Wrong schema</response>
-    [<AllowAnonymousOnly>]
     [<HttpPost(Name = "RegisterUser")>]
     [<ProducesResponseType(typeof<RegisterResponse>, StatusCodes.Status200OK)>]
     member this.Register(request: RegisterRequest) = task {
