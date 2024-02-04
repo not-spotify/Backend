@@ -2,6 +2,7 @@
 module MusicPlayerBackend.Common.TypeExtensions
 
 open System
+open System.Threading.Tasks
 
 // By default, function should pass value without modification
 // For example, "ToUpper" on null string should return null
@@ -84,4 +85,15 @@ module StringOption =
 
     let inline toUpperInv v =
         v |> Option.map String.toUpperInv
+
+module TaskResult =
+    let map (mapping: 'T -> 'U) (result: Task<Result<'T,'TError>>) = task {
+        let! result = result
+        return result |> Result.map mapping
+    }
+
+    let bind (binder: 'T -> Result<_, _>) (result: Task<Result<'T, 'TError>>) : Result<'U,'TError> Task = task {
+        let! result = result
+        return result |> Result.bind binder
+    }
 

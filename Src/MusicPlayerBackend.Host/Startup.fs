@@ -12,11 +12,6 @@ open Microsoft.Extensions.Options
 open Microsoft.IdentityModel.JsonWebTokens
 open Microsoft.IdentityModel.Tokens
 open Microsoft.OpenApi.Models
-open MusicPlayerBackend.App.Middlewares
-open MusicPlayerBackend.Data
-open MusicPlayerBackend.Data.Repositories
-open MusicPlayerBackend.Identity
-open MusicPlayerBackend.Services
 open Npgsql.EntityFrameworkCore.PostgreSQL.Infrastructure
 open Serilog
 open Microsoft.AspNetCore.Identity
@@ -24,10 +19,15 @@ open Microsoft.Extensions.DependencyInjection
 open Microsoft.Extensions.Configuration
 open Microsoft.Extensions.Hosting
 open Minio
-open MusicPlayerBackend.App
 
 open MusicPlayerBackend.Common.TypeExtensions
 open MusicPlayerBackend.Options
+open MusicPlayerBackend.Host
+open MusicPlayerBackend.Host.Ext
+open MusicPlayerBackend.Data
+open MusicPlayerBackend.Data.Repositories
+open MusicPlayerBackend.Identity
+open MusicPlayerBackend.Services
 
 type Startup(config: IConfiguration) =
     member _.ConfigureServices(services: IServiceCollection) =
@@ -112,6 +112,7 @@ type Startup(config: IConfiguration) =
             securityRequirement.Add(openApiSecurityScheme, Array.empty)
 
             c.AddSecurityRequirement(securityRequirement)
+            c.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, "MusicPlayerBackend.Host.xml"))
             c.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, "MusicPlayerBackend.xml"))
             c.EnableAnnotations()
         )
@@ -121,6 +122,7 @@ type Startup(config: IConfiguration) =
                        ctx: AppDbContext,
                        appConfig: IOptions<AppConfig>,
                        minioClient: IMinioClient) =
+
         %minioClient
             .CreateBucketIfNotExists("tracks")
             .CreateBucketIfNotExists("covers")
@@ -133,6 +135,7 @@ type Startup(config: IConfiguration) =
             %app.UseSwagger()
             %app.UseSwaggerUI(fun o -> o.DisplayOperationId())
 
+        %app.UseMiddleware<AnonymousOnlyMiddleware>()
         %app.UseMiddleware<UnauthorizedMiddleware>()
         %app
             .UseRouting()

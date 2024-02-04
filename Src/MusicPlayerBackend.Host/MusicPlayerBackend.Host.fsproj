@@ -6,6 +6,11 @@
         <WarnOn>3390;$(WarnOn)</WarnOn>
     </PropertyGroup>
 
+    <PropertyGroup>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <NoWarn>$(NoWarn);1591</NoWarn>
+    </PropertyGroup>
+
     <ItemGroup>
         <PackageReference Include="CliWrap" />
         <PackageReference Include="FSharp.Core" />
@@ -34,8 +39,17 @@
     </ItemGroup>
 
     <ItemGroup>
+        <Compile Include="Attributes\AllowAnonymousOnlyAttribute.fs" />
+        <Compile Include="Middlewares\UnauthorizedMiddleware.fs" />
+        <Compile Include="Middlewares\AnonymousOnlyMiddleware.fs" />
+        <Compile Include="UserResolver.fs" />
+        <Compile Include="MinioExtensions.fs" />
+        <Compile Include="Controllers\UserController.fs" />
+        <Compile Include="Controllers\FavoriteTrackController.fs" />
+        <Compile Include="Controllers\PlaylistController.fs" />
+        <Compile Include="Controllers\TrackController.fs" />
         <Compile Include="Startup.fs" />
-        <Compile Include="Program.fs"/>
+        <Compile Include="Program.fs" />
     </ItemGroup>
 
     <ItemGroup>

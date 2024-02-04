@@ -71,8 +71,8 @@ public sealed class PlaylistListResponse
 
 public sealed class PlaylistListItemResponse
 {
-    public required Guid Id { get; set; }
-    public required string Name { get; set; }
+    public Guid Id { get; set; }
+    public string Name { get; set; } = null!;
     public string? CoverUri { get; set; }
 }
 
@@ -99,6 +99,12 @@ public sealed class UpdatePlaylistRequest
 
 public sealed class UpdatePlaylistErrorResponse
 {
+    public UpdatePlaylistErrorResponse() {}
+
+    public UpdatePlaylistErrorResponse(string error)
+    {
+        Error = error;
+    }
     public string Error { get; set; } = null!;
 }
 
