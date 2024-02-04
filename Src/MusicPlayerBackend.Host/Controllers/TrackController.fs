@@ -38,17 +38,18 @@ type TrackController(trackRepository: ITrackRepository, s3Service: IS3Service, u
     member this.List([<FromQuery>] request: PlaylistListRequest, ct: CancellationToken) = task {
         let! userId = userProvider.GetUserId()
         let! tracks =
-            trackRepository
-                .QueryMany(fun t -> t.OwnerUserId = userId)
-                .Skip(request.Page * request.PageSize)
-                .Take(request.PageSize)
-                .Select(fun t -> TrackListItem(
-                    Author = t.Author,
-                    CoverUri = t.CoverUri,
-                    Name = t.Name,
-                    TrackUri = (if t.OwnerUserId = userId || t.Visibility = TrackVisibility.Visible then t.TrackUri else null),
-                    Visibility = (int t.Visibility |> LanguagePrimitives.EnumOfValue)))
-                .ToArrayAsync(ct)
+            query {
+                for t in trackRepository.QueryAll() do
+                    skip(request.Page * request.PageSize)
+                    take(request.PageSize)
+                    select(TrackListItem(
+                        Author = t.Author,
+                        CoverUri = t.CoverUri,
+                        Name = t.Name,
+                        TrackUri = (if t.OwnerUserId = userId || t.Visibility = TrackVisibility.Visible then t.TrackUri else null),
+                        Visibility = (int t.Visibility |> LanguagePrimitives.EnumOfValue)))
+
+            } |> _.ToArrayAsync(ct)
         let! trackCount = trackRepository.CountAsync((fun t -> t.OwnerUserId = userId), ct)
         return this.Ok(TrackListResponse(Items = tracks, Count = trackCount))
     }

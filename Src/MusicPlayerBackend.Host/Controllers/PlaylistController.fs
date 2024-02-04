@@ -6,7 +6,6 @@ open System.IO
 open System.Net.Mime
 open System.Threading
 open System.Linq
-open System.Threading.Tasks
 open Microsoft.AspNetCore.Authorization
 open Microsoft.AspNetCore.Http
 open Microsoft.AspNetCore.Mvc
@@ -20,7 +19,6 @@ open MusicPlayerBackend.Host
 open MusicPlayerBackend.Services
 open MusicPlayerBackend.TransferObjects
 open MusicPlayerBackend.TransferObjects.Playlist
-
 
 type ReturnBadRequestException(ar: IActionResult) =
     inherit Exception()
@@ -176,12 +174,14 @@ type PlaylistController(
             playlist.Name <- playlistName
             playlistRepository.Save(playlist)
             do! unitOfWork.SaveChangesAsync(ct)
+
             let! tracks =
-                trackPlaylistRepository
-                    .QueryMany(fun tp -> tp.PlaylistId = originalPlaylistId)
-                    .Where(fun tp -> tp.Track.Visibility = TrackVisibility.Visible || tp.Track.OwnerUserId = user.Id)
-                    .AsNoTracking()
-                    .ToArrayAsync(ct)
+                query {
+                    for tp in trackPlaylistRepository.QueryAll() do
+                    where (tp.PlaylistId = originalPlaylistId)
+                    where (tp.Track.Visibility = TrackVisibility.Visible || tp.Track.OwnerUserId = user.Id)
+                } |> _.AsNoTracking().ToArrayAsync(ct)
+
             for trackPlaylist in tracks do
                 trackPlaylist.Id <- Guid.Empty
                 trackPlaylist.PlaylistId <- playlist.Id
@@ -201,7 +201,7 @@ type PlaylistController(
     [<HttpDelete("{id:guid}", Name = "DeletePlaylist")>]
     [<ProducesResponseType(StatusCodes.Status204NoContent)>]
     [<ProducesResponseType(StatusCodes.Status400BadRequest)>]
-    member this.Delete(id: Guid) : Task<IActionResult> = task {
+    member this.Delete(id: Guid) = task {
         let! playlist = playlistRepository.GetByIdOrDefaultAsync(id)
         if playlist = null then
             return this.BadRequest(UpdatePlaylistErrorResponse($"Can't find playlist with id {id}")) :> IActionResult
@@ -230,7 +230,7 @@ type PlaylistController(
 
             let trackIds = request.Tracks |> Seq.map (_.Id) |> Seq.distinct
             let! tracks = trackRepository.GetByIdsAsync(trackIds, ct)
-            let tracks = tracks |> Seq.map (fun x -> x.Id, x) |> dict
+            let tracks = tracks |> Seq.map (fun track -> track.Id, track) |> dict
             let! addedTracks = trackPlaylistRepository.QueryMany((fun tp -> tp.PlaylistId = playlistId), fun tp -> tp.TrackId).ToListAsync(ct)
 
             let mutable responseTrackItems = List<TrackResponseItem>(request.Tracks.Length)
@@ -241,7 +241,12 @@ type PlaylistController(
                 else
                     match track.Action with
                     | TrackActionRequest.Delete ->
-                        let! trackPlaylist = trackPlaylistRepository.SingleAsync((fun tp -> tp.PlaylistId = playlistId && tp.TrackId = id), ct)
+                        let! trackPlaylist =
+                            query {
+                                for tp in trackPlaylistRepository.QueryAll() do
+                                    where (tp.PlaylistId = playlistId && tp.TrackId = id)
+                            } |> _.SingleAsync(ct)
+
                         trackPlaylistRepository.Delete(trackPlaylist)
                         %addedTracks.Remove(id)
                         responseTrackItems.Add(TrackResponseItem(Id = id, Action = TrackActionResponse.Deleted))
