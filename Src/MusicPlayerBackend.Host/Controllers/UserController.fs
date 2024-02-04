@@ -97,9 +97,8 @@ type UserController(
     }
 
     /// <summary>
-    /// Get JWT Bearer for using secure actions.
+    /// Gets JWT Bearer for using secure actions.
     /// </summary>
-    /// <param name="request"></param>
     /// <returns>JWT Bearer</returns>
     /// <response code="200">Returns JWT Bearer</response>
     /// <response code="401">Wrong email or password</response>

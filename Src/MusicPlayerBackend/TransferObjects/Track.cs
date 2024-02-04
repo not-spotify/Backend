@@ -39,6 +39,7 @@ public sealed class TrackCreateRequest
 
 public class TrackListItem
 {
+    public Guid Id { get; set; }
     public string? CoverUri { get; set; }
 
     /// Track hidden or deleted. TrackUri will be empty if false.
@@ -60,6 +61,29 @@ public class TrackListItem
 }
 
 public sealed class TrackListResponse : ItemsResponseAbstract<TrackListItem>;
+
+public class TrackResponse
+{
+    public Guid Id { get; set; }
+    public string? CoverUri { get; set; }
+
+    /// Track hidden or deleted. TrackUri will be empty if false.
+    public bool IsAvailable { get; set; }
+
+    private string? _trackUri;
+
+    /// Empty if IsAvailable equal false
+    public string? TrackUri
+    {
+        get => IsAvailable ? _trackUri : null;
+        set => _trackUri = value;
+    }
+
+    public TrackVisibility Visibility { get; set; }
+
+    public string Name { get; set; } = null!;
+    public string Author { get; set; } = null!;
+}
 
 public sealed class UpdateTrackErrorResponse
 {

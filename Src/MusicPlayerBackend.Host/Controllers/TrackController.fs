@@ -54,15 +54,25 @@ type TrackController(trackRepository: ITrackRepository, s3Service: IS3Service, u
     }
 
     /// <summary>
-    ///     Get track by Id.
+    ///     Gets track by Id.
     /// </summary>
     [<HttpGet("{id:guid}", Name = "GetTrack")>]
+    [<ProducesResponseType(typeof<TrackResponse>, StatusCodes.Status200OK)>]
     member this.Get(id: Guid, ct: CancellationToken) = task {
         let! userId = userProvider.GetUserId()
         let! track = trackRepository.GetByIdIfVisibleOrDefault(id, userId, ct)
         if track = null then
             return this.NotFound() :> IActionResult
         else
+            let track = TrackResponse(
+                Id = track.Id,
+                CoverUri = track.CoverUri,
+                IsAvailable = (track.OwnerUserId = userId || track.Visibility = TrackVisibility.Visible),
+                TrackUri = track.TrackUri,
+                Visibility = (int track.Visibility |> LanguagePrimitives.EnumOfValue),
+                Name = track.Name,
+                Author = track.Author
+            )
             return this.Ok(track) :> IActionResult
     }
 
@@ -119,6 +129,7 @@ type TrackController(trackRepository: ITrackRepository, s3Service: IS3Service, u
     /// </summary>
     [<HttpPost(Name = "UploadTrack")>]
     [<Consumes(MediaTypeNames.Multipart.FormData)>]
+    [<ProducesResponseType(typeof<TrackResponse>, StatusCodes.Status200OK)>]
     member this.Upload([<FromForm>] request: TrackCreateRequest, ct: CancellationToken) = task {
         let! uploadedTrackUri = s3Service.TryUploadFileStream("tracks", Guid.NewGuid().ToString() + "_" + request.Name, request.Track.OpenReadStream(), Path.GetExtension(request.Track.FileName), ct)
         if uploadedTrackUri = null then
@@ -133,7 +144,7 @@ type TrackController(trackRepository: ITrackRepository, s3Service: IS3Service, u
                     coverUri <- uploadedCoverUri
 
                     let! ownerUserId = userProvider.GetUserId()
-                    let trackEntity = Track(
+                    let track = Track(
                         CoverUri = coverUri,
                         Name = request.Name,
                         Author = request.Author,
@@ -141,9 +152,18 @@ type TrackController(trackRepository: ITrackRepository, s3Service: IS3Service, u
                         TrackUri = uploadedTrackUri,
                         OwnerUserId = ownerUserId)
 
-                    trackRepository.Save(trackEntity)
+                    trackRepository.Save(track)
                     do! unitOfWork.SaveChangesAsync(ct)
-                    return this.Ok(trackEntity) :> IActionResult
+                    let track = TrackResponse(
+                        Id = track.Id,
+                        CoverUri = track.CoverUri,
+                        IsAvailable = true,
+                        TrackUri = track.TrackUri,
+                        Visibility = (int track.Visibility |> LanguagePrimitives.EnumOfValue),
+                        Name = track.Name,
+                        Author = track.Author
+                    )
+                    return this.Ok(track) :> IActionResult
             else
                 return this.NoContent() :> IActionResult
     }

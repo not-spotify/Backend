@@ -50,7 +50,7 @@ public sealed class PlaylistResponse
     public required Guid Id { get; set; }
     public required string Name { get; set; }
     public string? CoverUri { get; set; }
-    public Guid[]? TrackIds { get; set; }
+    public VisibilityLevel Visibility { get; set; }
 }
 
 public enum VisibilityLevel

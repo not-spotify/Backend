@@ -85,7 +85,7 @@ type PlaylistController(
     /// </summary>
     [<HttpGet("{id:guid}", Name = "GetPlaylist")>]
     [<ProducesResponseType(StatusCodes.Status400BadRequest)>]
-    [<ProducesResponseType(typeof<PlaylistListResponse>, StatusCodes.Status200OK)>]
+    [<ProducesResponseType(typeof<PlaylistResponse>, StatusCodes.Status200OK)>]
     member this.Get(id: Guid, ct: CancellationToken) = task {
         let! userId = userProvider.GetUserId()
         let visiblePlaylistsQuery =
@@ -98,6 +98,11 @@ type PlaylistController(
         if playlist = null then
             return this.NotFound() :> IActionResult
         else
+            let playlist = PlaylistResponse(
+                Id = playlist.Id,
+                CoverUri = playlist.CoverUri,
+                Name = playlist.Name
+            )
             return this.Ok(playlist) :> IActionResult
     }
 
@@ -119,6 +124,14 @@ type PlaylistController(
         request.Visibility <- request.Visibility
         playlistRepository.Save(playlist)
         do! unitOfWork.SaveChangesAsync()
+
+        let playlist = PlaylistResponse(
+            Id = playlist.Id,
+            Name = playlist.Name,
+            CoverUri = playlist.CoverUri,
+            Visibility = (int playlist.Visibility |> LanguagePrimitives.EnumOfValue)
+        )
+
         return this.Ok(playlist) :> IActionResult
     }
 
@@ -252,7 +265,7 @@ type PlaylistController(
     [<ProducesResponseType(StatusCodes.Status204NoContent)>]
     [<ProducesResponseType(typeof<UpdatePlaylistErrorResponse>, StatusCodes.Status400BadRequest)>]
     [<Consumes(MediaTypeNames.Application.FormUrlEncoded)>]
-    member this.Update(playlistId: Guid, request: UpdatePlaylistRequest, ct: CancellationToken) = task {
+    member this.Update(playlistId: Guid, [<FromForm>] request: UpdatePlaylistRequest, ct: CancellationToken) = task {
         let! playlist = playlistRepository.GetByIdOrDefaultAsync(playlistId, ct)
         if playlist = null then
             return this.BadRequest(UpdatePlaylistErrorResponse(Error = "Can't find playlist")) :> IActionResult

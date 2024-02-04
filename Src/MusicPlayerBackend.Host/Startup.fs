@@ -113,7 +113,6 @@ type Startup(config: IConfiguration) =
 
             c.AddSecurityRequirement(securityRequirement)
             c.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, "MusicPlayerBackend.Host.xml"))
-            c.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, "MusicPlayerBackend.xml"))
             c.EnableAnnotations()
         )
 

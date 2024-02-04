@@ -64,6 +64,7 @@ type FavoriteTrackController(userProvider: IUserProvider,
         let playlistItemsQuery = trackPlaylistRepository.QueryMany(
             (fun tp -> tp.PlaylistId = user.FavoritePlaylistId),
             (fun tp -> FavoriteTrackListItem(
+                Id = tp.Id,
                 CoverUri = tp.Track.CoverUri,
                 TrackUri = (if tp.Track.OwnerUserId = user.Id || tp.Track.Visibility = TrackVisibility.Visible then tp.Track.TrackUri else null),
                 Name = tp.Track.Name,
