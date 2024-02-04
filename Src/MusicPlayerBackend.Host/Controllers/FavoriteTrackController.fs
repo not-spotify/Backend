@@ -59,7 +59,7 @@ type FavoriteTrackController(userProvider: IUserProvider,
     /// </summary>
     [<HttpGet("GetFavoriteTrackList", Name = "FavoriteTrackList")>]
     [<ProducesResponseType(typeof<FavoriteTrackListResponse>, StatusCodes.Status200OK)>]
-    member this.List(request: FavoriteTrackListRequest, ct: CancellationToken) = task {
+    member this.List([<FromQuery>] request: FavoriteTrackListRequest, ct: CancellationToken) = task {
         let! user = userProvider.GetUser()
         let playlistItemsQuery = trackPlaylistRepository.QueryMany(
             (fun tp -> tp.PlaylistId = user.FavoritePlaylistId),

@@ -57,20 +57,26 @@ type PlaylistController(
             let visiblePlaylistsQuery =
                 match userId with
                 | Some userId ->
-                    playlistRepository.QueryMany(fun p ->
-                        p.Visibility = PlaylistVisibility.Public
-                        || p.OwnerUserId = userId
-                        || p.Permissions.Any(fun np -> np.UserId = userId && np.PlaylistId = p.Id))
+                    query {
+                        for playlist in playlistRepository.QueryAll() do
+                        where (playlist.Visibility = PlaylistVisibility.Public || playlist.OwnerUserId = userId || playlist.Permissions.Any(fun np -> np.UserId = userId && np.PlaylistId = playlist.Id))
+                        select playlist
+                    }
                 | None ->
-                    playlistRepository.QueryMany(fun p -> p.Visibility = PlaylistVisibility.Public)
+                    query {
+                        for playlist in playlistRepository.QueryAll() do
+                        where (playlist.Visibility = PlaylistVisibility.Public)
+                    }
             let! totalCount = visiblePlaylistsQuery.CountAsync(ct)
-            let! playlists =
-                visiblePlaylistsQuery
-                    .Select(fun p ->
-                                PlaylistListItemResponse(Id = p.Id, CoverUri = p.CoverUri, Name = p.Name))
-                    .Skip(request.PageSize * request.Page)
-                    .Take(request.PageSize)
-                    .ToArrayAsync(ct)
+            let playlists =
+                query {
+                    for playlist in visiblePlaylistsQuery do
+                    skip (request.PageSize * request.Page)
+                    take request.PageSize
+                    select (PlaylistListItemResponse(Id = playlist.Id, CoverUri = playlist.CoverUri, Name = playlist.Name))
+                }
+            let! playlists = playlists.ToArrayAsync(ct)
+
             return this.Ok(PlaylistListResponse(Items = playlists, TotalCount = totalCount))
         }
 
@@ -83,8 +89,11 @@ type PlaylistController(
     member this.Get(id: Guid, ct: CancellationToken) = task {
         let! userId = userProvider.GetUserId()
         let visiblePlaylistsQuery =
-            playlistRepository
-                .QueryMany(fun p -> p.Visibility = PlaylistVisibility.Public || p.OwnerUserId = userId || p.Permissions.Any(fun np -> np.UserId = userId && np.PlaylistId = p.Id))
+            query {
+                for p in playlistRepository.QueryAll() do
+                where (p.Visibility = PlaylistVisibility.Public || p.OwnerUserId = userId || p.Permissions.Any(fun np -> np.UserId = userId && np.PlaylistId = p.Id))
+            }
+
         let! playlist = visiblePlaylistsQuery.SingleOrDefaultAsync((fun p -> p.Id = id), cancellationToken = ct)
         if playlist = null then
             return this.NotFound() :> IActionResult
@@ -262,7 +271,7 @@ type PlaylistController(
                     do! unitOfWork.SaveChangesAsync(ct)
                     return this.NoContent() :> IActionResult
             else
-                return this.NoContent() :> IActionResult // TODO: Optimize
+                return this.NoContent() :> IActionResult
     }
 
     /// <summary>
@@ -276,19 +285,24 @@ type PlaylistController(
         if visiblePlaylist then
             return this.NotFound() :> IActionResult
         else
-            let tracksQuery = trackPlaylistRepository.QueryMany(fun tp -> tp.PlaylistId = playlistId)
+            let tracksQuery =
+                query {
+                    for t in trackPlaylistRepository.QueryAll() do
+                    where (t.PlaylistId = playlistId)
+                }
             let! tracks =
-                tracksQuery
-                    .Skip(request.Page * request.PageSize)
-                    .Take(request.PageSize)
-                    .Select(fun tp ->
-                        TrackInPlaylistListItem(
+                query {
+                    for tp in tracksQuery do
+                    skip(request.Page * request.PageSize)
+                    take(request.PageSize)
+                    select(TrackInPlaylistListItem(
                             Author = tp.Track.Author,
                             CoverUri = tp.Track.CoverUri,
                             Name = tp.Track.Name,
                             TrackUri = tp.Track.TrackUri,
                             Visibility = (int tp.Track.Visibility |> LanguagePrimitives.EnumOfValue)))
-                    .ToArrayAsync(ct)
+                } |> _.ToArrayAsync(ct)
+
             let! trackCount = tracksQuery.CountAsync(ct)
             return this.Ok(TrackInPlaylistListResponse(Items = tracks, Count = trackCount)) :> IActionResult
     }

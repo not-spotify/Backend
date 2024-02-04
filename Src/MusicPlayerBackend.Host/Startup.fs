@@ -138,7 +138,7 @@ type Startup(config: IConfiguration) =
         %app.UseMiddleware<AnonymousOnlyMiddleware>()
         %app.UseMiddleware<UnauthorizedMiddleware>()
         %app
+            .UseAuthentication()
             .UseRouting()
             .UseAuthorization()
-            .UseAuthentication()
             .UseEndpoints(fun e -> %e.MapControllers())
