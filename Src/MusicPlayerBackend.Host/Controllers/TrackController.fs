@@ -134,13 +134,24 @@ type TrackController(trackRepository: ITrackRepository, s3Service: IS3Service, u
     [<Consumes(MediaTypeNames.Multipart.FormData)>]
     [<ProducesResponseType(typeof<TrackResponse>, StatusCodes.Status200OK)>]
     member this.Upload([<FromForm>] request: TrackCreateRequest, ct: CancellationToken) = task {
-        let! uploadedTrackUri = s3Service.TryUploadFileStream("tracks", Guid.NewGuid().ToString() + "_" + request.Name, request.Track.OpenReadStream(), Path.GetExtension(request.Track.FileName), ct)
+        let! uploadedTrackUri = s3Service.TryUploadFileStream(
+            "tracks",
+            Guid.NewGuid().ToString() + "_" + request.Name,
+            request.Track.OpenReadStream(),
+            Path.GetExtension(request.Track.FileName),
+            ct)
+
         if uploadedTrackUri = null then
             return this.BadRequest("Failed to upload track") :> IActionResult
         else
             let mutable coverUri = null
             if request.Cover <> null then
-                let! uploadedCoverUri = s3Service.TryUploadFileStream("covers", Guid.NewGuid().ToString() + "_" + request.Name, request.Cover.OpenReadStream(), Path.GetExtension(request.Cover.FileName), ct)
+                let! uploadedCoverUri = s3Service.TryUploadFileStream(
+                    "covers", Guid.NewGuid().ToString() + "_" + request.Name,
+                    request.Cover.OpenReadStream(),
+                    Path.GetExtension(request.Cover.FileName),
+                    ct)
+
                 if uploadedCoverUri = null then
                     return this.BadRequest("Failed to upload cover") :> IActionResult
                 else

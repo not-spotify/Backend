@@ -30,8 +30,6 @@ public sealed class TrackCreateRequest
     public string Author { get; set; } = null!;
 
     public IFormFile Track { get; set; } = null!;
-
-    [FromForm]
     public IFormFile? Cover { get; set; }
 
     public TrackVisibility Visibility { get; set; }

@@ -29,13 +29,13 @@ public sealed class S3Service(ILogger<S3Service> logger, IMinioClient minioClien
             using var ms = new MemoryStream();
             await stream.CopyToAsync(ms, ct);
             ms.Position = 0;
-            var audioName = key + extension;
+            var fileName = key + extension;
 
             var args = new PutObjectArgs()
                 .WithBucket(bucket)
-                .WithObject(audioName)
+                .WithObject(fileName)
                 .WithContentType(new FileExtensionContentTypeProvider().Mappings[extension])
-                .WithObjectSize(ms.Capacity)
+                .WithObjectSize(ms.Length)
                 .WithStreamData(ms);
 
             await minioClient.PutObjectAsync(args, ct);
