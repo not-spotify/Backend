@@ -26,6 +26,18 @@ module Option =
         if success then
             Some result else None
 
+    let inline ofUncheckedObj obj =
+        if System.Object.ReferenceEquals(null, obj) then
+            None
+        else
+            Some obj
+
+module Result =
+    let isOk (result: Result<_, _>) =
+        match result with
+        | Error _ -> false
+        | Ok _ -> true
+
 let inline isNotNull value =
     value
     |> isNull

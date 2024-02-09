@@ -4,11 +4,12 @@
         <OutputType>Exe</OutputType>
         <TargetFramework>net8.0</TargetFramework>
         <WarnOn>3390;$(WarnOn)</WarnOn>
+        <NoWarn>$(NoWarn);1591</NoWarn>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
     </PropertyGroup>
 
     <PropertyGroup>
-        <GenerateDocumentationFile>true</GenerateDocumentationFile>
-        <NoWarn>$(NoWarn);1591</NoWarn>
+        <RootNamespace>MusicPlayerBackend.Host</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>
@@ -29,9 +30,9 @@
 
     <ItemGroup>
         <ProjectReference Include="..\Data\Data.csproj"/>
-        <ProjectReference Include="..\MusicPlayerBackend.Identity\MusicPlayerBackend.Identity.fsproj" />
+        <ProjectReference Include="..\Identity\Identity.fsproj" />
+        <ProjectReference Include="..\Persistence\Persistence.fsproj" />
         <ProjectReference Include="..\MusicPlayerBackend\MusicPlayerBackend.csproj" />
-        <ProjectReference Include="..\Options\Options.fsproj" />
     </ItemGroup>
 
     <ItemGroup>
@@ -39,9 +40,15 @@
     </ItemGroup>
 
     <ItemGroup>
+        <Compile Include="OptionSections.fs" />
         <Compile Include="Middlewares\UnauthorizedMiddleware.fs" />
+        <Compile Include="Contracts\Playlist\Base.fs" />
+        <Compile Include="Contracts\Playlist\Queries.fs" />
+        <Compile Include="Contracts\Playlist\PlaylistContract.fs" />
+        <Compile Include="Contracts\User\Common.fs" />
         <Compile Include="Services\UserResolver.fs" />
         <Compile Include="Services\JwtService.fs" />
+        <Compile Include="Services\PlaylistService.fs" />
         <Compile Include="MinioExtensions.fs" />
         <Compile Include="Controllers\UserController.fs" />
         <Compile Include="Controllers\FavoriteTrackController.fs" />

@@ -23,7 +23,7 @@ open MusicPlayerBackend.TransferObjects.User
 type UserController(
         userManager: UserManager<User>,
         signInManager: SignInManager<User>,
-        userProvider: IUserProvider,
+        userProvider: UserProvider,
         refreshTokenRepository: IRefreshTokenRepository,
         playlistRepository: IPlaylistRepository,
         userRepository: IUserRepository,

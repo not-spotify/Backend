@@ -37,8 +37,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Data\Data.csproj"/>
-    <ProjectReference Include="..\MusicPlayerBackend.Identity\MusicPlayerBackend.Identity.fsproj" />
-    <ProjectReference Include="..\Options\Options.fsproj" />
+    <ProjectReference Include="..\Identity\Identity.fsproj" />
   </ItemGroup>
 
   <ItemGroup>

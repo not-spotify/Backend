@@ -1,6 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
     <PropertyGroup>
+      <RootNamespace>MusicPlayerBackend.Identity</RootNamespace>
       <OutputType>Library</OutputType>
     </PropertyGroup>
 
@@ -15,7 +16,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\Data\Data.csproj" />
-      <ProjectReference Include="..\MusicPlayerBackend.Common\MusicPlayerBackend.Common.fsproj" />
+      <ProjectReference Include="..\Common\Common.fsproj" />
     </ItemGroup>
 
     <ItemGroup>

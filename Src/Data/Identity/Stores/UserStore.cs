@@ -9,6 +9,7 @@ using MusicPlayerBackend.Data.Entities;
 
 namespace MusicPlayerBackend.Data.Identity.Stores;
 
+
 public sealed class UserStore(
     ILogger<UserStore> logger,
     IUserRepository userRepository,

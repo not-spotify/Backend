@@ -1,11 +1,10 @@
 ﻿namespace MusicPlayerBackend.Common.ActivePatterns
 
+open System
 open  MusicPlayerBackend.Common.TypeExtensions
 
 [<AutoOpen>]
 module String =
-    open System
-
     let inline (|NullOrEmpty|_|) (str: string) =
         String.IsNullOrEmpty(str)
         |> Option.ofBool
@@ -23,3 +22,11 @@ module String =
         String.IsNullOrWhiteSpace(str)
         |> not
         |> Option.ofBool
+
+[<AutoOpen>]
+module Object =
+    let inline (|UncheckedNull|_|) obj =
+        if Object.ReferenceEquals(obj, null) then
+            Option.unionUnit
+        else
+            None

@@ -8,6 +8,7 @@ open Microsoft.Extensions.Options
 open Microsoft.Extensions.DependencyInjection
 open MusicPlayerBackend.TransferObjects
 
+[<Sealed>]
 type UnauthorizedMiddleware(next: RequestDelegate) =
     member _.InvokeAsync(context: HttpContext) = task {
         do! next.Invoke(context)

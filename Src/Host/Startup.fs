@@ -22,7 +22,7 @@ open Microsoft.Extensions.Hosting
 open Minio
 
 open MusicPlayerBackend.Common.TypeExtensions
-open MusicPlayerBackend.Options
+open MusicPlayerBackend
 open MusicPlayerBackend.Host
 open MusicPlayerBackend.Host.Ext
 open MusicPlayerBackend.Data
@@ -33,9 +33,9 @@ open MusicPlayerBackend.Services
 type Startup(config: IConfiguration) =
     member _.ConfigureServices(services: IServiceCollection) =
         %services
-            .Configure<AppConfig>(config)
-            .Configure<MusicPlayerBackend.Options.Minio>(config.GetSection(nameof(Minio)))
-            .Configure<TokenConfig>(config.GetSection(nameof(TokenConfig)))
+            .Configure<OptionSections.AppConfig>(config)
+            .Configure<OptionSections.Minio>(config.GetSection(nameof(Minio)))
+            .Configure<OptionSections.TokenConfig>(config.GetSection(nameof(OptionSections.TokenConfig)))
             .Configure<PasswordHasherOptions>(fun (o: PasswordHasherOptions) -> o.IterationCount <- 600_000)
 
         %services
@@ -43,7 +43,7 @@ type Startup(config: IConfiguration) =
              .AddHttpContextAccessor()
 
         %services.AddMinio(fun o ->
-            let minioConfig = config.GetSection("Minio").Get<MusicPlayerBackend.Options.Minio>()
+            let minioConfig = config.GetSection("Minio").Get<OptionSections.Minio>()
             %o
                 .WithSSL(minioConfig.UseSsl)
                 .WithEndpoint(minioConfig.Endpoint, minioConfig.Port)
@@ -83,7 +83,7 @@ type Startup(config: IConfiguration) =
             .AddJwtBearer(fun o ->
                 o.TokenValidationParameters <- TokenValidationParameters(
                     ValidateIssuerSigningKey = false,
-                    IssuerSigningKey = SymmetricSecurityKey(Encoding.UTF8.GetBytes(config.GetSection(nameof(TokenConfig)).Get<TokenConfig>().SigningKey)),
+                    IssuerSigningKey = SymmetricSecurityKey(Encoding.UTF8.GetBytes(config.GetSection(nameof(OptionSections.TokenConfig)).Get<OptionSections.TokenConfig>().SigningKey)),
                     ValidateIssuer = false,
                     ValidateAudience = false,
                     RequireAudience = false
@@ -92,7 +92,7 @@ type Startup(config: IConfiguration) =
 
         %services.AddCustomIdentity()
         %services.AddAuthorization()
-        %services.AddTransient<IUserProvider, UserProvider>()
+        %services.AddTransient<UserProvider>()
         %services.AddTransient<JwtService>()
 
         %services.AddEndpointsApiExplorer()
@@ -121,7 +121,7 @@ type Startup(config: IConfiguration) =
     member _.Configure(app: IApplicationBuilder,
                        env: IWebHostEnvironment,
                        ctx: AppDbContext,
-                       appConfig: IOptions<AppConfig>,
+                       appConfig: IOptions<OptionSections.AppConfig>,
                        minioClient: IMinioClient) =
 
         %minioClient

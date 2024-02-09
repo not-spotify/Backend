@@ -28,7 +28,10 @@ type TrackVisibility = MusicPlayerBackend.Data.Entities.TrackVisibility
 [<ProducesResponseType(typeof<UnauthorizedResponse>, StatusCodes.Status401Unauthorized)>]
 [<Authorize>]
 [<Route("[controller]")>]
-type TrackController(trackRepository: ITrackRepository, s3Service: IS3Service, unitOfWork: IUnitOfWork, userProvider: IUserProvider) =
+type TrackController(trackRepository: ITrackRepository,
+                     s3Service: IS3Service,
+                     unitOfWork: IUnitOfWork,
+                     userProvider: UserProvider) =
     inherit ControllerBase()
 
     /// <summary>

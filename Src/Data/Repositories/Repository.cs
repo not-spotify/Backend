@@ -26,7 +26,6 @@ public interface IEntityRepository<in TKey, TEntity> where TEntity : class, IEnt
 
     Task<TResult[]> GetManyAsync<TResult>(Expression<Func<TEntity, bool>> predicate, Expression<Func<TEntity, TResult>> selector, CancellationToken ct = default);
 
-    Task<TEntity?> FirstOrDefaultAsync(Expression<Func<TEntity?, bool>> where, CancellationToken ct = default);
     Task<TEntity?> SingleOrDefaultAsync(Expression<Func<TEntity, bool>> where, CancellationToken ct = default);
     Task<TEntity> SingleAsync(CancellationToken ct = default);
     Task<TEntity> SingleAsync(Expression<Func<TEntity, bool>> where, CancellationToken ct = default);
@@ -105,11 +104,6 @@ public abstract class EntityRepositoryBase<TKey, TEntity>(AppDbContext dbContext
     public async Task<TResult[]> GetManyAsync<TResult>(Expression<Func<TEntity, bool>> predicate, Expression<Func<TEntity, TResult>> selector, CancellationToken ct = default)
     {
         return await QueryMany(predicate, selector).ToArrayAsync(ct);
-    }
-
-    public async Task<TEntity?> FirstOrDefaultAsync(Expression<Func<TEntity?, bool>> where, CancellationToken ct = default)
-    {
-        return await QueryAll().Where(where).FirstOrDefaultAsync(ct);
     }
 
     public async Task<TEntity?> SingleOrDefaultAsync(Expression<Func<TEntity, bool>> where, CancellationToken ct = default)

@@ -55,7 +55,7 @@ public sealed class PlaylistResponse
 
 public enum VisibilityLevel
 {
-    Private = 0,
+    Private,
     Public
 }
 

@@ -9,7 +9,7 @@ open Microsoft.IdentityModel.Tokens
 open MusicPlayerBackend.Data
 open MusicPlayerBackend.Data.Entities
 open MusicPlayerBackend.Data.Repositories
-open MusicPlayerBackend.Options
+open MusicPlayerBackend.OptionSections
 
 type JwtBearerResponse = {
     JwtBearer: string
@@ -29,7 +29,7 @@ type JwtService(
     member _.Generate(userId: Guid) = task {
         let jti = Guid.NewGuid()
         let refreshTokenValue = Guid.NewGuid()
-        let jwtValidDue = DateTime.UtcNow.AddDays(1)
+        let jwtValidDue = DateTime.UtcNow.AddDays(1) // TODO: Move to appconfig
         let refreshValidDue = jwtValidDue.AddDays(7)
 
         let secKey = System.Text.Encoding.UTF8.GetBytes(tokenConfig.SigningKey)

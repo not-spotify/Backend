@@ -1,4 +1,4 @@
-﻿namespace MusicPlayerBackend.Options
+﻿namespace MusicPlayerBackend.OptionSections
 
 [<CLIMutable>]
 type Minio = {

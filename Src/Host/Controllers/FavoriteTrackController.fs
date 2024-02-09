@@ -19,7 +19,7 @@ open MusicPlayerBackend.TransferObjects
 [<ProducesResponseType(StatusCodes.Status400BadRequest)>]
 [<ProducesResponseType(typeof<UnauthorizedResponse>, StatusCodes.Status401Unauthorized)>]
 [<Route("Track/")>]
-type FavoriteTrackController(userProvider: IUserProvider,
+type FavoriteTrackController(userProvider: UserProvider,
                             trackRepository: ITrackRepository,
                             trackPlaylistRepository: ITrackPlaylistRepository,
                             unitOfWork: IUnitOfWork) =
