@@ -10,10 +10,16 @@
     <ItemGroup>
         <Compile Include="Entities\User.fs" />
         <Compile Include="Entities\Playlist.fs" />
+        <Compile Include="Entities\Album.fs" />
+        <Compile Include="Entities\PlaylistUserPermission.fs" />
+        <Compile Include="Entities\RefreshToken.fs" />
+        <Compile Include="Entities\Track.fs" />
+        <Compile Include="Entities\TrackPlaylist.fs" />
+        <Compile Include="Entities\AlbumTrack.fs" />
         <Compile Include="AppDbContext.fs" />
-        <Compile Include="FsharpPlaylistRepository.fs" />
-        <Compile Include="FsharpUserRepository.fs" />
         <Compile Include="FSharpUnitOfWork.fs" />
+        <Compile Include="Repositories\FsharpPlaylistRepository.fs" />
+        <Compile Include="Repositories\FsharpUserRepository.fs" />
         <Compile Include="UserStore.fs" />
     </ItemGroup>
     

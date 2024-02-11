@@ -5,7 +5,7 @@ open Microsoft.EntityFrameworkCore
 
 open MusicPlayerBackend.Common
 open MusicPlayerBackend.Persistence
-open MusicPlayerBackend.Persistence.Entities.Playlist
+open MusicPlayerBackend.Persistence.Entities
 
 [<Sealed>]
 type FsharpPlaylistRepository(dbContext: FsharpAppDbContext) =
@@ -13,7 +13,7 @@ type FsharpPlaylistRepository(dbContext: FsharpAppDbContext) =
 
     member _.QueryAll() = playlists.AsQueryable()
 
-    member _.Save(playlist) =
+    member _.Save(playlist : Playlist) =
         if playlist.Id = Guid.Empty && playlist.CreatedAt = DateTimeOffset.MinValue then
             playlist.CreatedAt <- DateTimeOffset.UtcNow
         elif playlist.Id <> Guid.Empty then
@@ -29,7 +29,7 @@ type FsharpPlaylistRepository(dbContext: FsharpAppDbContext) =
 
     member _.Delete(playlist) = playlists.Remove(playlist)
 
-    member _.TryGetById(id: Id, ?ct) = task {
+    member _.TryGetById(id: PlaylistId, ?ct) = task {
         let getByIdQuery =
             query {
                 for playlist in playlists do

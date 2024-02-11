@@ -1,9 +1,7 @@
-﻿namespace MusicPlayerBackend.Persistence.Entities.Playlist
+﻿namespace MusicPlayerBackend.Persistence.Entities
 
 open System
-
-type UserId = Guid
-type Id = Guid
+open MusicPlayerBackend.Persistence.Entities
 
 type Visibility =
     | Private
@@ -11,7 +9,7 @@ type Visibility =
 
 [<CLIMutable>]
 type Playlist = {
-    mutable Id: Id
+    mutable Id: PlaylistId
 
     mutable Name: string
     mutable Visibility: Visibility

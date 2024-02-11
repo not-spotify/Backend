@@ -2,7 +2,7 @@
 
 open Microsoft.EntityFrameworkCore
 open MusicPlayerBackend.Common
-open MusicPlayerBackend.Persistence
+open MusicPlayerBackend.Persistence.Entities
 
 [<Sealed>]
 type FsharpAppDbContext(options) =
@@ -11,15 +11,15 @@ type FsharpAppDbContext(options) =
     static ConnectionStringName = "PgConnectionString"
 
     override _.OnModelCreating(modelBuilder) =
-        %modelBuilder.Entity<Entities.User.User>()
+        %modelBuilder.Entity<User>()
              .HasIndex(indexExpression = fun s -> s.NormalizedUserName)
              .IsUnique()
-        %modelBuilder.Entity<Entities.User.User>()
+        %modelBuilder.Entity<User>()
              .HasIndex(indexExpression = fun s -> s.NormalizedEmail)
              .IsUnique()
-        %modelBuilder.Entity<Entities.User.User>(fun builder ->
+        %modelBuilder.Entity<User>(fun builder ->
             %builder
-                .HasOne<Entities.Playlist.Playlist>()
+                .HasOne<Playlist>()
                 .WithMany()
                 .HasForeignKey(foreignKeyExpression = fun c -> c.FavoritePlaylistId)
         )

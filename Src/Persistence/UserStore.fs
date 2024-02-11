@@ -5,8 +5,9 @@ open Microsoft.AspNetCore.Identity
 open Microsoft.Extensions.Logging
 
 open MusicPlayerBackend.Common
+open MusicPlayerBackend.Persistence.Entities
 
-type IUserStore = inherit IUserPasswordStore<Entities.User.User> inherit IUserEmailStore<Entities.User.User>
+type IUserStore = inherit IUserPasswordStore<User> inherit IUserEmailStore<User>
 
 type UserStore(
     logger: ILogger<UserStore>,
@@ -26,9 +27,9 @@ type UserStore(
                 let! userByNormalizedEmail = self.FindByEmailAsync(normalizedEmail, cancellationToken)
 
                 if userByNormalizedUserName |> Option.ofUncheckedObj |> Option.isSome then
-                    return IdentityResult.Failed((IdentityErrorDescriber()).DuplicateUserName(normalizedUserName))
+                    return IdentityResult.Failed(IdentityErrorDescriber().DuplicateUserName(normalizedUserName))
                 elif userByNormalizedEmail |> Option.ofUncheckedObj |> Option.isSome then
-                    return IdentityResult.Failed((IdentityErrorDescriber()).DuplicateEmail(user.Email))
+                    return IdentityResult.Failed(IdentityErrorDescriber().DuplicateEmail(user.Email))
                 else
                     user.NormalizedUserName <- normalizedUserName
                     user.NormalizedEmail <- normalizedEmail

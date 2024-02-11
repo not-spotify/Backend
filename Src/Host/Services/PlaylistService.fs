@@ -22,15 +22,15 @@ module PlaylistService =
             |> Option.isNone then
             return Error Playlist.CreatePlaylistError.Empty
         else
-            let playlist : Entities.Playlist.Playlist =
+            let playlist : Entities.Playlist =
                 { Id = Guid.Empty
                   Name = request.Name
                   Visibility =
                       match request.Visibility with
                       | Contracts.Playlist.Private ->
-                          Entities.Playlist.Private
+                          Private
                       | Contracts.Playlist.Public ->
-                          Entities.Playlist.Public
+                          Public
                   CoverUri = request.CoverFileLink |> Option.ofStringW
                   OwnerUserId = request.UserId
                   CreatedAt = DateTimeOffset.MinValue
@@ -47,8 +47,8 @@ module PlaylistService =
                   OwnerUserId = playlist.OwnerUserId
                   Visibility =
                       match playlist.Visibility with
-                      | Entities.Playlist.Private -> Contracts.Playlist.Private
-                      | Entities.Playlist.Public -> Contracts.Playlist.Public }
+                      | Private -> Contracts.Playlist.Private
+                      | Public -> Contracts.Playlist.Public }
 
             return Ok(playlist)
     }
@@ -110,8 +110,8 @@ module PlaylistService =
                   OwnerUserId = playlist.OwnerUserId
                   Visibility =
                       match playlist.Visibility with
-                      | Entities.Playlist.Private -> Contracts.Playlist.Private
-                      | Entities.Playlist.Public -> Contracts.Playlist.Public }
+                      | Private -> Contracts.Playlist.Private
+                      | Public -> Contracts.Playlist.Public }
 
             return Ok(playlist)
     }

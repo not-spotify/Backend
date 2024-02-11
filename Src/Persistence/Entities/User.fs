@@ -1,13 +1,13 @@
-﻿module MusicPlayerBackend.Persistence.Entities.User
+﻿namespace MusicPlayerBackend.Persistence.Entities
 
 open System
 
-type Id = Guid
+type UserId = Guid
 type PlaylistId = Guid
 
 [<CLIMutable>]
 type User = {
-    mutable Id: Id
+    mutable Id: UserId
 
     mutable UserName: string
     mutable NormalizedUserName: string

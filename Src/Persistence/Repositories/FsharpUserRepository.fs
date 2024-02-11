@@ -5,30 +5,30 @@ open Microsoft.EntityFrameworkCore
 
 open MusicPlayerBackend.Common
 open MusicPlayerBackend.Persistence
-open MusicPlayerBackend.Persistence.Entities.User
+open MusicPlayerBackend.Persistence.Entities
 
 type FsharpUserRepository(dbContext: FsharpAppDbContext) =
     let users = dbContext.Set<User>()
 
     member _.QueryAll() = users.AsQueryable()
 
-    member _.Save(playlist) =
-        if playlist.Id = Guid.Empty && playlist.CreatedAt = DateTimeOffset.MinValue then
-            playlist.CreatedAt <- DateTimeOffset.UtcNow
-        elif playlist.Id <> Guid.Empty then
-            let playlistEntry = dbContext.Entry(playlist)
-            match playlistEntry.State with
-            | EntityState.Modified when playlistEntry.Property("UpdatedAt").IsModified |> not ->
-                playlist.UpdatedAt <- ValueSome DateTimeOffset.UtcNow
+    member _.Delete(user) = users.Remove(user) |> ignore
+
+    member _.Save(user: User) =
+        if user.Id = Guid.Empty && user.CreatedAt = DateTimeOffset.MinValue then
+            user.CreatedAt <- DateTimeOffset.UtcNow
+        elif user.Id <> Guid.Empty then
+            let userEntry = dbContext.Entry(user)
+            match userEntry.State with
+            | EntityState.Modified when userEntry.Property(nameof user.Id).IsModified |> not ->
+                user.UpdatedAt <- ValueSome DateTimeOffset.UtcNow
             | EntityState.Detached ->
                 raise ^ InvalidOperationException("Can't save detached playlist.")
             | _ -> ()
 
-        users.Update(playlist)
+        users.Update(user)
 
-
-
-    member _.TryGetById(id: Id, ?ct) = task {
+    member _.TryGetById(id: UserId, ?ct) = task {
         let getByIdQuery =
             query {
                 for user in users do
