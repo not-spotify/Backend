@@ -12,7 +12,6 @@ open Microsoft.Extensions.Options
 open Microsoft.IdentityModel.JsonWebTokens
 open Microsoft.IdentityModel.Tokens
 open Microsoft.OpenApi.Models
-open MusicPlayerBackend.Host.Services
 open Npgsql.EntityFrameworkCore.PostgreSQL.Infrastructure
 open Serilog
 open Microsoft.AspNetCore.Identity
@@ -21,12 +20,12 @@ open Microsoft.Extensions.Configuration
 open Microsoft.Extensions.Hosting
 open Minio
 
-open MusicPlayerBackend.Common.TypeExtensions
 open MusicPlayerBackend
+open MusicPlayerBackend.Common
 open MusicPlayerBackend.Host
 open MusicPlayerBackend.Host.Ext
-open MusicPlayerBackend.Data
-open MusicPlayerBackend.Data.Repositories
+open MusicPlayerBackend.Host.Services
+open MusicPlayerBackend.Persistence
 open MusicPlayerBackend.Identity
 open MusicPlayerBackend.Services
 
@@ -49,26 +48,26 @@ type Startup(config: IConfiguration) =
                 .WithEndpoint(minioConfig.Endpoint, minioConfig.Port)
                 .WithCredentials(minioConfig.AccessKey, minioConfig.SecretKey))
 
-        %services.AddScoped<AppDbContext>(fun c ->
-            let optionsBuilder = DbContextOptionsBuilder<AppDbContext>()
+        %services.AddScoped<FsharpAppDbContext>(fun c ->
+            let optionsBuilder = DbContextOptionsBuilder<FsharpAppDbContext>()
 
             %optionsBuilder.UseNpgsql(
-                connectionString = c.GetRequiredService<IConfiguration>().GetConnectionString(AppDbContext.ConnectionStringName),
-                npgsqlOptionsAction = Action<NpgsqlDbContextOptionsBuilder>(fun b -> %b.MigrationsAssembly(typeof<AppDbContext>.Assembly.GetName().Name))
+                connectionString = c.GetRequiredService<IConfiguration>().GetConnectionString(FsharpAppDbContext.ConnectionStringName),
+                npgsqlOptionsAction = Action<NpgsqlDbContextOptionsBuilder>(fun b -> %b.MigrationsAssembly(typeof<FsharpAppDbContext>.Assembly.GetName().Name))
             )
 
-            new AppDbContext(optionsBuilder.Options)
+            new FsharpAppDbContext(optionsBuilder.Options)
         )
 
         %services
-            .AddScoped<IUnitOfWork, UnitOfWork>()
-            .AddScoped<IAlbumRepository, AlbumRepository>()
-            .AddScoped<IPlaylistRepository, PlaylistRepository>()
-            .AddScoped<IPlaylistUserPermissionRepository, PlaylistUserPermissionRepository>()
-            .AddScoped<IRefreshTokenRepository, RefreshTokenRepository>()
-            .AddScoped<ITrackPlaylistRepository, TrackPlaylistRepository>()
-            .AddScoped<ITrackRepository, TrackRepository>()
-            .AddScoped<IUserRepository, UserRepository>()
+            .AddScoped<FsharpUnitOfWork>()
+            .AddScoped<FsharpAlbumRepository>()
+            .AddScoped<FsharpPlaylistRepository>()
+            .AddScoped<FsharpPlaylistUserPermissionRepository>()
+            .AddScoped<FsharpRefreshTokenRepository>()
+            .AddScoped<FsharpTrackPlaylistRepository>()
+            .AddScoped<FsharpTrackRepository>()
+            .AddScoped<FsharpUserRepository>()
 
         %services
             .AddTransient<IS3Service, S3Service>()
@@ -120,7 +119,7 @@ type Startup(config: IConfiguration) =
 
     member _.Configure(app: IApplicationBuilder,
                        env: IWebHostEnvironment,
-                       ctx: AppDbContext,
+                       ctx: FsharpAppDbContext,
                        appConfig: IOptions<OptionSections.AppConfig>,
                        minioClient: IMinioClient) =
 

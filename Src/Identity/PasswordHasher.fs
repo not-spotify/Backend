@@ -1,7 +1,8 @@
 ﻿namespace MusicPlayerBackend.Identity
 
 open Microsoft.AspNetCore.Identity
-open MusicPlayerBackend.Data.Entities
+
+open MusicPlayerBackend.Persistence.Entities
 
 type PasswordHasher() =
     interface IPasswordHasher<User> with

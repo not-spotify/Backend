@@ -93,4 +93,16 @@ module Task =
     let bTrue = System.Threading.Tasks.Task.FromResult(true)
     let bFalse = System.Threading.Tasks.Task.FromResult(false)
     let completed = System.Threading.Tasks.Task.CompletedTask
+
+    let inline map ([<InlineIfLambda>] mapping) taskValue = task {
+        let! taskValue = taskValue
+        return mapping taskValue
+    }
+
     let inline fromResult value = System.Threading.Tasks.Task.FromResult(value)
+
+module TaskOption =
+    let inline map ([<InlineIfLambda>] mapping) option = task {
+        let! option = option
+        return option |> Option.map mapping
+    }

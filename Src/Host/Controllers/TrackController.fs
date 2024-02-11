@@ -7,19 +7,14 @@ open System.Threading
 open Microsoft.AspNetCore.Authorization
 open Microsoft.AspNetCore.Http
 open Microsoft.AspNetCore.Mvc
-open Microsoft.EntityFrameworkCore
 
 open MusicPlayerBackend.Common
-open MusicPlayerBackend.Data
-open MusicPlayerBackend.Data.Entities
-open MusicPlayerBackend.Data.Repositories
 open MusicPlayerBackend.Host
+open MusicPlayerBackend.Persistence
+open MusicPlayerBackend.Persistence.Entities
 open MusicPlayerBackend.Services
 open MusicPlayerBackend.TransferObjects
 open MusicPlayerBackend.TransferObjects.Track
-
-type TrackListItem = MusicPlayerBackend.TransferObjects.Track.TrackListItem
-type TrackVisibility = MusicPlayerBackend.Data.Entities.TrackVisibility
 
 [<ApiController>]
 [<Consumes(MediaTypeNames.Application.Json)>]
@@ -28,36 +23,11 @@ type TrackVisibility = MusicPlayerBackend.Data.Entities.TrackVisibility
 [<ProducesResponseType(typeof<UnauthorizedResponse>, StatusCodes.Status401Unauthorized)>]
 [<Authorize>]
 [<Route("[controller]")>]
-type TrackController(trackRepository: ITrackRepository,
+type TrackController(trackRepository: FsharpTrackRepository,
                      s3Service: IS3Service,
-                     unitOfWork: IUnitOfWork,
+                     unitOfWork: FsharpUnitOfWork,
                      userProvider: UserProvider) =
     inherit ControllerBase()
-
-    /// <summary>
-    ///     Gets track list.
-    /// </summary>
-    [<HttpGet(Name = "GetTracks")>]
-    [<ProducesResponseType(typeof<TrackListResponse>, StatusCodes.Status200OK)>]
-    member this.List([<FromQuery>] request: PlaylistListRequest, ct: CancellationToken) = task {
-        let! userId = userProvider.GetUserId()
-        let! tracks =
-            query {
-                for t in trackRepository.QueryAll() do
-                    skip(request.Page * request.PageSize)
-                    take(request.PageSize)
-                    select(TrackListItem(
-                        Author = t.Author,
-                        CoverUri = t.CoverUri,
-                        Name = t.Name,
-                        TrackUri = (if t.OwnerUserId = userId || t.Visibility = TrackVisibility.Visible then t.TrackUri else null),
-                        Visibility = (int t.Visibility |> enum))
-                    )
-
-            } |> _.ToArrayAsync(ct)
-        let! trackCount = trackRepository.CountAsync((fun t -> t.OwnerUserId = userId), ct)
-        return this.Ok(TrackListResponse(Items = tracks, Count = trackCount))
-    }
 
     /// <summary>
     ///     Gets track by Id.
@@ -66,14 +36,14 @@ type TrackController(trackRepository: ITrackRepository,
     [<ProducesResponseType(typeof<TrackResponse>, StatusCodes.Status200OK)>]
     member this.Get(id: Guid, ct: CancellationToken) = task {
         let! userId = userProvider.GetUserId()
-        let! track = trackRepository.GetByIdIfVisibleOrDefault(id, userId, ct)
-        if track = null then
+        let! track = trackRepository.TryGetVisible(id, userId, ct)
+        match track with
+        | None ->
             return this.NotFound() :> IActionResult
-        else
+        | Some track ->
             let track = TrackResponse(
                 Id = track.Id,
-                CoverUri = track.CoverUri,
-                IsAvailable = (track.OwnerUserId = userId || track.Visibility = TrackVisibility.Visible),
+                CoverUri = (track.CoverUri |> Option.toObj),
                 TrackUri = track.TrackUri,
                 Visibility = ucast track.Visibility,
                 Name = track.Name,
@@ -89,30 +59,44 @@ type TrackController(trackRepository: ITrackRepository,
     [<Consumes(MediaTypeNames.Application.FormUrlEncoded)>]
     member this.Update(id: Guid, [<FromForm>] request: TrackUpdateRequest, ct: CancellationToken) = task {
         let! userId = userProvider.GetUserId()
-        let! track = trackRepository.GetByIdIfOwnerOrDefault(userId, id, ct)
-        if track = null then
+        let! track = trackRepository.TryGetIfOwner(userId, id, ct)
+        match track with
+        | None ->
             return this.NotFound() :> IActionResult
-        elif request.Visibility.HasValue then
-            track.Visibility <- ucast request.Visibility.Value
-            return this.NoContent() :> IActionResult
-        elif request.Cover <> null then
-            if request.RemoveCover then
-                return this.BadRequest(UpdateTrackErrorResponse(Error = $"{nameof(request.RemoveCover)} is true")) :> IActionResult
-            else
-                let! uploadedCoverUri = s3Service.TryUploadFileStream("covers", Guid.NewGuid().ToString() + "_" + track.Name, request.Cover.OpenReadStream(), Path.GetExtension(request.Cover.FileName), ct)
-                if uploadedCoverUri = null then
-                    return this.BadRequest("Failed to upload cover") :> IActionResult
+        | Some track ->
+            if request.Visibility.HasValue then
+                track.Visibility <-
+                    match request.Visibility.Value with
+                    | TrackVisibility.Hidden -> Entities.TrackVisibility.Hidden
+                    | TrackVisibility.Visible -> Entities.TrackVisibility.Visible
+                    | _ -> ArgumentOutOfRangeException() |> raise
+
+            if request.Cover <> null then
+                if request.RemoveCover then
+                    return this.BadRequest(UpdateTrackErrorResponse(Error = $"{nameof(request.RemoveCover)} is true")) :> IActionResult
                 else
-                    track.CoverUri <- uploadedCoverUri
-                    if request.RemoveCover then
-                        track.CoverUri <- null
-                        trackRepository.Save(track)
-                        do! unitOfWork.SaveChangesAsync(ct)
-                        return this.NoContent() :> IActionResult
+                    let! uploadedCoverUri =
+                        s3Service
+                            .TryUploadFileStream(
+                                "covers",
+                                Guid.NewGuid().ToString() + "_" + track.Name,
+                                request.Cover.OpenReadStream(),
+                                Path.GetExtension(request.Cover.FileName),
+                                ct
+                            )
+
+                    if uploadedCoverUri = null then
+                        return this.BadRequest("Failed to upload cover") :> IActionResult
                     else
+                        track.CoverUri <- Some uploadedCoverUri
+                        if request.RemoveCover then
+                            track.CoverUri <- None
+                            %trackRepository.Save(track)
+                            do! unitOfWork.SaveChanges(ct)
+
                         return this.NoContent() :> IActionResult
-        else
-            return this.NoContent() :> IActionResult
+            else
+                return this.NoContent() :> IActionResult
     }
 
     /// <summary>
@@ -121,13 +105,9 @@ type TrackController(trackRepository: ITrackRepository,
     [<HttpDelete("{id:guid}", Name = "DeleteTrack")>]
     member this.Delete(id: Guid, ct: CancellationToken) = task {
         let! userId = userProvider.GetUserId()
-        let! track = trackRepository.GetByIdIfOwnerOrDefault(id, userId, ct)
-        if track = null then
-            return this.NotFound() :> IActionResult
-        else
-            trackRepository.Delete(track)
-            do! unitOfWork.SaveChangesAsync(ct)
-            return this.NoContent() :> IActionResult
+        let! track = trackRepository.DeleteIfOwner(id, userId, ct)
+        do! unitOfWork.SaveChanges(ct)
+        return this.NoContent() :> IActionResult
     }
 
     /// <summary>
@@ -161,20 +141,19 @@ type TrackController(trackRepository: ITrackRepository,
                     coverUri <- uploadedCoverUri
 
                     let! ownerUserId = userProvider.GetUserId()
-                    let track = Track(
-                        CoverUri = coverUri,
-                        Name = request.Name,
-                        Author = request.Author,
-                        Visibility = ucast request.Visibility,
-                        TrackUri = uploadedTrackUri,
-                        OwnerUserId = ownerUserId)
+                    let xv =
+                        match request.Visibility with
+                        | TrackVisibility.Hidden -> Entities.TrackVisibility.Hidden
+                        | TrackVisibility.Visible -> Entities.TrackVisibility.Visible
+                        | _ -> ArgumentOutOfRangeException() |> raise
 
-                    trackRepository.Save(track)
-                    do! unitOfWork.SaveChangesAsync(ct)
+                    let track = Track.Create(ownerUserId, (coverUri |> Option.ofObj), uploadedTrackUri, xv, request.Name, request.Author)
+
+                    %trackRepository.Save(track)
+                    do! unitOfWork.SaveChanges(ct)
                     let track = TrackResponse(
                         Id = track.Id,
-                        CoverUri = track.CoverUri,
-                        IsAvailable = true,
+                        CoverUri = (track.CoverUri |> Option.toObj),
                         TrackUri = track.TrackUri,
                         Visibility = ucast track.Visibility,
                         Name = track.Name,

@@ -14,7 +14,7 @@ type FsharpUserStore(
     logger: ILogger<FsharpUserStore>,
     lookupNormalizer: ILookupNormalizer,
     userRepository: FsharpUserRepository,
-    unitOfWork: FSharpUnitOfWork) as this =
+    unitOfWork: FsharpUnitOfWork) as this =
 
      let self = (this :> IUserStore)
 

@@ -36,12 +36,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Data\Data.csproj"/>
     <ProjectReference Include="..\Identity\Identity.fsproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\Data\Data.csproj"/>
   </ItemGroup>
 
   <ItemGroup>

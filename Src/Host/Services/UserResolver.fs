@@ -1,9 +1,11 @@
 ﻿namespace MusicPlayerBackend.Host
 
+open System.Threading.Tasks
 open Microsoft.AspNetCore.Http
 open Microsoft.AspNetCore.Identity
 
-open MusicPlayerBackend.Data.Entities
+open MusicPlayerBackend.Common
+open MusicPlayerBackend.Persistence.Entities
 
 [<Sealed>]
 type UserProvider(httpContextAccessor: IHttpContextAccessor, userManager: UserManager<User>) =
@@ -12,16 +14,19 @@ type UserProvider(httpContextAccessor: IHttpContextAccessor, userManager: UserMa
     }
 
     member this.GetUserId() = task {
-        let! user = this.GetUser()
-        return user.Id
+        return!
+            this.GetUser()
+            |> Task.map _.Id
     }
 
     member this.TryGetUserId() = task {
-        let! user = this.TryGetUser()
-        return user |> Option.map (fun (u: User) -> u.Id)
+        return!
+            this.TryGetUser()
+            |> TaskOption.map _.Id
     }
 
-    member this.TryGetUser() = task {
+    // TODO: Don't use database model
+    member this.TryGetUser() : Task<User option> = task {
         match Option.ofObj httpContextAccessor.HttpContext.User with
         | None ->
             return None

@@ -6,10 +6,11 @@ open System.Security.Claims
 open Microsoft.Extensions.Options
 open Microsoft.IdentityModel.JsonWebTokens
 open Microsoft.IdentityModel.Tokens
-open MusicPlayerBackend.Data
-open MusicPlayerBackend.Data.Entities
-open MusicPlayerBackend.Data.Repositories
+
+open MusicPlayerBackend.Common
 open MusicPlayerBackend.OptionSections
+open MusicPlayerBackend.Persistence
+open MusicPlayerBackend.Persistence.Entities
 
 type JwtBearerResponse = {
     JwtBearer: string
@@ -21,8 +22,8 @@ type JwtBearerResponse = {
 [<Sealed>]
 type JwtService(
     tokenConfig: IOptions<TokenConfig>,
-    refreshTokenRepository: IRefreshTokenRepository,
-    unitOfWork: IUnitOfWork) =
+    refreshTokenRepository: FsharpRefreshTokenRepository,
+    unitOfWork: FsharpUnitOfWork) =
 
     let tokenConfig = tokenConfig.Value
 
@@ -45,14 +46,10 @@ type JwtService(
 
         let tokenHandler = JwtSecurityTokenHandler()
         let token = tokenHandler.CreateToken(tokenDescriptor)
-        let refreshToken = RefreshToken(
-            ValidDue = refreshValidDue,
-            Jti = jti,
-            UserId = userId,
-            Token = refreshTokenValue
-        )
-        refreshTokenRepository.Save(refreshToken)
-        do! unitOfWork.SaveChangesAsync()
+        let refreshToken = RefreshToken.Create(userId, jwtValidDue, jti, refreshTokenValue)
+
+        %refreshTokenRepository.Save(refreshToken)
+        do! unitOfWork.SaveChanges()
 
         return {
             JwtBearer = tokenHandler.WriteToken(token)

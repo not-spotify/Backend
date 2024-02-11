@@ -31,3 +31,33 @@ type EntityFrameworkQueryableExtensions() =
 
         return result |> Option.ofUncheckedObj
     }
+
+    [<Extension>]
+    static member Any(queryable: IQueryable<'T>, ct) = task {
+        return!
+            match ct with
+            | None ->
+                queryable.AnyAsync()
+            | Some ct ->
+                queryable.AnyAsync(ct)
+    }
+
+    [<Extension>]
+    static member Count(queryable: IQueryable<'T>, ct) = task {
+        return!
+            match ct with
+            | None ->
+                queryable.CountAsync()
+            | Some ct ->
+                queryable.CountAsync(ct)
+    }
+
+    [<Extension>]
+    static member ToArray(queryable: IQueryable<'T>, ct) = task {
+        return!
+            match ct with
+            | None ->
+                queryable.ToArrayAsync()
+            | Some ct ->
+                queryable.ToArrayAsync(ct)
+    }

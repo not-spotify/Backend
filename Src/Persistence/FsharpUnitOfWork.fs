@@ -3,7 +3,7 @@
 open System.Threading.Tasks
 open Microsoft.EntityFrameworkCore.Storage
 
-type FSharpUnitOfWork(ctx: FsharpAppDbContext) =
+type FsharpUnitOfWork(ctx: FsharpAppDbContext) =
     let mutable t : IDbContextTransaction = null
 
     member _.SaveChanges(?ct) =

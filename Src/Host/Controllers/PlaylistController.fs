@@ -1,20 +1,11 @@
 ﻿namespace MusicPlayerBackend.Controllers
 
 open System
-open System.Collections.Generic
-open System.IO
 open System.Net.Mime
-open System.Threading
-open System.Linq
 open Microsoft.AspNetCore.Authorization
 open Microsoft.AspNetCore.Http
 open Microsoft.AspNetCore.Mvc
-open Microsoft.EntityFrameworkCore
 
-open MusicPlayerBackend.Host
-open MusicPlayerBackend.Common.TypeExtensions
-open MusicPlayerBackend.Data.Entities
-open MusicPlayerBackend.Data.Repositories
 open MusicPlayerBackend.Host
 open MusicPlayerBackend.Host.Services
 open MusicPlayerBackend.Persistence
@@ -36,10 +27,10 @@ type ReturnBadRequestException(ar: IActionResult) =
 [<Route("[controller]")>]
 type PlaylistController(
     playlistRepository: FsharpPlaylistRepository,
-    trackRepository: ITrackRepository,
-    trackPlaylistRepository: ITrackPlaylistRepository,
-    playlistUserPermissionRepository: IPlaylistUserPermissionRepository,
-    unitOfWork: FSharpUnitOfWork,
+    trackRepository: FsharpTrackRepository,
+    trackPlaylistRepository: FsharpTrackPlaylistRepository,
+    playlistUserPermissionRepository: FsharpPlaylistUserPermissionRepository,
+    unitOfWork: FsharpUnitOfWork,
     s3Service: IS3Service,
     userProvider: UserProvider) =
     inherit ControllerBase()

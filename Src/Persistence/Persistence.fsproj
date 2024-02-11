@@ -8,20 +8,18 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <Compile Include="Entities\User.fs" />
-        <Compile Include="Entities\Playlist.fs" />
-        <Compile Include="Entities\Album.fs" />
-        <Compile Include="Entities\PlaylistUserPermission.fs" />
-        <Compile Include="Entities\RefreshToken.fs" />
-        <Compile Include="Entities\Track.fs" />
-        <Compile Include="Entities\TrackPlaylist.fs" />
-        <Compile Include="Entities\AlbumTrack.fs" />
+        <Compile Include="Entities.fs" />
         <Compile Include="TypeExtensions.fs" />
         <Compile Include="AppDbContext.fs" />
-        <Compile Include="FSharpUnitOfWork.fs" />
+        <Compile Include="FsharpUnitOfWork.fs" />
         <Compile Include="Repositories\Extensions.fs" />
         <Compile Include="Repositories\FsharpPlaylistRepository.fs" />
+        <Compile Include="Repositories\FsharpTrackPlaylistRepository.fs" />
+        <Compile Include="Repositories\FsharpTrackRepository.fs" />
         <Compile Include="Repositories\FsharpUserRepository.fs" />
+        <Compile Include="Repositories\FsharpPlaylistUserRepository.fs" />
+        <Compile Include="Repositories\FsharpRefreshTokenRepository.fs" />
+        <Compile Include="Repositories\FsharpAlbumRepository.fs" />
         <Compile Include="FsharpUserStore.fs" />
     </ItemGroup>
     

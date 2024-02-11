@@ -1,16 +1,14 @@
 ﻿namespace MusicPlayerBackend.Host
 
 open System
-open System.Linq
 open System.Net.Mime
 open System.Threading
 open System.Threading.Tasks
 open Microsoft.AspNetCore.Http
 open Microsoft.AspNetCore.Mvc
-open Microsoft.EntityFrameworkCore
-open MusicPlayerBackend.Data
-open MusicPlayerBackend.Data.Entities
-open MusicPlayerBackend.Data.Repositories
+
+open MusicPlayerBackend.Persistence
+open MusicPlayerBackend.Persistence.Entities
 open MusicPlayerBackend.TransferObjects
 
 [<ApiController>]
@@ -20,9 +18,10 @@ open MusicPlayerBackend.TransferObjects
 [<ProducesResponseType(typeof<UnauthorizedResponse>, StatusCodes.Status401Unauthorized)>]
 [<Route("Track/")>]
 type FavoriteTrackController(userProvider: UserProvider,
-                            trackRepository: ITrackRepository,
-                            trackPlaylistRepository: ITrackPlaylistRepository,
-                            unitOfWork: IUnitOfWork) =
+                            trackRepository: FsharpTrackRepository,
+                            playlistRepository: FsharpPlaylistRepository,
+                            trackPlaylistRepository: FsharpTrackPlaylistRepository,
+                            unitOfWork: FsharpUnitOfWork) =
     inherit ControllerBase()
 
     /// <summary>
@@ -33,12 +32,13 @@ type FavoriteTrackController(userProvider: UserProvider,
     member this.Favorite(trackId: Guid) : Task<IActionResult> = task {
         let! user = userProvider.GetUser()
         let userId = user.Id
-        let! track = trackRepository.GetByIdIfVisibleOrDefault(trackId, userId)
-        if track = null then
+        let! track = trackRepository.TryGetVisible(trackId, userId)
+        match track with
+        | None ->
             return this.NoContent() :> IActionResult
-        else
+        | Some track ->
             do! trackPlaylistRepository.AddTrackIfNotAdded(user.FavoritePlaylistId, trackId)
-            do! unitOfWork.SaveChangesAsync()
+            do! unitOfWork.SaveChanges()
             return this.NoContent() :> IActionResult
     }
 
@@ -50,7 +50,7 @@ type FavoriteTrackController(userProvider: UserProvider,
     member this.RemoveLike(trackId: Guid) = task {
         let! user = userProvider.GetUser()
         do! trackPlaylistRepository.AddTrackIfNotAdded(user.FavoritePlaylistId, trackId)
-        do! unitOfWork.SaveChangesAsync()
+        do! unitOfWork.SaveChanges()
         return this.NoContent() :> IActionResult
     }
 
@@ -61,22 +61,29 @@ type FavoriteTrackController(userProvider: UserProvider,
     [<ProducesResponseType(typeof<FavoriteTrackListResponse>, StatusCodes.Status200OK)>]
     member this.List([<FromQuery>] request: FavoriteTrackListRequest, ct: CancellationToken) = task {
         let! user = userProvider.GetUser()
-        let playlistItemsQuery = trackPlaylistRepository.QueryMany(
-            (fun tp -> tp.PlaylistId = user.FavoritePlaylistId),
-            (fun tp -> FavoriteTrackListItem(
-                Id = tp.Id,
-                CoverUri = tp.Track.CoverUri,
-                TrackUri = (if tp.Track.OwnerUserId = user.Id || tp.Track.Visibility = TrackVisibility.Visible then tp.Track.TrackUri else null),
-                Name = tp.Track.Name,
-                Author = tp.Track.Author,
-                IsAvailable = (tp.Playlist.OwnerUserId = user.Id || tp.Playlist.Visibility = PlaylistVisibility.Public)
-            )))
-        let! playlistItems = playlistItemsQuery
-                                .Skip(request.PageSize * request.Page)
-                                .Take(request.PageSize)
-                                .ToArrayAsync(ct)
-        let! c = playlistItemsQuery.CountAsync(ct)
-        return this.Ok(FavoriteTrackListResponse(Items = playlistItems, Count = c)) :> IActionResult
+        let mapping (playlist: MusicPlayerBackend.Persistence.Entities.Track) : FavoriteTrackListItem =
+            FavoriteTrackListItem(
+                Id = playlist.Id,
+                CoverUri = (playlist.CoverUri |> Option.toObj),
+                Name = playlist.Name,
+                Visibility =
+                    match playlist.Visibility with
+                    | TrackVisibility.Hidden -> MusicPlayerBackend.TransferObjects.Track.TrackVisibility.Hidden
+                    | TrackVisibility.Visible -> MusicPlayerBackend.TransferObjects.Track.TrackVisibility.Visible
+                )
+
+        let! count, playlistItems =
+            playlistRepository
+                .GetVisibleTracks(
+                    user.FavoritePlaylistId,
+                    request.Page,
+                    request.PageSize,
+                    mapping,
+                    ct)
+        return this.Ok(FavoriteTrackListResponse(
+            Items = playlistItems,
+            Count = count))
+        :> IActionResult
     }
 
 

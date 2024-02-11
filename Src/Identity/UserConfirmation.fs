@@ -1,12 +1,12 @@
 ﻿namespace MusicPlayerBackend.Identity
 
-open System.Threading.Tasks
 open Microsoft.AspNetCore.Identity
-open MusicPlayerBackend.Data.Entities
 
-// TODO: Implement mail confirmation
+open MusicPlayerBackend.Common
+open MusicPlayerBackend.Persistence.Entities
+
 [<Sealed>]
 type UserConfirmation() =
     interface IUserConfirmation<User> with
         member this.IsConfirmedAsync(_, _) =
-            Task.FromResult(true)
+            Task.bTrue

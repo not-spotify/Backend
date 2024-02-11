@@ -9,8 +9,8 @@ public sealed class GetTracksInPlaylistRequest : PaginationRequestBase;
 
 public enum TrackVisibility
 {
-    Hidden = 0,
-    Visible = 1
+    Hidden,
+    Visible
 }
 
 public sealed class TrackUpdateRequest
@@ -65,17 +65,7 @@ public class TrackResponse
     public Guid Id { get; set; }
     public string? CoverUri { get; set; }
 
-    /// Track hidden or deleted. TrackUri will be empty if false.
-    public bool IsAvailable { get; set; }
-
-    private string? _trackUri;
-
-    /// Empty if IsAvailable equal false
-    public string? TrackUri
-    {
-        get => IsAvailable ? _trackUri : null;
-        set => _trackUri = value;
-    }
+    public string? TrackUri { get; set; }
 
     public TrackVisibility Visibility { get; set; }
 

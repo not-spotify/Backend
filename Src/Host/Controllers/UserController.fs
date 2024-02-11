@@ -1,17 +1,17 @@
 ﻿namespace MusicPlayerBackend.Host.Controllers
 
+open System
 open System.Net.Mime
 open Microsoft.AspNetCore.Authorization
 open Microsoft.AspNetCore.Http
 open Microsoft.AspNetCore.Identity
 open Microsoft.AspNetCore.Mvc
 
-open MusicPlayerBackend.Data
-open MusicPlayerBackend.Data.Entities
-open MusicPlayerBackend.Data.Repositories
 open MusicPlayerBackend.Common.TypeExtensions
 open MusicPlayerBackend.Host
 open MusicPlayerBackend.Host.Services
+open MusicPlayerBackend.Persistence
+open MusicPlayerBackend.Persistence.Entities
 open MusicPlayerBackend.TransferObjects
 open MusicPlayerBackend.TransferObjects.User
 
@@ -24,10 +24,10 @@ type UserController(
         userManager: UserManager<User>,
         signInManager: SignInManager<User>,
         userProvider: UserProvider,
-        refreshTokenRepository: IRefreshTokenRepository,
-        playlistRepository: IPlaylistRepository,
-        userRepository: IUserRepository,
-        unitOfWork: IUnitOfWork,
+        refreshTokenRepository: FsharpRefreshTokenRepository,
+        playlistRepository: FsharpPlaylistRepository,
+        userRepository: FsharpUserRepository,
+        unitOfWork: FsharpUnitOfWork,
         jwtService: JwtService) =
 
     inherit ControllerBase()
@@ -62,26 +62,25 @@ type UserController(
     [<HttpPost(Name = "RegisterUser")>]
     [<ProducesResponseType(typeof<RegisterResponse>, StatusCodes.Status200OK)>]
     member this.Register(request: RegisterRequest) = task {
-        let user = User(UserName = request.UserName, Email = request.Email)
+        let user = User.Create(request.UserName, request.Email, request.Password, Guid.Empty)
         let! result = userManager.CreateAsync(user = user, password = request.Password)
         match result.Succeeded with
         | true ->
-            let! _ = unitOfWork.BeginTransactionAsync()
-            userRepository.Save(user)
-            do! unitOfWork.SaveChangesAsync()
+            let! _ = unitOfWork.BeginTransaction()
+            let trackedUser = userRepository.Save(user)
+            do! unitOfWork.SaveChanges()
 
-            let playlist = Playlist(
-                Visibility = PlaylistVisibility.Private,
-                Name = $"{request.UserName}'s Favorites",
-                OwnerUserId = user.Id
-            )
+            let user = trackedUser.Entity
 
-            playlistRepository.Save(playlist)
-            do! unitOfWork.SaveChangesAsync()
+            let playlist = Playlist.Create($"{request.UserName}'s Favorites", Visibility.Private, None, user.Id)
+
+            let trackedPlaylist = playlistRepository.Save(playlist)
+            do! unitOfWork.SaveChanges()
+            let playlist = trackedPlaylist.Entity
 
             user.FavoritePlaylistId <- playlist.Id
-            do! unitOfWork.SaveChangesAsync()
-            do! unitOfWork.CommitAsync()
+            do! unitOfWork.SaveChanges()
+            do! unitOfWork.Commit()
 
             return this.Ok ^ RegisterResponse(Id = user.Id) :> IActionResult
         | false ->
@@ -99,7 +98,13 @@ type UserController(
     [<ProducesResponseType(typeof<LoginResponse>, StatusCodes.Status401Unauthorized)>]
     member this.Login(request: LoginRequest) = task {
         let! user = userManager.FindByEmailAsync(request.Email)
-        match Option.ofObj user with
+        let user = // TODO: Implement User for domain level
+            if Object.ReferenceEquals(user, null) then
+                None
+            else
+                Some user
+
+        match user with
         | None ->
             return this.Unauthorized(UnauthorizedResponse(Error = "Can't find user or wrong password")) :> IActionResult
         | Some user ->
@@ -124,16 +129,17 @@ type UserController(
     [<ProducesResponseType(typeof<LoginResponse>, StatusCodes.Status200OK)>]
     [<ProducesResponseType(typeof<UnauthorizedResponse>, StatusCodes.Status401Unauthorized)>]
     member this.Refresh(request: RefreshRequest) = task {
-        let! existingRefreshToken = refreshTokenRepository.GetValidTokenOrDefault(request.UserId, request.Jti, request.RefreshToken)
-        if isNull existingRefreshToken then
+        let! existingRefreshToken = refreshTokenRepository.TryGetValid(request.UserId, request.Jti, request.RefreshToken)
+        match existingRefreshToken with
+        | None ->
             return this.Unauthorized(UnauthorizedResponse(Error = "Can't refresh Jwt Bearer")) :> IActionResult
-        else
-            let! _ = unitOfWork.BeginTransactionAsync()
+        | Some existingRefreshToken ->
+            let! _ = unitOfWork.BeginTransaction()
             existingRefreshToken.Revoked <- true
-            refreshTokenRepository.Save(existingRefreshToken)
+            %refreshTokenRepository.Save(existingRefreshToken)
 
             let! jwtResponse = jwtService.Generate(existingRefreshToken.UserId)
-            do! unitOfWork.CommitAsync()
+            do! unitOfWork.Commit()
 
             return this.Ok ^ LoginResponse(
                 JwtBearer = jwtResponse.JwtBearer,

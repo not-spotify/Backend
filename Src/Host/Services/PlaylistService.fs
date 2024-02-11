@@ -12,7 +12,7 @@ open MusicPlayerBackend.Persistence.Entities
 
 module PlaylistService =
     let create
-        (unitOfWork: FSharpUnitOfWork)
+        (unitOfWork: FsharpUnitOfWork)
         (playlistRepository: FsharpPlaylistRepository)
         (request: Playlist.CreateRequest) = task {
 
@@ -34,7 +34,9 @@ module PlaylistService =
                   CoverUri = request.CoverFileLink |> Option.ofStringW
                   OwnerUserId = request.UserId
                   CreatedAt = DateTimeOffset.MinValue
-                  UpdatedAt = ValueNone }
+                  UpdatedAt = ValueNone
+                  OwnerUser = Unchecked.defaultof<_>
+                  TrackPlaylists = null }
 
             let tracked = playlistRepository.Save(playlist)
             do! unitOfWork.SaveChanges()
@@ -58,7 +60,7 @@ module PlaylistService =
         (msg: Playlist.ListQuery) = task {
         let getPlaylistListQuery =
             query {
-                for playlist in playlistRepository.QueryAll() do
+                for playlist in playlistRepository.Query do
                 select ({
                     Id = playlist.Id
                     Name = playlist.Name
@@ -82,7 +84,7 @@ module PlaylistService =
     }
 
     let update
-        (unitOfWork: FSharpUnitOfWork)
+        (unitOfWork: FsharpUnitOfWork)
         (playlistRepository: FsharpPlaylistRepository)
         (msg: Playlist.UpdateRequest) = task {
 

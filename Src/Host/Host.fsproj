@@ -29,14 +29,9 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Data\Data.csproj"/>
         <ProjectReference Include="..\Identity\Identity.fsproj" />
         <ProjectReference Include="..\Persistence\Persistence.fsproj" />
         <ProjectReference Include="..\MusicPlayerBackend\MusicPlayerBackend.csproj" />
-    </ItemGroup>
-
-    <ItemGroup>
-        <ProjectReference Include="..\Data\Data.csproj"/>
     </ItemGroup>
 
     <ItemGroup>
