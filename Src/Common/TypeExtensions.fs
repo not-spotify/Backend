@@ -1,16 +1,19 @@
 ﻿[<AutoOpen>]
 module MusicPlayerBackend.Common.TypeExtensions
 
-open System.Threading.Tasks
-
-#nowarn "0077"
 #nowarn "0042"
 
-// By default, function should pass value without modification
+// By default, function should pass value without modification (fault-tolerant)
 // For example, "ToUpper" on null string should return null
 
 module Option =
     let unionUnit = Some ()
+
+    let inline ofTry (opResult, result) =
+        if opResult then
+            Some result
+        else
+            None
 
     let inline ofBool (v: bool) =
         if v then
@@ -21,16 +24,6 @@ module Option =
             None
         else
             Some str
-
-    let inline ofTryPattern (success, result) =
-        if success then
-            Some result else None
-
-    let inline ofUncheckedObj obj =
-        if System.Object.ReferenceEquals(null, obj) then
-            None
-        else
-            Some obj
 
 module Result =
     let isOk (result: Result<_, _>) =
@@ -96,14 +89,8 @@ module StringOption =
     let inline toUpperInv v =
         v |> Option.map String.toUpperInv
 
-module TaskResult =
-    let map (mapping: 'T -> 'U) (result: Task<Result<'T,'TError>>) = task {
-        let! result = result
-        return result |> Result.map mapping
-    }
-
-    let bind (binder: 'T -> Result<_, _>) (result: Task<Result<'T, 'TError>>) : Result<'U,'TError> Task = task {
-        let! result = result
-        return result |> Result.bind binder
-    }
-
+module Task =
+    let bTrue = System.Threading.Tasks.Task.FromResult(true)
+    let bFalse = System.Threading.Tasks.Task.FromResult(false)
+    let completed = System.Threading.Tasks.Task.CompletedTask
+    let inline fromResult value = System.Threading.Tasks.Task.FromResult(value)

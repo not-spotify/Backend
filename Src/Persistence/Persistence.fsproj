@@ -16,11 +16,13 @@
         <Compile Include="Entities\Track.fs" />
         <Compile Include="Entities\TrackPlaylist.fs" />
         <Compile Include="Entities\AlbumTrack.fs" />
+        <Compile Include="TypeExtensions.fs" />
         <Compile Include="AppDbContext.fs" />
         <Compile Include="FSharpUnitOfWork.fs" />
+        <Compile Include="Repositories\Extensions.fs" />
         <Compile Include="Repositories\FsharpPlaylistRepository.fs" />
         <Compile Include="Repositories\FsharpUserRepository.fs" />
-        <Compile Include="UserStore.fs" />
+        <Compile Include="FsharpUserStore.fs" />
     </ItemGroup>
     
     <ItemGroup>

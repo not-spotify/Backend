@@ -6,11 +6,13 @@ open Microsoft.EntityFrameworkCore
 open MusicPlayerBackend.Common
 open MusicPlayerBackend.Persistence
 open MusicPlayerBackend.Persistence.Entities
+open MusicPlayerBackend.Persistence.Repositories
 
+[<Sealed>]
 type FsharpUserRepository(dbContext: FsharpAppDbContext) =
     let users = dbContext.Set<User>()
 
-    member _.QueryAll() = users.AsQueryable()
+    member _.Query with get() = users.AsQueryable()
 
     member _.Delete(user) = users.Remove(user) |> ignore
 
@@ -29,19 +31,28 @@ type FsharpUserRepository(dbContext: FsharpAppDbContext) =
         users.Update(user)
 
     member _.TryGetById(id: UserId, ?ct) = task {
-        let getByIdQuery =
+        return!
             query {
                 for user in users do
                     where (user.Id = id)
                     select user
-            }
+            } |> _.TrySingle(ct)
+    }
 
-        let! playlist =
-            match ct with
-            | None ->
-                getByIdQuery.SingleOrDefaultAsync()
-            | Some ct ->
-                getByIdQuery.SingleOrDefaultAsync(ct)
+    member _.TryGetByNormalizedEmail(normalizedEmail: string, ?ct) = task {
+        return!
+            query {
+                for user in users do
+                    where (user.NormalizedEmail = normalizedEmail)
+                    select user
+            } |> _.TrySingle(ct)
+    }
 
-        return Option.ofUncheckedObj playlist
+    member _.TryGetByNormalizedUserName(normalizedUserName: string, ?ct) = task {
+        return!
+            query {
+                for user in users do
+                    where (user.NormalizedUserName = normalizedUserName)
+                    select user
+            } |> _.TrySingle(ct)
     }
