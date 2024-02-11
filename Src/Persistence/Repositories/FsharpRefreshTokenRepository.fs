@@ -23,7 +23,7 @@ type FsharpRefreshTokenRepository(dbContext: FsharpAppDbContext) =
             let userEntry = dbContext.Entry(refreshToken)
             match userEntry.State with
             | EntityState.Modified when userEntry.Property(nameof refreshToken.UpdatedAt).IsModified |> not ->
-                refreshToken.UpdatedAt <- ValueSome DateTimeOffset.UtcNow
+                refreshToken.UpdatedAt <- Some DateTimeOffset.UtcNow
             | EntityState.Detached ->
                 raise ^ InvalidOperationException("Can't save detached RefreshToken.")
             | _ -> ()

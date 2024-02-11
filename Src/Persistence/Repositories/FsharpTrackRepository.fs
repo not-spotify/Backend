@@ -21,7 +21,7 @@ type FsharpTrackRepository(dbContext: FsharpAppDbContext) =
             let playlistEntry = dbContext.Entry(track)
             match playlistEntry.State with
             | EntityState.Modified when playlistEntry.Property(nameof track.UpdatedAt).IsModified |> not ->
-                track.UpdatedAt <- ValueSome DateTimeOffset.UtcNow
+                track.UpdatedAt <- Some DateTimeOffset.UtcNow
             | EntityState.Detached ->
                 raise ^ InvalidOperationException("Can't save detached track.")
             | _ -> ()

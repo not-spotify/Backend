@@ -1,6 +1,8 @@
 ﻿namespace MusicPlayerBackend.Persistence
 
 open Microsoft.EntityFrameworkCore
+open EntityFrameworkCore.FSharp.Extensions
+
 open MusicPlayerBackend.Common
 open MusicPlayerBackend.Persistence.Entities
 
@@ -10,44 +12,51 @@ type FsharpAppDbContext(options) =
 
     static ConnectionStringName = "PgConnectionString"
 
-    member val Playlists =
-        Playlist
-            .Default with get, set
+    [<DefaultValue>]
+    val mutable playlists : DbSet<Playlist>
+    member this.Playlists with get() = this.playlists and set v = this.playlists <- v
 
-    member val PlaylistUserPermissions =
-        PlaylistUserPermission
-            .Default with get, set
 
-    member val Albums =
-        Album
-            .Default with get, set
+    [<DefaultValue>]
+    val mutable playlistUserPermissions : DbSet<PlaylistUserPermission>
+    member this.PlaylistUserPermissions with get() = this.playlistUserPermissions and set v = this.playlistUserPermissions <- v
 
-    member val Tracks =
-        Track
-            .Default with get, set
+    [<DefaultValue>]
+    val mutable albums : DbSet<Album>
+    member this.Albums with get() = this.albums and set v = this.albums <- v
 
-    member val AlbumTracks =
-        AlbumTrack
-            .Default with get, set
 
-    member val Users =
-        User
-            .Default with get, set
+    [<DefaultValue>]
+    val mutable tracks : DbSet<Track>
+    member this.Tracks with get() = this.tracks and set v = this.tracks <- v
 
-    member val RefreshTokens =
-        RefreshToken
-            .Default with get, set
+    [<DefaultValue>]
+    val mutable albumTracks : DbSet<AlbumTrack>
+    member this.AlbumTracks with get() = this.albumTracks and set v = this.albumTracks <- v
+
+
+    [<DefaultValue>]
+    val mutable users : DbSet<User>
+    member this.Users with get() = this.users and set v = this.users <- v
+
+    [<DefaultValue>]
+    val mutable refreshTokens : DbSet<RefreshToken>
+    member this.RefreshTokens with get() = this.refreshTokens and set v = this.refreshTokens <- v
+
 
     override _.OnModelCreating(modelBuilder) =
-        %modelBuilder.Entity<User>()
-             .HasIndex(indexExpression = fun s -> s.NormalizedUserName)
-             .IsUnique()
-        %modelBuilder.Entity<User>()
-             .HasIndex(indexExpression = fun s -> s.NormalizedEmail)
-             .IsUnique()
-        %modelBuilder.Entity<User>(fun builder ->
-            %builder
-                .HasOne<Playlist>()
-                .WithMany()
-                .HasForeignKey(foreignKeyExpression = fun c -> c.FavoritePlaylistId)
-        )
+        %modelBuilder.RegisterSingleUnionCases()
+        %modelBuilder.RegisterOptionTypes()
+
+        // %modelBuilder.Entity<User>()
+        //      .HasIndex(indexExpression = fun s -> s.NormalizedUserName)
+        //      .IsUnique()
+        // %modelBuilder.Entity<User>()
+        //      .HasIndex(indexExpression = fun s -> s.NormalizedEmail)
+        //      .IsUnique()
+        // %modelBuilder.Entity<User>(fun builder ->
+        //     %builder
+        //         .HasOne<Playlist>()
+        //         .WithMany()
+        //         .HasForeignKey(foreignKeyExpression = fun c -> c.FavoritePlaylistId)
+        // )

@@ -22,7 +22,7 @@ type FsharpPlaylistRepository(dbContext: FsharpAppDbContext) =
             let playlistEntry = dbContext.Entry(playlist)
             match playlistEntry.State with
             | EntityState.Modified when playlistEntry.Property(nameof playlist.UpdatedAt).IsModified |> not ->
-                playlist.UpdatedAt <- ValueSome DateTimeOffset.UtcNow
+                playlist.UpdatedAt <- Some DateTimeOffset.UtcNow
             | EntityState.Detached ->
                 raise ^ InvalidOperationException("Can't save detached playlist.")
             | _ -> ()

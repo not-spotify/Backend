@@ -28,13 +28,13 @@ module PlaylistService =
                   Visibility =
                       match request.Visibility with
                       | Contracts.Playlist.Private ->
-                          Private
+                          Visibility.Private
                       | Contracts.Playlist.Public ->
-                          Public
+                          Visibility.Public
                   CoverUri = request.CoverFileLink |> Option.ofStringW
                   OwnerUserId = request.UserId
                   CreatedAt = DateTimeOffset.MinValue
-                  UpdatedAt = ValueNone
+                  UpdatedAt = None
                   OwnerUser = Unchecked.defaultof<_>
                   TrackPlaylists = null }
 
@@ -49,8 +49,9 @@ module PlaylistService =
                   OwnerUserId = playlist.OwnerUserId
                   Visibility =
                       match playlist.Visibility with
-                      | Private -> Contracts.Playlist.Private
-                      | Public -> Contracts.Playlist.Public }
+                      | Visibility.Private -> Contracts.Playlist.Private
+                      | Visibility.Public -> Contracts.Playlist.Public
+                      | _ -> ArgumentOutOfRangeException() |> raise}
 
             return Ok(playlist)
     }
@@ -112,8 +113,9 @@ module PlaylistService =
                   OwnerUserId = playlist.OwnerUserId
                   Visibility =
                       match playlist.Visibility with
-                      | Private -> Contracts.Playlist.Private
-                      | Public -> Contracts.Playlist.Public }
+                      | Visibility.Private -> Contracts.Playlist.Private
+                      | Visibility.Public -> Contracts.Playlist.Public
+                      | _ -> ArgumentOutOfRangeException() |> raise}
 
             return Ok(playlist)
     }

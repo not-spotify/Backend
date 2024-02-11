@@ -22,7 +22,7 @@ type FsharpAlbumRepository(dbContext: FsharpAppDbContext) =
             let userEntry = dbContext.Entry(album)
             match userEntry.State with
             | EntityState.Modified when userEntry.Property(nameof album.UpdatedAt).IsModified |> not ->
-                album.UpdatedAt <- ValueSome DateTimeOffset.UtcNow
+                album.UpdatedAt <- Some DateTimeOffset.UtcNow
             | EntityState.Detached ->
                 raise ^ InvalidOperationException("Can't save detached RefreshToken.")
             | _ -> ()

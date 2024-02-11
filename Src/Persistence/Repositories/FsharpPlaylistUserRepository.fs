@@ -23,7 +23,7 @@ type FsharpPlaylistUserPermissionRepository(dbContext: FsharpAppDbContext) =
             let userEntry = dbContext.Entry(permission)
             match userEntry.State with
             | EntityState.Modified when userEntry.Property(nameof permission.UpdatedAt).IsModified |> not ->
-                permission.UpdatedAt <- ValueSome DateTimeOffset.UtcNow
+                permission.UpdatedAt <- Some DateTimeOffset.UtcNow
             | EntityState.Detached ->
                 raise ^ InvalidOperationException("Can't save detached permission.")
             | _ -> ()

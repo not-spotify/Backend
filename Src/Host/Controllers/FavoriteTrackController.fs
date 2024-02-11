@@ -70,6 +70,7 @@ type FavoriteTrackController(userProvider: UserProvider,
                     match playlist.Visibility with
                     | TrackVisibility.Hidden -> MusicPlayerBackend.TransferObjects.Track.TrackVisibility.Hidden
                     | TrackVisibility.Visible -> MusicPlayerBackend.TransferObjects.Track.TrackVisibility.Visible
+                    | _ -> ArgumentOutOfRangeException() |> raise
                 )
 
         let! count, playlistItems =

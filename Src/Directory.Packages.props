@@ -4,6 +4,7 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageVersion Include="CliWrap" Version="3.6.6" />
+    <PackageVersion Include="EntityFrameworkCore.FSharp" Version="6.0.7" />
     <PackageVersion Include="FSharp.Core" Version="8.0.101" />
     <PackageVersion Include="Microsoft.AspNetCore.Identity.UI" Version="8.0.0" />
     <PackageVersion Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.4" />

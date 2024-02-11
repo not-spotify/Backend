@@ -22,7 +22,7 @@ type [<CLIMutable>] PlaylistUserPermission = {
     User: User
 
     mutable CreatedAt: DateTimeOffset
-    mutable UpdatedAt: DateTimeOffset voption
+    mutable UpdatedAt: DateTimeOffset option
 }
 with
     static member Default = Unchecked.defaultof<PlaylistUserPermission>
@@ -41,7 +41,7 @@ and [<CLIMutable>] User = {
     Permissions: IQueryable<PlaylistUserPermission>
 
     mutable CreatedAt: DateTimeOffset
-    mutable UpdatedAt: DateTimeOffset voption
+    mutable UpdatedAt: DateTimeOffset option
 }
 with
     static member Default = Unchecked.defaultof<User>
@@ -56,12 +56,12 @@ with
         FavoritePlaylist = Unchecked.defaultof<_>
         Permissions = null
         CreatedAt = DateTimeOffset.MinValue
-        UpdatedAt = ValueNone
+        UpdatedAt = None
     }
 
 and Visibility =
-    | Private
-    | Public
+    | Private = 0
+    | Public = 1
 
 and [<CLIMutable>] Playlist = {
     mutable Id: PlaylistId
@@ -75,7 +75,7 @@ and [<CLIMutable>] Playlist = {
     TrackPlaylists: IQueryable<TrackPlaylist>
 
     mutable CreatedAt: DateTimeOffset
-    mutable UpdatedAt: DateTimeOffset voption
+    mutable UpdatedAt: DateTimeOffset option
 }
 with
     static member Default = Unchecked.defaultof<Playlist>
@@ -88,7 +88,7 @@ with
         OwnerUser = Unchecked.defaultof<_>
         TrackPlaylists = null
         CreatedAt = DateTimeOffset.MinValue
-        UpdatedAt = ValueNone
+        UpdatedAt = None
     }
 
 and [<CLIMutable>] Album = {
@@ -99,7 +99,7 @@ and [<CLIMutable>] Album = {
     AlbumTracks: IQueryable<AlbumTrack>
 
     mutable CreatedAt: DateTimeOffset
-    mutable UpdatedAt: DateTimeOffset voption
+    mutable UpdatedAt: DateTimeOffset option
 }
 with
     static member Default = Unchecked.defaultof<Album>
@@ -114,7 +114,7 @@ and [<CLIMutable>] RefreshToken = {
     mutable UserId: UserId
     mutable ValidDue: DateTimeOffset
     mutable CreatedAt: DateTimeOffset
-    mutable UpdatedAt: DateTimeOffset voption
+    mutable UpdatedAt: DateTimeOffset option
 }
 with
     static member Default = Unchecked.defaultof<RefreshToken>
@@ -125,13 +125,13 @@ with
         Token = token
         Revoked = false
         CreatedAt = DateTimeOffset.MinValue
-        UpdatedAt = ValueNone
+        UpdatedAt = None
         UserId = userId
     }
 
 and TrackVisibility =
-    | Hidden
-    | Visible
+    | Hidden = 0
+    | Visible = 1
 
 and [<CLIMutable>] Track = {
     mutable Id: TrackId
@@ -145,7 +145,7 @@ and [<CLIMutable>] Track = {
     mutable Author: string
 
     mutable CreatedAt: DateTimeOffset
-    mutable UpdatedAt: DateTimeOffset voption
+    mutable UpdatedAt: DateTimeOffset option
 }
 with
     static member Default = Unchecked.defaultof<Track>
@@ -158,7 +158,7 @@ with
         Name = name
         Author = author
         CreatedAt = DateTimeOffset.MinValue
-        UpdatedAt = ValueNone
+        UpdatedAt = None
     }
 
 and [<CLIMutable>] TrackPlaylist = {
