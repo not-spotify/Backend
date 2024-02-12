@@ -10,6 +10,7 @@ open Microsoft.AspNetCore.Mvc
 
 open MusicPlayerBackend.Common
 open MusicPlayerBackend.Host
+open MusicPlayerBackend.Host.Models.Common
 open MusicPlayerBackend.Host.Services
 open MusicPlayerBackend.Persistence
 open MusicPlayerBackend.Persistence.Entities
@@ -73,7 +74,9 @@ type TrackController(trackRepository: FsharpTrackRepository,
 
             if request.Cover <> null then
                 if request.RemoveCover then
-                    return this.BadRequest(UpdateTrackErrorResponse(Error = $"{nameof(request.RemoveCover)} is true")) :> IActionResult
+                    return this.BadRequest({
+                        Error = $"{nameof(request.RemoveCover)} is true"
+                    } : BadResponse) :> IActionResult
                 else
                     let! uploadedCoverUri =
                         s3Service
@@ -85,7 +88,9 @@ type TrackController(trackRepository: FsharpTrackRepository,
                             )
 
                     if Option.isNone uploadedCoverUri then
-                        return this.BadRequest("Failed to upload cover") :> IActionResult
+                        return this.BadRequest({
+                            Error = "Failed to upload cover"
+                        } : BadResponse) :> IActionResult
                     else
                         track.CoverUri <- uploadedCoverUri
                         if request.RemoveCover then
@@ -123,7 +128,9 @@ type TrackController(trackRepository: FsharpTrackRepository,
             Path.GetExtension(request.Track.FileName))
 
         if Option.isNone uploadedTrackUri then
-            return this.BadRequest("Failed to upload track") :> IActionResult
+            return this.BadRequest({
+                Error = "Failed to upload track"
+            } : BadResponse) :> IActionResult
         else
             let mutable coverUri = null
             if request.Cover <> null then
@@ -133,7 +140,9 @@ type TrackController(trackRepository: FsharpTrackRepository,
                     Path.GetExtension(request.Cover.FileName))
 
                 if Option.isNone uploadedCoverUri then
-                    return this.BadRequest("Failed to upload cover") :> IActionResult
+                    return this.BadRequest({
+                        Error = "Failed to upload cover"
+                    } : BadResponse) :> IActionResult
                 else
                     coverUri <- uploadedCoverUri.Value
 
@@ -144,7 +153,13 @@ type TrackController(trackRepository: FsharpTrackRepository,
                         | TrackVisibility.Visible -> Entities.TrackVisibility.Visible
                         | _ -> ArgumentOutOfRangeException() |> raise
 
-                    let track = Track.Create(ownerUserId, (coverUri |> Option.ofObj), uploadedTrackUri.Value, xv, request.Name, request.Author)
+                    let track = Track.Create(
+                        ownerUserId,
+                        (coverUri |> Option.ofObj),
+                        uploadedTrackUri.Value,
+                        xv,
+                        request.Name,
+                        request.Author)
 
                     %trackRepository.Save(track)
                     do! unitOfWork.SaveChanges(ct)

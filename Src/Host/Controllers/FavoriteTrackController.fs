@@ -37,7 +37,7 @@ type FavoriteTrackController(userProvider: UserProvider,
         | None ->
             return this.NoContent() :> IActionResult
         | Some track ->
-            do! trackPlaylistRepository.AddTrackIfNotAdded(user.FavoritePlaylistId, trackId)
+            do! trackPlaylistRepository.AddTrackIfNotAdded(user.FavoritePlaylistId, track.Id)
             do! unitOfWork.SaveChanges()
             return this.NoContent() :> IActionResult
     }

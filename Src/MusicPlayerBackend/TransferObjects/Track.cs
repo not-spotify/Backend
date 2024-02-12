@@ -1,6 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
-
-// ReSharper disable once CheckNamespace
+﻿// ReSharper disable once CheckNamespace
 namespace MusicPlayerBackend.TransferObjects.Track;
 
 public sealed class PlaylistListRequest : PaginationRequestBase;
