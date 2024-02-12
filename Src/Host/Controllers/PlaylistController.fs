@@ -9,7 +9,6 @@ open Microsoft.AspNetCore.Mvc
 open MusicPlayerBackend.Host
 open MusicPlayerBackend.Host.Services
 open MusicPlayerBackend.Persistence
-open MusicPlayerBackend.Services
 open MusicPlayerBackend.TransferObjects
 open MusicPlayerBackend.TransferObjects.Playlist
 
@@ -31,7 +30,7 @@ type PlaylistController(
     trackPlaylistRepository: FsharpTrackPlaylistRepository,
     playlistUserPermissionRepository: FsharpPlaylistUserPermissionRepository,
     unitOfWork: FsharpUnitOfWork,
-    s3Service: IS3Service,
+    s3Service: S3Service,
     userProvider: UserProvider) =
     inherit ControllerBase()
 

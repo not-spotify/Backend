@@ -44,7 +44,10 @@
         <Compile Include="Services\UserResolver.fs" />
         <Compile Include="Services\JwtService.fs" />
         <Compile Include="Services\PlaylistService.fs" />
+        <Compile Include="Services\S3Service.fs" />
         <Compile Include="MinioExtensions.fs" />
+        <Compile Include="Models\Common.fs" />
+        <Compile Include="Models\User.fs" />
         <Compile Include="Controllers\UserController.fs" />
         <Compile Include="Controllers\FavoriteTrackController.fs" />
         <Compile Include="Controllers\PlaylistController.fs" />

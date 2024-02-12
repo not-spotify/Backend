@@ -27,7 +27,6 @@ open MusicPlayerBackend.Host.Ext
 open MusicPlayerBackend.Host.Services
 open MusicPlayerBackend.Persistence
 open MusicPlayerBackend.Identity
-open MusicPlayerBackend.Services
 
 type Startup(config: IConfiguration) =
     member _.ConfigureServices(services: IServiceCollection) =
@@ -70,7 +69,7 @@ type Startup(config: IConfiguration) =
             .AddScoped<FsharpUserRepository>()
 
         %services
-            .AddTransient<IS3Service, S3Service>()
+            .AddTransient<S3Service>()
 
         %services
             .AddControllers()

@@ -9,11 +9,11 @@ open Microsoft.AspNetCore.Mvc
 
 open MusicPlayerBackend.Common.TypeExtensions
 open MusicPlayerBackend.Host
+open MusicPlayerBackend.Host.Models.Common
+open MusicPlayerBackend.Host.Models.User
 open MusicPlayerBackend.Host.Services
 open MusicPlayerBackend.Persistence
 open MusicPlayerBackend.Persistence.Entities
-open MusicPlayerBackend.TransferObjects
-open MusicPlayerBackend.TransferObjects.User
 
 [<ApiController>]
 [<Consumes(MediaTypeNames.Application.Json)>]
@@ -46,11 +46,11 @@ type UserController(
     member this.GetMe() = task {
         let! user = userProvider.GetUser()
 
-        return this.Ok ^ UserResponse(
-            Id = user.Id,
-            Email = user.Email,
+        return this.Ok ^ {
+            Id = user.Id
+            Email = user.Email
             UserName = user.UserName
-        )
+        }
     }
 
     /// <summary>
@@ -82,7 +82,7 @@ type UserController(
             do! unitOfWork.SaveChanges()
             do! unitOfWork.Commit()
 
-            return this.Ok ^ RegisterResponse(Id = user.Id) :> IActionResult
+            return this.Ok ^ { Id = user.Id } :> IActionResult
         | false ->
             return this.BadRequest(result) :> IActionResult
     }
@@ -94,8 +94,8 @@ type UserController(
     /// <response code="200">Returns JWT Bearer</response>
     /// <response code="401">Wrong email or password</response>
     [<HttpPost(Name = "LogInUser")>]
-    [<ProducesResponseType(typeof<LoginResponse>, StatusCodes.Status200OK)>]
-    [<ProducesResponseType(typeof<LoginResponse>, StatusCodes.Status401Unauthorized)>]
+    [<ProducesResponseType(typeof<TokenResponse>, StatusCodes.Status200OK)>]
+    [<ProducesResponseType(typeof<UnauthorizedResponse>, StatusCodes.Status401Unauthorized)>]
     member this.Login(request: LoginRequest) = task {
         let! user = userManager.FindByEmailAsync(request.Email)
         let user = // TODO: Implement User for domain level
@@ -106,33 +106,39 @@ type UserController(
 
         match user with
         | None ->
-            return this.Unauthorized(UnauthorizedResponse(Error = "Can't find user or wrong password")) :> IActionResult
+            return this.Unauthorized({
+                Error = "Can't find user or wrong password"
+            } : UnauthorizedResponse) :> IActionResult
         | Some user ->
             let! signInResult = signInManager.CheckPasswordSignInAsync(user, request.Password, false)
             if not signInResult.Succeeded then
-                return this.Unauthorized(UnauthorizedResponse(Error = string signInResult)) :> IActionResult
+                return this.Unauthorized({
+                    Error = string signInResult
+                } : UnauthorizedResponse) :> IActionResult
             else
                 let! jwtResponse = jwtService.Generate(user.Id)
 
-                return this.Ok ^ LoginResponse(
-                    JwtBearer = jwtResponse.JwtBearer,
-                    RefreshToken = jwtResponse.RefreshToken,
-                    RefreshTokenValidDue = jwtResponse.RefreshTokenValidDue,
-                    JwtBearerValidDue = jwtResponse.JwtBearerValidDue,
-                    UserId = user.Id) :> IActionResult
+                return this.Ok ({
+                    JwtBearer = jwtResponse.JwtBearer
+                    RefreshToken = jwtResponse.RefreshToken
+                    RefreshTokenValidDue = jwtResponse.RefreshTokenValidDue
+                    JwtBearerValidDue = jwtResponse.JwtBearerValidDue
+                    Id = user.Id } : TokenResponse) :> IActionResult
         }
 
     /// <summary>
     ///     Gets new JWT Bearer by RefreshToken.
     /// </summary>
     [<HttpPost(Name = "RefreshUserToken")>]
-    [<ProducesResponseType(typeof<LoginResponse>, StatusCodes.Status200OK)>]
+    [<ProducesResponseType(typeof<TokenResponse>, StatusCodes.Status200OK)>]
     [<ProducesResponseType(typeof<UnauthorizedResponse>, StatusCodes.Status401Unauthorized)>]
-    member this.Refresh(request: RefreshRequest) = task {
-        let! existingRefreshToken = refreshTokenRepository.TryGetValid(request.UserId, request.Jti, request.RefreshToken)
+    member this.Refresh(request: RefreshTokenRequest) = task {
+        let! existingRefreshToken = refreshTokenRepository.TryGetValid(request.Id, request.Jti, request.RefreshToken)
         match existingRefreshToken with
         | None ->
-            return this.Unauthorized(UnauthorizedResponse(Error = "Can't refresh Jwt Bearer")) :> IActionResult
+            return this.Unauthorized({
+                Error = "Can't refresh Jwt Bearer"
+            } : UnauthorizedResponse) :> IActionResult
         | Some existingRefreshToken ->
             do! unitOfWork.BeginTransaction()
             existingRefreshToken.Revoked <- true
@@ -141,10 +147,10 @@ type UserController(
             let! jwtResponse = jwtService.Generate(existingRefreshToken.UserId)
             do! unitOfWork.Commit()
 
-            return this.Ok ^ LoginResponse(
-                JwtBearer = jwtResponse.JwtBearer,
-                RefreshToken = jwtResponse.RefreshToken,
-                RefreshTokenValidDue = jwtResponse.RefreshTokenValidDue,
-                JwtBearerValidDue = jwtResponse.JwtBearerValidDue,
-                UserId = existingRefreshToken.UserId) :> IActionResult
+            return this.Ok ({
+                JwtBearer = jwtResponse.JwtBearer
+                RefreshToken = jwtResponse.RefreshToken
+                RefreshTokenValidDue = jwtResponse.RefreshTokenValidDue
+                JwtBearerValidDue = jwtResponse.JwtBearerValidDue
+                Id = existingRefreshToken.UserId } : TokenResponse) :> IActionResult
         }
