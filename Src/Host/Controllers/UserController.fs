@@ -66,7 +66,7 @@ type UserController(
         let! result = userManager.CreateAsync(user = user, password = request.Password)
         match result.Succeeded with
         | true ->
-            let! _ = unitOfWork.BeginTransaction()
+            do! unitOfWork.BeginTransaction()
             let trackedUser = userRepository.Save(user)
             do! unitOfWork.SaveChanges()
 
@@ -134,7 +134,7 @@ type UserController(
         | None ->
             return this.Unauthorized(UnauthorizedResponse(Error = "Can't refresh Jwt Bearer")) :> IActionResult
         | Some existingRefreshToken ->
-            let! _ = unitOfWork.BeginTransaction()
+            do! unitOfWork.BeginTransaction()
             existingRefreshToken.Revoked <- true
             %refreshTokenRepository.Save(existingRefreshToken)
 

@@ -11,10 +11,13 @@ type FsharpUnitOfWork(ctx: FsharpAppDbContext) =
         | None -> ctx.SaveChangesAsync() :> Task
         | Some ct -> ctx.SaveChangesAsync(ct) :> Task
 
-    member _.BeginTransaction(?ct) =
-        match ct with
-        | None -> ctx.Database.BeginTransactionAsync() :> Task
-        | Some ct -> ctx.Database.BeginTransactionAsync(ct) :> Task
+    member _.BeginTransaction(?ct) = task {
+        let! transaction =
+            match ct with
+            | None -> ctx.Database.BeginTransactionAsync()
+            | Some ct -> ctx.Database.BeginTransactionAsync(ct)
+        t <- transaction
+    }
 
     member _.Commit(?ct) =
         match ct with
