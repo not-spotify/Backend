@@ -11,6 +11,7 @@
         <Compile Include="Entities.fs" />
         <Compile Include="TypeExtensions.fs" />
         <Compile Include="AppDbContext.fs" />
+        <Compile Include="Migrations/*.fs" />
         <Compile Include="FsharpUnitOfWork.fs" />
         <Compile Include="Repositories\Extensions.fs" />
         <Compile Include="Repositories\FsharpPlaylistRepository.fs" />
@@ -22,11 +23,11 @@
         <Compile Include="Repositories\FsharpAlbumRepository.fs" />
         <Compile Include="FsharpUserStore.fs" />
     </ItemGroup>
-    
+
     <ItemGroup>
       <ProjectReference Include="..\Common\Common.fsproj" />
     </ItemGroup>
-    
+
     <ItemGroup>
         <PackageReference Include="EntityFrameworkCore.FSharp" />
         <PackageReference Include="Microsoft.CodeAnalysis.Analyzers"/>

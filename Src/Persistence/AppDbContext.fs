@@ -48,15 +48,23 @@ type FsharpAppDbContext(options) =
         %modelBuilder.RegisterSingleUnionCases()
         %modelBuilder.RegisterOptionTypes()
 
-        // %modelBuilder.Entity<User>()
-        //      .HasIndex(indexExpression = fun s -> s.NormalizedUserName)
-        //      .IsUnique()
-        // %modelBuilder.Entity<User>()
-        //      .HasIndex(indexExpression = fun s -> s.NormalizedEmail)
-        //      .IsUnique()
-        // %modelBuilder.Entity<User>(fun builder ->
-        //     %builder
-        //         .HasOne<Playlist>()
-        //         .WithMany()
-        //         .HasForeignKey(foreignKeyExpression = fun c -> c.FavoritePlaylistId)
-        // )
+        %modelBuilder.Entity<PlaylistUserPermission>()
+            .HasKey("PlaylistId", "UserId", "Permission")
+
+        %modelBuilder.Entity<TrackPlaylist>()
+            .HasKey("TrackId", "PlaylistId")
+
+        %modelBuilder.Entity<AlbumTrack>()
+            .HasKey("AlbumId", "TrackId")
+
+        %modelBuilder.Entity<User>()
+             .HasIndex(indexExpression = fun s -> s.NormalizedUserName)
+             .IsUnique()
+        %modelBuilder.Entity<User>()
+             .HasIndex(indexExpression = fun s -> s.NormalizedEmail)
+             .IsUnique()
+        %modelBuilder.Entity<User>(fun builder ->
+            %builder
+                .HasOne<Playlist>(fun p -> p.FavoritePlaylist).WithOne(fun p -> p.OwnerUser)
+                .HasForeignKey<Playlist>(foreignKeyExpression = fun c -> c.OwnerUserId)
+        )

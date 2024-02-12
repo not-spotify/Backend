@@ -1,6 +1,7 @@
 ﻿namespace MusicPlayerBackend.Persistence.Entities
 
 open System
+open System.ComponentModel.DataAnnotations
 open System.Linq
 
 type UserId = Guid
@@ -20,12 +21,11 @@ type [<CLIMutable>] PlaylistUserPermission = {
 
     Playlist: Playlist
     User: User
+    Permission: PlaylistPermission
 
     mutable CreatedAt: DateTimeOffset
     mutable UpdatedAt: DateTimeOffset option
 }
-with
-    static member Default = Unchecked.defaultof<PlaylistUserPermission>
 
 and [<CLIMutable>] User = {
     mutable Id: UserId
@@ -44,7 +44,6 @@ and [<CLIMutable>] User = {
     mutable UpdatedAt: DateTimeOffset option
 }
 with
-    static member Default = Unchecked.defaultof<User>
     static member Create(userName, email, hashedPassword, favoritePlaylistId) : User = {
         Id = Guid.Empty
         UserName = userName
@@ -78,7 +77,6 @@ and [<CLIMutable>] Playlist = {
     mutable UpdatedAt: DateTimeOffset option
 }
 with
-    static member Default = Unchecked.defaultof<Playlist>
     static member Create(name, visibility, coverUri, ownerUserId) = {
         Id = Guid.Empty
         Name = name
@@ -101,8 +99,6 @@ and [<CLIMutable>] Album = {
     mutable CreatedAt: DateTimeOffset
     mutable UpdatedAt: DateTimeOffset option
 }
-with
-    static member Default = Unchecked.defaultof<Album>
 
 and Jti = Guid
 
@@ -112,12 +108,14 @@ and [<CLIMutable>] RefreshToken = {
     mutable Token: Guid
     mutable Revoked: bool
     mutable UserId: UserId
+
+    mutable User: User
+
     mutable ValidDue: DateTimeOffset
     mutable CreatedAt: DateTimeOffset
     mutable UpdatedAt: DateTimeOffset option
 }
 with
-    static member Default = Unchecked.defaultof<RefreshToken>
     static member Create(userId, validDue, jti, token) = {
         Id = Guid.Empty
         ValidDue = validDue
@@ -127,6 +125,7 @@ with
         CreatedAt = DateTimeOffset.MinValue
         UpdatedAt = None
         UserId = userId
+        User = Unchecked.defaultof<_>
     }
 
 and TrackVisibility =
@@ -134,8 +133,10 @@ and TrackVisibility =
     | Visible = 1
 
 and [<CLIMutable>] Track = {
+    [<Key>]
     mutable Id: TrackId
     mutable OwnerUserId: UserId
+    mutable OwnerUser: User
 
     mutable CoverUri: string option
     mutable TrackUri: string
@@ -148,10 +149,10 @@ and [<CLIMutable>] Track = {
     mutable UpdatedAt: DateTimeOffset option
 }
 with
-    static member Default = Unchecked.defaultof<Track>
     static member Create(ownerUserId, coverUri, trackUri, visibility, name, author) = {
         Id = Guid.Empty
         OwnerUserId = ownerUserId
+        OwnerUser = Unchecked.defaultof<_>
         CoverUri = coverUri
         TrackUri = trackUri
         Visibility = visibility
@@ -171,7 +172,6 @@ and [<CLIMutable>] TrackPlaylist = {
     mutable AddedAt: DateTimeOffset
 }
 with
-    static member Default = Unchecked.defaultof<TrackPlaylist>
     static member Create(trackId, playlistId) = {
         TrackId = trackId
         PlaylistId = playlistId
@@ -190,5 +190,3 @@ and [<CLIMutable>] AlbumTrack = {
 
     mutable CreatedAt: DateTimeOffset
 }
-with
-    static member Default = Unchecked.defaultof<AlbumTrack>
