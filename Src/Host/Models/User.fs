@@ -41,4 +41,3 @@ type UserResponse = {
     UserName: string
     Email: string
 }
-

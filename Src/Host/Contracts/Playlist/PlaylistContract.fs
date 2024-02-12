@@ -6,7 +6,7 @@ type CreateRequest = {
     UserId: Guid
     Name: string
     Visibility: Visibility
-    CoverFileLink: string
+    CoverFileLink: string option
 }
 
 type UpdateRequest = {
@@ -58,6 +58,8 @@ type PlaylistQueryRequest =
 type Item = {
     Id: Id
     Name: string
+    CoverUri: string option
+    Visibility: Visibility
     OwnerUserId: UserId
 }
 

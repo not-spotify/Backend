@@ -1,12 +1,19 @@
 ﻿namespace MusicPlayerBackend.Controllers
 
 open System
+open System.IO
 open System.Net.Mime
+open System.Threading.Tasks
 open Microsoft.AspNetCore.Authorization
 open Microsoft.AspNetCore.Http
 open Microsoft.AspNetCore.Mvc
 
+open MusicPlayerBackend.Common
 open MusicPlayerBackend.Host
+open MusicPlayerBackend.Host.Contracts.Playlist
+open MusicPlayerBackend.Host.Models.Common
+open MusicPlayerBackend.Host.Models.Playlist
+open MusicPlayerBackend.Host.Models.Track
 open MusicPlayerBackend.Host.Services
 open MusicPlayerBackend.Persistence
 open MusicPlayerBackend.TransferObjects
@@ -111,22 +118,47 @@ type PlaylistController(
     [<Authorize>]
     [<ProducesResponseType(typeof<PlaylistResponse>, StatusCodes.Status200OK)>]
     [<ProducesResponseType(StatusCodes.Status400BadRequest)>]
-    member this.Create([<FromBody>] msg: Contracts.Playlist.CreateRequest) = task {
+    member this.Create([<FromBody>] request: PlaylistCreateRequest) = task {
         let! userId = userProvider.GetUserId()
 
-        let request = {
-            msg with
-                UserId = userId
+        let! coverUri =
+            match request.Cover with
+            | None -> Task.FromResult None
+            | Some cover ->
+                s3Service.TryUploadFileStream(
+                    "covers", Guid.NewGuid().ToString() + "_" + request.Name,
+                    cover.OpenReadStream(),
+                    Path.GetExtension(cover.FileName))
+
+        let visibility =
+            match request.Visibility with
+            | PlaylistVisibility.Private ->
+                Visibility.Private
+            | PlaylistVisibility.Public ->
+                Visibility.Public
+
+        let msg : CreateRequest = {
+            UserId = userId
+            Name = request.Name
+            Visibility = visibility
+            CoverFileLink = coverUri
         }
 
-        let! playlist = request |> PlaylistService.create unitOfWork playlistRepository
+        let! playlist = msg |> PlaylistService.create unitOfWork playlistRepository
+        match playlist with
+        | Error error ->
+            // TODO: Remove cover
+            return this.BadRequest({
+                Error = string error
+            } : BadResponse) :> IActionResult
 
-        if Result.isError playlist then
-            () // TODO: Remove cover
-
-        return this.Ok(playlist) :> IActionResult
+        | Ok playlist ->
+            return this.Ok({ Id = playlist.Id
+                             Name = playlist.Name
+                             CoverUri = playlist.CoverUri
+                             Visibility = request.Visibility } : PlaylistResponse) :> IActionResult
     }
-    //
+
     // /// <summary>
     // ///     Creates clone of existing playlist.
     // /// </summary>
@@ -264,7 +296,7 @@ type PlaylistController(
     [<ProducesResponseType(StatusCodes.Status204NoContent)>]
     [<ProducesResponseType(typeof<UpdatePlaylistErrorResponse>, StatusCodes.Status400BadRequest)>]
     [<Consumes(MediaTypeNames.Application.FormUrlEncoded)>]
-    member this.Update(playlistId: Guid, [<FromForm>] msg: Contracts.Playlist.UpdateRequest) = task {
+    member this.Update(playlistId: Guid, [<FromForm>] msg: UpdateRequest) = task {
         let! playlist = msg |> PlaylistService.update unitOfWork playlistRepository
 
         if Result.isError playlist then
@@ -277,14 +309,31 @@ type PlaylistController(
     ///     Gets track list
     /// </summary>
     [<HttpGet("{playlistId:guid}/Tracks", Name = "GetPlaylists")>]
-    [<ProducesResponseType(typeof<TrackInPlaylistListResponse>, StatusCodes.Status200OK)>]
-    member this.List(msg: Contracts.Playlist.ListQuery) = task {
+    [<ProducesResponseType(typeof<ItemsResponse<PlaylistResponse>>, StatusCodes.Status200OK)>]
+    member this.List(request: TrackFilterRequest) = task {
         let! userId = userProvider.GetUserId()
-        let msg = {
-            msg with
-                UserId = userId
+        let msg : ListQuery = {
+            UserId = userId
+            PageNumber = request.Page
+            PageSize = request.PageSize
         }
-        let list = msg |> PlaylistService.list playlistRepository
-
-        return this.Ok(list) :> IActionResult
+        let! listResponse = msg |> PlaylistService.list playlistRepository
+        match listResponse with
+        | Error error ->
+            return this.BadRequest({
+                Error = string error
+            } : BadResponse) :> IActionResult
+        | Ok list ->
+            let tracks = list.Items |> Array.map ^ fun p -> { Id = p.Id
+                                                              Name = p.Name
+                                                              CoverUri = p.CoverUri
+                                                              Visibility =
+                                                                  match p.Visibility with
+                                                                  | Visibility.Private ->
+                                                                      PlaylistVisibility.Private
+                                                                  | Visibility.Public ->
+                                                                      PlaylistVisibility.Public } : PlaylistResponse
+            return this.Ok({ PageNumber = list.PageNumber
+                             TotalCount = list.TotalCount
+                             Items = tracks } : ItemsResponse<PlaylistResponse>) :> IActionResult
     }

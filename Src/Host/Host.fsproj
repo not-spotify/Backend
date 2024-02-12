@@ -48,6 +48,8 @@
         <Compile Include="MinioExtensions.fs" />
         <Compile Include="Models\Common.fs" />
         <Compile Include="Models\User.fs" />
+        <Compile Include="Models\Playlist.fs" />
+        <Compile Include="Models\Track.fs" />
         <Compile Include="Controllers\UserController.fs" />
         <Compile Include="Controllers\FavoriteTrackController.fs" />
         <Compile Include="Controllers\PlaylistController.fs" />

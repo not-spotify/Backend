@@ -31,7 +31,7 @@ module PlaylistService =
                           Visibility.Private
                       | Contracts.Playlist.Public ->
                           Visibility.Public
-                  CoverUri = request.CoverFileLink |> Option.ofStringW
+                  CoverUri = request.CoverFileLink
                   OwnerUserId = request.UserId
                   CreatedAt = DateTimeOffset.MinValue
                   UpdatedAt = None
@@ -66,6 +66,12 @@ module PlaylistService =
                     Id = playlist.Id
                     Name = playlist.Name
                     OwnerUserId = playlist.OwnerUserId
+                    CoverUri = playlist.CoverUri
+                    Visibility =
+                        match playlist.Visibility with
+                        | Visibility.Private -> Contracts.Playlist.Visibility.Private
+                        | Visibility.Public -> Contracts.Playlist.Visibility.Public
+                        | _ -> ArgumentOutOfRangeException() |> raise
                 } : Playlist.Item)
             }
 

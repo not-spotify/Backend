@@ -9,6 +9,7 @@ type BadResponse = {
 }
 
 type ItemsResponse<'T> = {
-    Count: int
-    Items: 'T
+    PageNumber: int
+    TotalCount: int
+    Items: 'T[]
 }

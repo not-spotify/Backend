@@ -45,14 +45,6 @@ public sealed class ClonePlaylistRequest
     public bool IncludeTrackIds { get; set; }
 }
 
-public sealed class PlaylistResponse
-{
-    public required Guid Id { get; set; }
-    public required string Name { get; set; }
-    public string? CoverUri { get; set; }
-    public VisibilityLevel Visibility { get; set; }
-}
-
 public enum VisibilityLevel
 {
     Private,
@@ -75,27 +67,6 @@ public sealed class PlaylistListItemResponse
     public string Name { get; set; } = null!;
     public string? CoverUri { get; set; }
     public VisibilityLevel Visibility { get; set; }
-}
-
-public sealed class CreatePlaylistRequest
-{
-    [Required]
-    [StringLength(maximumLength: 17, MinimumLength = 5, ErrorMessage = "Expected playlist name between 5 and 17")]
-    public string Name { get; set; } = null!;
-
-    public VisibilityLevel? Visibility { get; set; } = VisibilityLevel.Private;
-}
-
-public sealed class UpdatePlaylistRequest
-{
-    public string? Name { get; set; }
-
-    public VisibilityLevel? Visibility { get; set; }
-
-    /// Removes existing cover. Provided cover with true value produce error.
-    public bool RemoveCover { get; set; }
-
-    public IFormFile? Cover { get; set; }
 }
 
 public sealed class UpdatePlaylistErrorResponse
