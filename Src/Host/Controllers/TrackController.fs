@@ -11,11 +11,10 @@ open Microsoft.AspNetCore.Mvc
 open MusicPlayerBackend.Common
 open MusicPlayerBackend.Host
 open MusicPlayerBackend.Host.Models.Common
+open MusicPlayerBackend.Host.Models.Track
 open MusicPlayerBackend.Host.Services
 open MusicPlayerBackend.Persistence
 open MusicPlayerBackend.Persistence.Entities
-open MusicPlayerBackend.TransferObjects
-open MusicPlayerBackend.TransferObjects.Track
 
 [<ApiController>]
 [<Consumes(MediaTypeNames.Application.Json)>]
@@ -35,22 +34,23 @@ type TrackController(trackRepository: FsharpTrackRepository,
     /// </summary>
     [<HttpGet("{id:guid}", Name = "GetTrack")>]
     [<ProducesResponseType(typeof<TrackResponse>, StatusCodes.Status200OK)>]
-    member this.Get(id: Guid, ct: CancellationToken) = task {
+    member this.Get(id: TrackId, ct: CancellationToken) = task {
         let! userId = userProvider.GetUserId()
         let! track = trackRepository.TryGetVisible(id, userId, ct)
         match track with
         | None ->
             return this.NotFound() :> IActionResult
         | Some track ->
-            let track = TrackResponse(
-                Id = track.Id,
-                CoverUri = (track.CoverUri |> Option.toObj),
-                TrackUri = track.TrackUri,
-                Visibility = ucast track.Visibility,
-                Name = track.Name,
+            return this.Ok({
+                Id = track.Id
+                CoverUri = track.CoverUri
+                TrackUri = track.TrackUri
+                Visibility = failwith "todo"
+                Name = track.Name
                 Author = track.Author
-            )
-            return this.Ok(track) :> IActionResult
+                CreatedAt = track.CreatedAt
+                UpdatedAt = track.UpdatedAt
+            } : TrackResponse) :> IActionResult
     }
 
     /// <summary>
@@ -58,21 +58,23 @@ type TrackController(trackRepository: FsharpTrackRepository,
     /// </summary>
     [<HttpPut("{id:guid}", Name = "UpdateTrack")>]
     [<Consumes(MediaTypeNames.Application.FormUrlEncoded)>]
-    member this.Update(id: Guid, [<FromForm>] request: TrackUpdateRequest, ct: CancellationToken) = task {
+    member this.Update(id: Guid, [<FromForm>] request: UpdateTrackRequest, ct: CancellationToken) = task {
         let! userId = userProvider.GetUserId()
         let! track = trackRepository.TryGetIfOwner(userId, id, ct)
         match track with
         | None ->
             return this.NotFound() :> IActionResult
         | Some track ->
-            if request.Visibility.HasValue then
+            match request.Visibility with
+            | Some visibility ->
                 track.Visibility <-
-                    match request.Visibility.Value with
-                    | TrackVisibility.Hidden -> Entities.TrackVisibility.Hidden
-                    | TrackVisibility.Visible -> Entities.TrackVisibility.Visible
-                    | _ -> ArgumentOutOfRangeException() |> raise
+                    match visibility with
+                    | Hidden -> failwith "todo"
+                    | Public -> failwith "todo"
+            | _ -> ()
 
-            if request.Cover <> null then
+            match request.Cover with
+            | Some cover ->
                 if request.RemoveCover then
                     return this.BadRequest({
                         Error = $"{nameof(request.RemoveCover)} is true"
@@ -83,8 +85,8 @@ type TrackController(trackRepository: FsharpTrackRepository,
                             .TryUploadFileStream(
                                 "covers",
                                 Guid.NewGuid().ToString() + "_" + track.Name,
-                                request.Cover.OpenReadStream(),
-                                Path.GetExtension(request.Cover.FileName)
+                                cover.OpenReadStream(),
+                                Path.GetExtension(cover.FileName)
                             )
 
                     if Option.isNone uploadedCoverUri then
@@ -99,7 +101,7 @@ type TrackController(trackRepository: FsharpTrackRepository,
                             do! unitOfWork.SaveChanges(ct)
 
                         return this.NoContent() :> IActionResult
-            else
+            | None ->
                 return this.NoContent() :> IActionResult
     }
 
@@ -120,7 +122,7 @@ type TrackController(trackRepository: FsharpTrackRepository,
     [<HttpPost(Name = "UploadTrack")>]
     [<Consumes(MediaTypeNames.Multipart.FormData)>]
     [<ProducesResponseType(typeof<TrackResponse>, StatusCodes.Status200OK)>]
-    member this.Upload([<FromForm>] request: TrackCreateRequest, ct: CancellationToken) = task {
+    member this.Upload([<FromForm>] request: CreateTrackRequest, ct: CancellationToken) = task {
         let! uploadedTrackUri = s3Service.TryUploadFileStream(
             "tracks",
             Guid.NewGuid().ToString() + "_" + request.Name,
@@ -133,11 +135,12 @@ type TrackController(trackRepository: FsharpTrackRepository,
             } : BadResponse) :> IActionResult
         else
             let mutable coverUri = null
-            if request.Cover <> null then
+            match request.Cover with
+            | Some cover ->
                 let! uploadedCoverUri = s3Service.TryUploadFileStream(
                     "covers", Guid.NewGuid().ToString() + "_" + request.Name,
-                    request.Cover.OpenReadStream(),
-                    Path.GetExtension(request.Cover.FileName))
+                    cover.OpenReadStream(),
+                    Path.GetExtension(cover.FileName))
 
                 if Option.isNone uploadedCoverUri then
                     return this.BadRequest({
@@ -149,9 +152,8 @@ type TrackController(trackRepository: FsharpTrackRepository,
                     let! ownerUserId = userProvider.GetUserId()
                     let xv =
                         match request.Visibility with
-                        | TrackVisibility.Hidden -> Entities.TrackVisibility.Hidden
-                        | TrackVisibility.Visible -> Entities.TrackVisibility.Visible
-                        | _ -> ArgumentOutOfRangeException() |> raise
+                        | Hidden -> TrackVisibility.Hidden
+                        | Public -> TrackVisibility.Visible
 
                     let track = Track.Create(
                         ownerUserId,
@@ -163,16 +165,15 @@ type TrackController(trackRepository: FsharpTrackRepository,
 
                     %trackRepository.Save(track)
                     do! unitOfWork.SaveChanges(ct)
-                    let track = TrackResponse(
-                        Id = track.Id,
-                        CoverUri = (track.CoverUri |> Option.toObj),
-                        TrackUri = track.TrackUri,
-                        Visibility = ucast track.Visibility,
-                        Name = track.Name,
-                        Author = track.Author
-                    )
-                    return this.Ok(track) :> IActionResult
-            else
+                    return this.Ok({ Id = track.Id
+                                     CoverUri = track.CoverUri
+                                     TrackUri = track.TrackUri
+                                     Author = track.Author
+                                     Name = track.Name
+                                     Visibility = request.Visibility
+                                     CreatedAt = track.CreatedAt
+                                     UpdatedAt = track.UpdatedAt } : TrackResponse) :> IActionResult
+            | None ->
                 return this.NoContent() :> IActionResult
     }
 

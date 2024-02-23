@@ -72,6 +72,7 @@ and [<CLIMutable>] Playlist = {
 
     OwnerUser: User
     TrackPlaylists: IQueryable<TrackPlaylist>
+    Permissions: IQueryable<PlaylistUserPermission>
 
     mutable CreatedAt: DateTimeOffset
     mutable UpdatedAt: DateTimeOffset option
@@ -85,6 +86,7 @@ with
         OwnerUserId = ownerUserId
         OwnerUser = Unchecked.defaultof<_>
         TrackPlaylists = null
+        Permissions = null
         CreatedAt = DateTimeOffset.MinValue
         UpdatedAt = None
     }

@@ -1,6 +1,6 @@
 ﻿namespace MusicPlayerBackend.Host.Contracts.Playlist
 
-type Id = System.Guid
+type PlaylistId = System.Guid
 type UserId = System.Guid
 
 type Visibility =
@@ -8,7 +8,7 @@ type Visibility =
     | Public
 
 type Playlist = {
-    Id: Id
+    Id: PlaylistId
     Name: string
     OwnerUserId: UserId
     CoverUri: string option

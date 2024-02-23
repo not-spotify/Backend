@@ -36,7 +36,8 @@ module PlaylistService =
                   CreatedAt = DateTimeOffset.MinValue
                   UpdatedAt = None
                   OwnerUser = Unchecked.defaultof<_>
-                  TrackPlaylists = null }
+                  TrackPlaylists = null
+                  Permissions = null }
 
             let tracked = playlistRepository.Save(playlist)
             do! unitOfWork.SaveChanges()
@@ -105,8 +106,8 @@ module PlaylistService =
             if msg.Name |> Option.ofStringW |> Option.isSome then
                 playlist.Name <- msg.Name
 
-            if msg.CoverFileLink |> Option.ofStringW |> Option.isSome then
-                playlist.CoverUri <- Some msg.CoverFileLink
+            if msg.CoverFileLink |> Option.isSome then
+                playlist.CoverUri <- msg.CoverFileLink
 
             let tracked = playlistRepository.Save(playlist)
             do! unitOfWork.SaveChanges()

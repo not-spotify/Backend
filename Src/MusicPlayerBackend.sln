@@ -1,7 +1,5 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MusicPlayerBackend", "MusicPlayerBackend\MusicPlayerBackend.csproj", "{A2EEAF86-CE21-493E-9659-E4EFA893C485}"
-EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Identity", "Identity\Identity.fsproj", "{988060E3-A2D3-4890-ACA5-7D8B9DB51578}"
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Common", "Common\Common.fsproj", "{68F93951-AA8D-474B-B8EB-567A5D0B012D}"
@@ -16,10 +14,6 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{A2EEAF86-CE21-493E-9659-E4EFA893C485}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{A2EEAF86-CE21-493E-9659-E4EFA893C485}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{A2EEAF86-CE21-493E-9659-E4EFA893C485}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{A2EEAF86-CE21-493E-9659-E4EFA893C485}.Release|Any CPU.Build.0 = Release|Any CPU
 		{988060E3-A2D3-4890-ACA5-7D8B9DB51578}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{988060E3-A2D3-4890-ACA5-7D8B9DB51578}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{988060E3-A2D3-4890-ACA5-7D8B9DB51578}.Release|Any CPU.ActiveCfg = Release|Any CPU

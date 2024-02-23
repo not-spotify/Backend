@@ -6,7 +6,6 @@ open Microsoft.AspNetCore.Http
 open Microsoft.AspNetCore.Http.Json;
 open Microsoft.Extensions.Options
 open Microsoft.Extensions.DependencyInjection
-open MusicPlayerBackend.TransferObjects
 
 [<Sealed>]
 type UnauthorizedMiddleware(next: RequestDelegate) =
@@ -17,7 +16,7 @@ type UnauthorizedMiddleware(next: RequestDelegate) =
             context.Response.ContentType <- MediaTypeNames.Application.Json
 
             let jsonOptions = context.RequestServices.GetRequiredService<IOptions<JsonOptions>>().Value.SerializerOptions
-            let response = UnauthorizedResponse(Error = "Unauthorized. Refresh token or authorize.")
+            let response = {| Error = "Unauthorized. Refresh token or authorize." |}
 
             do! context.Response.WriteAsync(JsonSerializer.Serialize(response, jsonOptions))
     }

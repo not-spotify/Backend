@@ -11,10 +11,10 @@ type CreateRequest = {
 
 type UpdateRequest = {
     UserId: UserId
-    Id: Id
+    Id: PlaylistId
     Name: string
     DeleteCover: bool
-    CoverFileLink: string
+    CoverFileLink: string option
 }
 
 type DeleteRequest = {
@@ -56,7 +56,7 @@ type PlaylistQueryRequest =
     | Get of GetQuery
 
 type Item = {
-    Id: Id
+    Id: PlaylistId
     Name: string
     CoverUri: string option
     Visibility: Visibility

@@ -1,5 +1,9 @@
 ﻿namespace MusicPlayerBackend.Host.Contracts.User
 
-open System
+type CreateUserRequest = {
+    UserName: string
+    Email: string
 
-type UserId = Guid
+    Password: string
+    ConfirmPassword: string
+}

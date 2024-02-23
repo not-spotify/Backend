@@ -31,7 +31,6 @@
     <ItemGroup>
         <ProjectReference Include="..\Identity\Identity.fsproj" />
         <ProjectReference Include="..\Persistence\Persistence.fsproj" />
-        <ProjectReference Include="..\MusicPlayerBackend\MusicPlayerBackend.csproj" />
     </ItemGroup>
 
     <ItemGroup>
@@ -41,6 +40,7 @@
         <Compile Include="Contracts\Playlist\Queries.fs" />
         <Compile Include="Contracts\Playlist\PlaylistContract.fs" />
         <Compile Include="Contracts\User\Common.fs" />
+        <Compile Include="Contracts\Track\TrackContract.fs" />
         <Compile Include="Services\UserResolver.fs" />
         <Compile Include="Services\JwtService.fs" />
         <Compile Include="Services\PlaylistService.fs" />
@@ -51,7 +51,6 @@
         <Compile Include="Models\Playlist.fs" />
         <Compile Include="Models\Track.fs" />
         <Compile Include="Controllers\UserController.fs" />
-        <Compile Include="Controllers\FavoriteTrackController.fs" />
         <Compile Include="Controllers\PlaylistController.fs" />
         <Compile Include="Controllers\TrackController.fs" />
         <Compile Include="Startup.fs" />

@@ -15,7 +15,7 @@ type FsharpPlaylistRepository(dbContext: FsharpAppDbContext) =
 
     member _.Query with get() = playlists.AsQueryable()
 
-    member _.Save(playlist : Playlist) =
+    member _.Save(playlist: Playlist) =
         if playlist.Id = Guid.Empty && playlist.CreatedAt = DateTimeOffset.MinValue then
             playlist.CreatedAt <- DateTimeOffset.UtcNow
         elif playlist.Id <> Guid.Empty then
@@ -29,13 +29,42 @@ type FsharpPlaylistRepository(dbContext: FsharpAppDbContext) =
 
         playlists.Update(playlist)
 
-    member _.Delete(playlist) = playlists.Remove(playlist)
+    member _.Delete(playlist) = %playlists.Remove(playlist)
 
     member _.TryGetById(id: PlaylistId, ?ct) = task {
         return!
             query {
                 for playlist in playlists do
                     where (playlist.Id = id)
+                    select playlist
+            } |> _.TrySingle(ct)
+    }
+
+    member _.TryGetIfCanViewById(id: PlaylistId, userId: UserId, ?ct) = task {
+        return!
+            query {
+                for playlist in playlists do
+                    where (playlist.Id = id && (
+                        playlist.OwnerUserId = userId
+                        || playlist.Permissions.Any(
+                            fun np -> np.UserId = userId
+                                      && np.PlaylistId = playlist.Id (* any type of permission allow to view *) ))
+                    )
+                    select playlist
+            } |> _.TrySingle(ct)
+    }
+
+    member _.TryGetIfCanModifyById(id: PlaylistId, userId: UserId, ?ct) = task {
+        return!
+            query {
+                for playlist in playlists do
+                    where (playlist.Id = id && (
+                        playlist.OwnerUserId = userId
+                        || playlist.Permissions.Any(
+                            fun np -> np.UserId = userId
+                                      && np.PlaylistId = playlist.Id
+                                      && np.Permission = PlaylistPermission.Full))
+                    )
                     select playlist
             } |> _.TrySingle(ct)
     }
