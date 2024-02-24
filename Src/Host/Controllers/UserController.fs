@@ -9,8 +9,7 @@ open Microsoft.AspNetCore.Mvc
 
 open MusicPlayerBackend.Common.TypeExtensions
 open MusicPlayerBackend.Host
-open MusicPlayerBackend.Host.Models.Common
-open MusicPlayerBackend.Host.Models.User
+open MusicPlayerBackend.Host.Models
 open MusicPlayerBackend.Host.Services
 open MusicPlayerBackend.Persistence
 open MusicPlayerBackend.Persistence.Entities
@@ -41,7 +40,7 @@ type UserController(
     /// <response code="401">Not authorized</response>
     [<Authorize>]
     [<HttpGet(Name = "GetMe")>]
-    [<ProducesResponseType(typeof<UserResponse>, StatusCodes.Status200OK)>]
+    [<ProducesResponseType(typeof<Models.User>, StatusCodes.Status200OK)>]
     [<ProducesResponseType(typeof<UnauthorizedResponse>, StatusCodes.Status401Unauthorized)>]
     member this.GetMe() = task {
         let! user = userProvider.GetUser()
@@ -59,8 +58,8 @@ type UserController(
     /// <returns>User identifier and JWT Bearer</returns>
     /// <response code="200">Returns User identifier</response>
     /// <response code="400">Wrong schema</response>
-    [<HttpPost(Name = "RegisterUser")>]
-    [<ProducesResponseType(typeof<RegisterResponse>, StatusCodes.Status200OK)>]
+    [<HttpPost(Name = "Register")>]
+    [<ProducesResponseType(typeof<Models.User>, StatusCodes.Status200OK)>]
     member this.Register(request: RegisterRequest) = task {
         let user = User.Create(request.UserName, request.Email, request.Password, Guid.Empty)
         let! result = userManager.CreateAsync(user = user, password = request.Password)
@@ -72,7 +71,11 @@ type UserController(
 
             let user = trackedUser.Entity
 
-            let playlist = Playlist.Create($"{request.UserName}'s Favorites", Visibility.Private, None, user.Id)
+            let playlist = Playlist.Create(
+                $"{request.UserName}'s Favorites",
+                Visibility.Private,
+                None,
+                user.Id)
 
             let trackedPlaylist = playlistRepository.Save(playlist)
             do! unitOfWork.SaveChanges()
@@ -82,18 +85,22 @@ type UserController(
             do! unitOfWork.SaveChanges()
             do! unitOfWork.Commit()
 
-            return this.Ok ^ { Id = user.Id } :> IActionResult
+            return this.Ok ^ ({
+                Id = user.Id
+                UserName = user.UserName
+                Email = user.Email
+            } : Models.User) :> IActionResult
         | false ->
             return this.BadRequest(result) :> IActionResult
     }
 
     /// <summary>
-    /// Gets JWT Bearer for using secure actions.
+    ///     Gets JWT Bearer for using secure actions.
     /// </summary>
     /// <returns>JWT Bearer</returns>
     /// <response code="200">Returns JWT Bearer</response>
     /// <response code="401">Wrong email or password</response>
-    [<HttpPost(Name = "LogInUser")>]
+    [<HttpPost(Name = "LogIn")>]
     [<ProducesResponseType(typeof<TokenResponse>, StatusCodes.Status200OK)>]
     [<ProducesResponseType(typeof<UnauthorizedResponse>, StatusCodes.Status401Unauthorized)>]
     member this.Login(request: LoginRequest) = task {
@@ -129,7 +136,7 @@ type UserController(
     /// <summary>
     ///     Gets new JWT Bearer by RefreshToken.
     /// </summary>
-    [<HttpPost(Name = "RefreshUserToken")>]
+    [<HttpPost(Name = "Refresh")>]
     [<ProducesResponseType(typeof<TokenResponse>, StatusCodes.Status200OK)>]
     [<ProducesResponseType(typeof<UnauthorizedResponse>, StatusCodes.Status401Unauthorized)>]
     member this.Refresh(request: RefreshTokenRequest) = task {

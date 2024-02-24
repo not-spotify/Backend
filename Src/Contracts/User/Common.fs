@@ -1,4 +1,4 @@
-﻿namespace MusicPlayerBackend.Host.Contracts.User
+﻿namespace MusicPlayerBackend.Contracts.User
 
 type CreateUserRequest = {
     UserName: string
@@ -6,4 +6,10 @@ type CreateUserRequest = {
 
     Password: string
     ConfirmPassword: string
+}
+
+type UserId = System.Guid
+
+type User = {
+    Id: UserId
 }

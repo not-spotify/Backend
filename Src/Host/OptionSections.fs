@@ -14,6 +14,8 @@ type TokenConfig = {
     SigningKey: string
     Issuer: string
     Audience: string
+    ValidHours: float // 7 * 24
+    RefreshValidHours: float // 7 * 24
 }
 
 [<CLIMutable>]

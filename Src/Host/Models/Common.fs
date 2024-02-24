@@ -1,12 +1,10 @@
-﻿module MusicPlayerBackend.Host.Models.Common
-
-type UnauthorizedResponse = {
-    Error: string
-}
+﻿namespace MusicPlayerBackend.Host.Models
 
 type BadResponse = {
     Error: string
 }
+
+type UnauthorizedResponse = BadResponse
 
 type ItemsResponse<'T> = {
     PageNumber: int

@@ -10,7 +10,7 @@ open Microsoft.AspNetCore.Mvc
 
 open MusicPlayerBackend.Common
 open MusicPlayerBackend.Host
-open MusicPlayerBackend.Host.Models.Common
+open MusicPlayerBackend.Host.Models
 open MusicPlayerBackend.Host.Models.Track
 open MusicPlayerBackend.Host.Services
 open MusicPlayerBackend.Persistence
@@ -111,7 +111,7 @@ type TrackController(trackRepository: FsharpTrackRepository,
     [<HttpDelete("{id:guid}", Name = "DeleteTrack")>]
     member this.Delete(id: Guid, ct: CancellationToken) = task {
         let! userId = userProvider.GetUserId()
-        let! track = trackRepository.DeleteIfOwner(id, userId, ct)
+        do! trackRepository.DeleteIfOwner(id, userId, ct)
         do! unitOfWork.SaveChanges(ct)
         return this.NoContent() :> IActionResult
     }

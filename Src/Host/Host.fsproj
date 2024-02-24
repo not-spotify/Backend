@@ -29,6 +29,7 @@
     </ItemGroup>
 
     <ItemGroup>
+        <ProjectReference Include="..\Contracts\Contracts.fsproj" />
         <ProjectReference Include="..\Identity\Identity.fsproj" />
         <ProjectReference Include="..\Persistence\Persistence.fsproj" />
     </ItemGroup>
@@ -36,11 +37,6 @@
     <ItemGroup>
         <Compile Include="OptionSections.fs" />
         <Compile Include="Middlewares\UnauthorizedMiddleware.fs" />
-        <Compile Include="Contracts\Playlist\Base.fs" />
-        <Compile Include="Contracts\Playlist\Queries.fs" />
-        <Compile Include="Contracts\Playlist\PlaylistContract.fs" />
-        <Compile Include="Contracts\User\Common.fs" />
-        <Compile Include="Contracts\Track\TrackContract.fs" />
         <Compile Include="Services\UserResolver.fs" />
         <Compile Include="Services\JwtService.fs" />
         <Compile Include="Services\PlaylistService.fs" />

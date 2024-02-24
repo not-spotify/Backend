@@ -21,20 +21,22 @@ type JwtBearerResponse = {
 
 [<Sealed>]
 type JwtService(
-    tokenConfig: IOptions<TokenConfig>,
+    config: IOptions<TokenConfig>,
     refreshTokenRepository: FsharpRefreshTokenRepository,
     unitOfWork: FsharpUnitOfWork) =
 
-    let tokenConfig = tokenConfig.Value
+    let config = config.Value
 
-    member _.Generate(userId: Guid) = task {
+    member _.Generate(userId: UserId) = task {
         let jti = Guid.NewGuid()
         let refreshTokenValue = Guid.NewGuid()
-        let jwtValidDue = DateTime.UtcNow.AddDays(1) // TODO: Move to appconfig
-        let refreshValidDue = jwtValidDue.AddDays(7)
+        let jwtValidDue = DateTime.UtcNow.AddHours(config.ValidHours)
+        let refreshValidDue = jwtValidDue.AddDays(config.RefreshValidHours)
 
-        let secKey = System.Text.Encoding.UTF8.GetBytes(tokenConfig.SigningKey)
-        let signCred = SigningCredentials(SymmetricSecurityKey(secKey), SecurityAlgorithms.HmacSha256Signature)
+        let secKey = System.Text.Encoding.UTF8.GetBytes(config.SigningKey)
+        let signCred = SigningCredentials(
+            SymmetricSecurityKey(secKey),
+            SecurityAlgorithms.HmacSha256Signature)
 
         let tokenDescriptor = SecurityTokenDescriptor(
             Subject = ClaimsIdentity([|

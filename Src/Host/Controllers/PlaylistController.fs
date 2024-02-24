@@ -10,10 +10,9 @@ open Microsoft.AspNetCore.Http
 open Microsoft.AspNetCore.Mvc
 
 open MusicPlayerBackend.Common
+open MusicPlayerBackend.Contracts.Playlist
 open MusicPlayerBackend.Host
-open MusicPlayerBackend.Host.Contracts.Playlist
-open MusicPlayerBackend.Host.Models.Common
-open MusicPlayerBackend.Host.Models.Playlist
+open MusicPlayerBackend.Host.Models
 open MusicPlayerBackend.Host.Models.Track
 open MusicPlayerBackend.Host.Services
 open MusicPlayerBackend.Persistence
@@ -38,7 +37,7 @@ type PlaylistController(
     /// </summary>
     [<HttpGet("{id:guid}", Name = "GetPlaylist")>]
     [<ProducesResponseType(StatusCodes.Status400BadRequest)>]
-    [<ProducesResponseType(typeof<PlaylistResponse>, StatusCodes.Status200OK)>]
+    [<ProducesResponseType(typeof<Playlist>, StatusCodes.Status200OK)>]
     member this.Get(id: Guid) = task {
         let! userId = userProvider.GetUserId()
         let! playlist = playlistRepository.TryGetIfCanViewById(id, userId)
@@ -55,12 +54,12 @@ type PlaylistController(
             return this.Ok({ Id = playlist.Id
                              Name = playlist.Name
                              CoverUri = playlist.CoverUri
-                             Visibility = visibility } : PlaylistResponse) :> IActionResult
+                             Visibility = visibility } : Models.Playlist) :> IActionResult
     }
 
     [<HttpGet("{id:guid}", Name = "SearchPlaylistTracks")>]
     [<ProducesResponseType(StatusCodes.Status400BadRequest)>]
-    [<ProducesResponseType(typeof<PlaylistResponse>, StatusCodes.Status200OK)>]
+    [<ProducesResponseType(typeof<Playlist>, StatusCodes.Status200OK)>]
     member this.SearchPlaylistTracks() = task {
         ()
     }
@@ -70,9 +69,9 @@ type PlaylistController(
     /// </summary>
     [<HttpPost(Name = "CreatePlaylist")>]
     [<Authorize>]
-    [<ProducesResponseType(typeof<PlaylistResponse>, StatusCodes.Status200OK)>]
+    [<ProducesResponseType(typeof<Playlist>, StatusCodes.Status200OK)>]
     [<ProducesResponseType(StatusCodes.Status400BadRequest)>]
-    member this.Create([<FromBody>] request: PlaylistCreateRequest) = task {
+    member this.Create([<FromBody>] request: CreatePlaylist) = task {
         let! userId = userProvider.GetUserId()
 
         let! coverUri =
@@ -103,7 +102,7 @@ type PlaylistController(
             return this.Ok({ Id = playlist.Id
                              Name = playlist.Name
                              CoverUri = playlist.CoverUri
-                             Visibility = request.Visibility } : PlaylistResponse) :> IActionResult
+                             Visibility = request.Visibility } : Models.Playlist) :> IActionResult
     }
 
     /// <summary>
@@ -132,7 +131,7 @@ type PlaylistController(
     [<HttpPut("{playlistId:guid}", Name = "UpdatePlaylist")>]
     [<ProducesResponseType(StatusCodes.Status204NoContent)>]
     [<Consumes(MediaTypeNames.Application.FormUrlEncoded)>]
-    member this.Update(playlistId: Guid, [<FromForm>] request: PlaylistUpdateRequest) = task {
+    member this.Update(playlistId: Guid, [<FromForm>] request: UpdatePlaylist) = task {
         let! cover =
             request.Cover
             |> Option.map ^ fun cover -> s3Service.TryUploadFileStream(
@@ -162,7 +161,7 @@ type PlaylistController(
     ///     Get visible to user playlists.
     /// </summary>
     [<HttpGet("{playlistId:guid}/Tracks", Name = "GetPlaylists")>]
-    [<ProducesResponseType(typeof<ItemsResponse<PlaylistResponse>>, StatusCodes.Status200OK)>]
+    [<ProducesResponseType(typeof<ItemsResponse<Playlist>>, StatusCodes.Status200OK)>]
     member this.List(request: SearchTracksRequest) = task {
         let! userId = userProvider.GetUserId()
         let msg : ListQuery = {
@@ -180,9 +179,8 @@ type PlaylistController(
             let tracks = list.Items |> Array.map ^ fun p -> { Id = p.Id
                                                               Name = p.Name
                                                               CoverUri = p.CoverUri
-                                                              Visibility = failwith "todo" } : PlaylistResponse
+                                                              Visibility = failwith "todo" }
             return this.Ok({ PageNumber = list.PageNumber
                              TotalCount = list.TotalCount
-                             Items = tracks } : ItemsResponse<PlaylistResponse>) :> IActionResult
+                             Items = tracks } : ItemsResponse<Models.Playlist>) :> IActionResult
     }
-

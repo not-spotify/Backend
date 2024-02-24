@@ -1,6 +1,8 @@
-﻿namespace MusicPlayerBackend.Host.Contracts.Playlist
+﻿namespace MusicPlayerBackend.Contracts.Playlist
 
 open System
+
+open MusicPlayerBackend.Contracts.User
 
 type CreateRequest = {
     UserId: Guid
@@ -55,7 +57,7 @@ type PlaylistQueryRequest =
     | List of ListQuery
     | Get of GetQuery
 
-type Item = {
+type Playlist = {
     Id: PlaylistId
     Name: string
     CoverUri: string option
@@ -64,7 +66,7 @@ type Item = {
 }
 
 type List = {
-    Items: Item[]
+    Items: Playlist[]
 
     PageNumber: int
     TotalCount: int

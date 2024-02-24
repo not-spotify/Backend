@@ -1,17 +1,18 @@
-﻿module MusicPlayerBackend.Host.Models.User
+﻿namespace MusicPlayerBackend.Host.Models
 
 open System
 
 type UserId = Guid
 
 type RegisterRequest = {
+    /// <example>metauser</example>
     UserName: string
-    Email: string
-    Password: string
-}
 
-type RegisterResponse = {
-    Id: UserId
+    /// <example>meta@mail.local</example>
+    Email: string
+
+    /// <example>somesecurepassword</example>
+    Password: string
 }
 
 type LoginRequest = {
@@ -32,11 +33,11 @@ type TokenResponse = {
     Id: UserId
     JwtBearer: string
     RefreshToken: string
-    RefreshTokenValidDue: DateTime // TODO: offset?
+    RefreshTokenValidDue: DateTime
     JwtBearerValidDue: DateTime
 }
 
-type UserResponse = {
+type User = {
     Id: UserId
     UserName: string
     Email: string

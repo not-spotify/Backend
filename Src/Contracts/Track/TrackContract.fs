@@ -1,7 +1,8 @@
-﻿namespace MusicPlayerBackend.Host.Contracts.Track
+﻿namespace MusicPlayerBackend.Contracts.Track
 
 open System
-open MusicPlayerBackend.Host.Contracts.Playlist
+
+open MusicPlayerBackend.Contracts.User
 
 type TrackId = Guid
 

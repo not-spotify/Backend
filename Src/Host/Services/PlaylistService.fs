@@ -4,8 +4,7 @@ open System
 open System.Linq
 open Microsoft.EntityFrameworkCore
 
-open MusicPlayerBackend.Host
-open MusicPlayerBackend.Host.Contracts
+open MusicPlayerBackend.Contracts
 open MusicPlayerBackend.Persistence
 open MusicPlayerBackend.Common.TypeExtensions
 open MusicPlayerBackend.Persistence.Entities
@@ -27,9 +26,9 @@ module PlaylistService =
                   Name = request.Name
                   Visibility =
                       match request.Visibility with
-                      | Contracts.Playlist.Private ->
+                      | Playlist.Private ->
                           Visibility.Private
-                      | Contracts.Playlist.Public ->
+                      | Playlist.Public ->
                           Visibility.Public
                   CoverUri = request.CoverFileLink
                   OwnerUserId = request.UserId
@@ -43,15 +42,15 @@ module PlaylistService =
             do! unitOfWork.SaveChanges()
 
             let playlist = tracked.Entity
-            let playlist : Contracts.Playlist.Playlist =
+            let playlist : Playlist.Playlist =
                 { Id = playlist.Id
                   Name = playlist.Name
                   CoverUri = playlist.CoverUri
                   OwnerUserId = playlist.OwnerUserId
                   Visibility =
                       match playlist.Visibility with
-                      | Visibility.Private -> Contracts.Playlist.Private
-                      | Visibility.Public -> Contracts.Playlist.Public
+                      | Visibility.Private -> Playlist.Private
+                      | Visibility.Public -> Playlist.Public
                       | _ -> ArgumentOutOfRangeException() |> raise}
 
             return Ok(playlist)
@@ -70,10 +69,10 @@ module PlaylistService =
                     CoverUri = playlist.CoverUri
                     Visibility =
                         match playlist.Visibility with
-                        | Visibility.Private -> Contracts.Playlist.Visibility.Private
-                        | Visibility.Public -> Contracts.Playlist.Visibility.Public
+                        | Visibility.Private -> Playlist.Visibility.Private
+                        | Visibility.Public -> Playlist.Visibility.Public
                         | _ -> ArgumentOutOfRangeException() |> raise
-                } : Playlist.Item)
+                } : Playlist.Playlist)
             }
 
         let! totalCount = getPlaylistListQuery.CountAsync()
@@ -113,15 +112,15 @@ module PlaylistService =
             do! unitOfWork.SaveChanges()
 
             let playlist = tracked.Entity
-            let playlist : Contracts.Playlist.Playlist =
+            let playlist : Playlist.Playlist =
                 { Id = playlist.Id
                   Name = playlist.Name
                   CoverUri = playlist.CoverUri
                   OwnerUserId = playlist.OwnerUserId
                   Visibility =
                       match playlist.Visibility with
-                      | Visibility.Private -> Contracts.Playlist.Private
-                      | Visibility.Public -> Contracts.Playlist.Public
+                      | Visibility.Private -> Playlist.Private
+                      | Visibility.Public -> Playlist.Public
                       | _ -> ArgumentOutOfRangeException() |> raise}
 
             return Ok(playlist)
