@@ -83,10 +83,15 @@ type PlaylistController(
                     cover.OpenReadStream(),
                     Path.GetExtension(cover.FileName))
 
+        let visibility : MusicPlayerBackend.Contracts.Playlist.Visibility =
+            match request.Visibility with
+            | PlaylistVisibility.Private -> MusicPlayerBackend.Contracts.Playlist.Visibility.Private
+            | PlaylistVisibility.Public -> MusicPlayerBackend.Contracts.Playlist.Visibility.Public
+
         let msg : CreateRequest = {
             UserId = userId
             Name = request.Name
-            Visibility = failwith "todo"
+            Visibility = visibility
             CoverFileLink = coverUri
         }
 
@@ -176,10 +181,19 @@ type PlaylistController(
                 Error = string error
             } : BadResponse) :> IActionResult
         | Ok list ->
-            let tracks = list.Items |> Array.map ^ fun p -> { Id = p.Id
-                                                              Name = p.Name
-                                                              CoverUri = p.CoverUri
-                                                              Visibility = failwith "todo" }
+            let tracks =
+                list.Items
+                |> Array.map ^ fun playlist -> {
+                    Id = playlist.Id
+                    Name = playlist.Name
+                    CoverUri = playlist.CoverUri
+                    Visibility =
+                        match playlist.Visibility with
+                        | MusicPlayerBackend.Contracts.Playlist.Private ->
+                            PlaylistVisibility.Private
+                        | MusicPlayerBackend.Contracts.Playlist.Public ->
+                            PlaylistVisibility.Public
+                }
             return this.Ok({ PageNumber = list.PageNumber
                              TotalCount = list.TotalCount
                              Items = tracks } : ItemsResponse<Models.Playlist>) :> IActionResult

@@ -41,11 +41,17 @@ type TrackController(trackRepository: FsharpTrackRepository,
         | None ->
             return this.NotFound() :> IActionResult
         | Some track ->
+            let visibility =
+                match track.Visibility with
+                | TrackVisibility.Hidden -> Hidden
+                | TrackVisibility.Visible -> Public
+                | _ -> ArgumentOutOfRangeException() |> raise
+
             return this.Ok({
                 Id = track.Id
                 CoverUri = track.CoverUri
                 TrackUri = track.TrackUri
-                Visibility = failwith "todo"
+                Visibility = visibility
                 Name = track.Name
                 Author = track.Author
                 CreatedAt = track.CreatedAt
@@ -69,8 +75,8 @@ type TrackController(trackRepository: FsharpTrackRepository,
             | Some visibility ->
                 track.Visibility <-
                     match visibility with
-                    | Hidden -> failwith "todo"
-                    | Public -> failwith "todo"
+                    | Hidden -> TrackVisibility.Hidden
+                    | Public -> TrackVisibility.Visible
             | _ -> ()
 
             match request.Cover with

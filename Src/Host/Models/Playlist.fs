@@ -9,7 +9,7 @@ type PlaylistVisibility =
     | Public
 
 module PlaylistVisibility =
-    let ofContract (cv: MusicPlayerBackend.Contracts.Track.Visibility) =
+    let ofContract (cv: Visibility) =
         match cv with
         | Visibility.Private ->
             PlaylistVisibility.Private
@@ -19,9 +19,9 @@ module PlaylistVisibility =
     let toContract (mv: PlaylistVisibility) =
         match mv with
         | Private ->
-            MusicPlayerBackend.Contracts.Track.Visibility.Private
+            Visibility.Private
         | Public ->
-            MusicPlayerBackend.Contracts.Track.Visibility.Public
+            Visibility.Public
 
 type CreatePlaylist = {
     Name: string
