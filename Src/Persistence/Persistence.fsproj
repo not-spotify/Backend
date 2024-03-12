@@ -1,0 +1,41 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <RootNamespace>MusicPlayerBackend.Persistence</RootNamespace>
+        <WarnOn>3390;$(WarnOn)</WarnOn>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <Compile Include="Entities.fs" />
+        <Compile Include="TypeExtensions.fs" />
+        <Compile Include="AppDbContext.fs" />
+        <Compile Include="Migrations/*.fs" />
+        <Compile Include="FsharpUnitOfWork.fs" />
+        <Compile Include="Repositories\Extensions.fs" />
+        <Compile Include="Repositories\FsharpPlaylistRepository.fs" />
+        <Compile Include="Repositories\FsharpTrackPlaylistRepository.fs" />
+        <Compile Include="Repositories\FsharpTrackRepository.fs" />
+        <Compile Include="Repositories\FsharpUserRepository.fs" />
+        <Compile Include="Repositories\FsharpPlaylistUserRepository.fs" />
+        <Compile Include="Repositories\FsharpRefreshTokenRepository.fs" />
+        <Compile Include="Repositories\FsharpAlbumRepository.fs" />
+        <Compile Include="FsharpUserStore.fs" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Common\Common.fsproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="EntityFrameworkCore.FSharp" />
+        <PackageReference Include="Microsoft.CodeAnalysis.Analyzers"/>
+        <PackageReference Include="Microsoft.EntityFrameworkCore" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Design"/>
+        <PackageReference Include="Microsoft.Extensions.Identity.Stores" />
+        <PackageReference Include="Minio" />
+        <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
+    </ItemGroup>
+
+</Project>
