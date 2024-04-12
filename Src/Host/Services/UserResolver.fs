@@ -28,9 +28,9 @@ type UserProvider(httpContextAccessor: IHttpContextAccessor, userManager: UserMa
     // TODO: Don't use database model
     member this.TryGetUser() : Task<User option> = task {
         match Option.ofObj httpContextAccessor.HttpContext.User with
-        | None ->
-            return None
         | Some user ->
             let! user = userManager.GetUserAsync(user)
             return Some user
+        | None ->
+            return None
     }

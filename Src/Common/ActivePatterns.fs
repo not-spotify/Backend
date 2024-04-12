@@ -23,6 +23,10 @@ module String =
         |> not
         |> Option.ofBool
 
+    let inline (|Length|) (str: string) =
+        str
+        |> String.length
+
 [<AutoOpen>]
 module Object =
     let inline (|UncheckedNull|_|) obj =
@@ -30,3 +34,22 @@ module Object =
             Option.unionUnit
         else
             None
+
+module FSharpType =
+    open Microsoft.FSharp.Reflection
+
+    let inline (|Function|Module|Tuple|Record|Union|ExceptionRepresentation|Object|) t =
+        if FSharpType.IsFunction t then
+            Function
+        elif FSharpType.IsModule t then
+            Module
+        elif FSharpType.IsTuple t then
+            Tuple
+        elif FSharpType.IsRecord t then
+            Record
+        elif FSharpType.IsUnion t then
+            Union
+        elif FSharpType.IsExceptionRepresentation t then
+            ExceptionRepresentation
+        else
+            Object

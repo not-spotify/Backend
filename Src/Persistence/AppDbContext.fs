@@ -1,7 +1,7 @@
 ﻿namespace MusicPlayerBackend.Persistence
 
 open Microsoft.EntityFrameworkCore
-open EntityFrameworkCore.FSharp.Extensions
+// open EntityFrameworkCore.FSharp.Extensions
 
 open MusicPlayerBackend.Common
 open MusicPlayerBackend.Persistence.Entities
@@ -10,7 +10,7 @@ open MusicPlayerBackend.Persistence.Entities
 type FsharpAppDbContext(options) =
     inherit DbContext(options)
 
-    static ConnectionStringName = "PgConnectionString"
+    static member ConnectionStringName = "PgConnectionString"
 
     [<DefaultValue>]
     val mutable playlists : DbSet<Playlist>
@@ -45,8 +45,8 @@ type FsharpAppDbContext(options) =
 
 
     override _.OnModelCreating(modelBuilder) =
-        %modelBuilder.RegisterSingleUnionCases()
-        %modelBuilder.RegisterOptionTypes()
+        // %modelBuilder.RegisterSingleUnionCases()
+        // %modelBuilder.RegisterOptionTypes()
 
         %modelBuilder.Entity<PlaylistUserPermission>()
             .HasKey("PlaylistId", "UserId", "Permission")

@@ -2,7 +2,7 @@
 
 open System
 
-open MusicPlayerBackend.Contracts.User
+open Domain
 
 type TrackId = Guid
 

@@ -12,7 +12,6 @@ open Microsoft.Extensions.Options
 open Microsoft.IdentityModel.JsonWebTokens
 open Microsoft.IdentityModel.Tokens
 open Microsoft.OpenApi.Models
-open Npgsql.EntityFrameworkCore.PostgreSQL.Infrastructure
 open Serilog
 open Microsoft.AspNetCore.Identity
 open Microsoft.Extensions.DependencyInjection
@@ -32,7 +31,7 @@ type Startup(config: IConfiguration) =
     member _.ConfigureServices(services: IServiceCollection) =
         %services
             .Configure<OptionSections.AppConfig>(config)
-            .Configure<OptionSections.Minio>(config.GetSection(nameof(Minio)))
+            .Configure<OptionSections.Minio>(config.GetSection("minio"))
             .Configure<OptionSections.TokenConfig>(config.GetSection(nameof(OptionSections.TokenConfig)))
             .Configure<PasswordHasherOptions>(fun (o: PasswordHasherOptions) -> o.IterationCount <- 600_000)
 
@@ -40,9 +39,9 @@ type Startup(config: IConfiguration) =
              .AddSerilog()
              .AddHttpContextAccessor()
 
-        %services.AddMinio(fun o ->
-            let minioConfig = config.GetSection("Minio").Get<OptionSections.Minio>()
-            %o
+        %services.AddMinio(fun minioClient ->
+            let minioConfig = config.GetSection("minio").Get<OptionSections.Minio>()
+            %minioClient
                 .WithSSL(minioConfig.UseSsl)
                 .WithEndpoint(minioConfig.Endpoint, minioConfig.Port)
                 .WithCredentials(minioConfig.AccessKey, minioConfig.SecretKey))
@@ -52,7 +51,7 @@ type Startup(config: IConfiguration) =
 
             %optionsBuilder.UseNpgsql(
                 connectionString = c.GetRequiredService<IConfiguration>().GetConnectionString(FsharpAppDbContext.ConnectionStringName),
-                npgsqlOptionsAction = Action<NpgsqlDbContextOptionsBuilder>(fun b -> %b.MigrationsAssembly(typeof<FsharpAppDbContext>.Assembly.GetName().Name))
+                npgsqlOptionsAction = fun builder -> %builder.MigrationsAssembly(typeof<FsharpAppDbContext>.Assembly.GetName().Name)
             )
 
             new FsharpAppDbContext(optionsBuilder.Options)
@@ -88,10 +87,11 @@ type Startup(config: IConfiguration) =
             )
         )
 
-        %services.AddCustomIdentity()
-        %services.AddAuthorization()
-        %services.AddTransient<UserProvider>()
-        %services.AddTransient<JwtService>()
+        %services
+            .AddCustomIdentity()
+            .AddAuthorization()
+            .AddTransient<UserProvider>()
+            .AddTransient<JwtService>()
 
         %services.AddEndpointsApiExplorer()
 
@@ -112,7 +112,7 @@ type Startup(config: IConfiguration) =
             securityRequirement.Add(openApiSecurityScheme, Array.empty)
 
             c.AddSecurityRequirement(securityRequirement)
-            c.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, "MusicPlayerBackend.Host.xml"))
+            c.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, "Host.xml"))
             c.EnableAnnotations()
         )
 

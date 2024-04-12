@@ -9,12 +9,12 @@ type Visibility =
     | Hidden
     | Public
 
-type SearchTracksRequest = {
+type [<CLIMutable>] SearchTracksRequest = {
     Page: int
     PageSize: int
 }
 
-type CreateTrackRequest = {
+type [<CLIMutable>]  CreateTrackRequest = {
     Visibility: Visibility
     Cover: IFormFile option
     Track: IFormFile
@@ -22,7 +22,7 @@ type CreateTrackRequest = {
     Name: string
 }
 
-type UpdateTrackRequest = {
+type [<CLIMutable>]  UpdateTrackRequest = {
     TrackId: TrackId
     Visibility: Visibility option
     Cover: IFormFile option
@@ -31,7 +31,7 @@ type UpdateTrackRequest = {
     Name: string
 }
 
-type TrackResponse = {
+type [<CLIMutable>] TrackResponse = {
     Id: TrackId
     CoverUri: string option
     TrackUri: string

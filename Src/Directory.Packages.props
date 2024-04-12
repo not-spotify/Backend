@@ -5,7 +5,9 @@
   <ItemGroup>
     <PackageVersion Include="CliWrap" Version="3.6.6" />
     <PackageVersion Include="EntityFrameworkCore.FSharp" Version="6.0.7" />
-    <PackageVersion Include="FSharp.Core" Version="8.0.101" />
+    <PackageVersion Include="FSharp.Core" Version="8.0.200" />
+    <PackageVersion Include="FSharp.Data.Npgsql" Version="2.1.0" />
+    <PackageVersion Include="FSharp.Quotations.Evaluator" Version="2.1.0" />
     <PackageVersion Include="Microsoft.AspNetCore.Identity.UI" Version="8.0.0" />
     <PackageVersion Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.4" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="6.0.26" />
@@ -14,7 +16,7 @@
     <PackageVersion Include="Microsoft.Extensions.Identity.Stores" Version="8.0.0" />
     <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.0" />
     <PackageVersion Include="Microsoft.IdentityModel.Abstractions" Version="7.3.0" />
-    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.9.0" />
     <PackageVersion Include="Minio" Version="6.0.1" />
     <PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="6.0.22" />
     <PackageVersion Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.0" />
@@ -26,5 +28,6 @@
     <PackageVersion Include="Swashbuckle.AspNetCore.Annotations" Version="6.5.0" />
     <PackageVersion Include="NUnit.Analyzers" Version="3.6.1" />
     <PackageVersion Include="coverlet.collector" Version="6.0.0" />
+    <PackageVersion Include="TypeShape" Version="10.0.0" />
   </ItemGroup>
 </Project>

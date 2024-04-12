@@ -2,8 +2,6 @@
 
 open System
 
-open MusicPlayerBackend.Contracts.User
-
 type CreateRequest = {
     UserId: Guid
     Name: string

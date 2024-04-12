@@ -14,7 +14,6 @@
 
     <ItemGroup>
         <PackageReference Include="CliWrap" />
-        <PackageReference Include="FSharp.Core" />
         <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer"/>
         <PackageReference Include="Microsoft.AspNetCore.Identity.UI" />
         <PackageReference Include="Microsoft.AspNetCore.OpenApi"/>
@@ -29,7 +28,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Contracts\Contracts.fsproj" />
+        <ProjectReference Include="..\Domain\Domain.fsproj" />
         <ProjectReference Include="..\Identity\Identity.fsproj" />
         <ProjectReference Include="..\Persistence\Persistence.fsproj" />
     </ItemGroup>

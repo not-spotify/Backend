@@ -37,7 +37,7 @@ type PlaylistController(
     /// </summary>
     [<HttpGet("{id:guid}", Name = "GetPlaylist")>]
     [<ProducesResponseType(StatusCodes.Status400BadRequest)>]
-    [<ProducesResponseType(typeof<Playlist>, StatusCodes.Status200OK)>]
+    [<ProducesResponseType(typeof<Models.Playlist>, StatusCodes.Status200OK)>]
     member this.Get(id: Guid) = task {
         let! userId = userProvider.GetUserId()
         let! playlist = playlistRepository.TryGetIfCanViewById(id, userId)
@@ -57,19 +57,19 @@ type PlaylistController(
                              Visibility = visibility } : Models.Playlist) :> IActionResult
     }
 
-    [<HttpGet("{id:guid}", Name = "SearchPlaylistTracks")>]
-    [<ProducesResponseType(StatusCodes.Status400BadRequest)>]
-    [<ProducesResponseType(typeof<Playlist>, StatusCodes.Status200OK)>]
-    member this.SearchPlaylistTracks() = task {
-        ()
-    }
+    // [<HttpGet("{id:guid}", Name = "SearchPlaylistTracks")>]
+    // [<ProducesResponseType(StatusCodes.Status400BadRequest)>]
+    // [<ProducesResponseType(typeof<Models.Playlist>, StatusCodes.Status200OK)>]
+    // member this.SearchPlaylistTracks() = task {
+    //     ()
+    // }
 
     /// <summary>
     ///     Creates new playlist.
     /// </summary>
     [<HttpPost(Name = "CreatePlaylist")>]
     [<Authorize>]
-    [<ProducesResponseType(typeof<Playlist>, StatusCodes.Status200OK)>]
+    [<ProducesResponseType(typeof<Models.Playlist>, StatusCodes.Status200OK)>]
     [<ProducesResponseType(StatusCodes.Status400BadRequest)>]
     member this.Create([<FromBody>] request: CreatePlaylist) = task {
         let! userId = userProvider.GetUserId()
@@ -156,8 +156,8 @@ type PlaylistController(
         }
         let! playlist = msg |> PlaylistService.update unitOfWork playlistRepository
 
-        if Result.isError playlist then
-            () // TODO: Remove cover
+        // if Result.isError playlist then
+        //     () // TODO: Remove cover
 
         return this.Ok(playlist) :> IActionResult
     }
@@ -166,7 +166,7 @@ type PlaylistController(
     ///     Get visible to user playlists.
     /// </summary>
     [<HttpGet("{playlistId:guid}/Tracks", Name = "GetPlaylists")>]
-    [<ProducesResponseType(typeof<ItemsResponse<Playlist>>, StatusCodes.Status200OK)>]
+    [<ProducesResponseType(typeof<ItemsResponse<Models.Playlist>>, StatusCodes.Status200OK)>]
     member this.List(request: SearchTracksRequest) = task {
         let! userId = userProvider.GetUserId()
         let msg : ListQuery = {

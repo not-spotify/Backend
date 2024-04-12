@@ -26,8 +26,7 @@ module Option =
             Some str
 
 module Result =
-    let isOk (result: Result<_, _>) =
-        match result with
+    let isOk = function
         | Error _ -> false
         | Ok _ -> true
 
@@ -39,6 +38,11 @@ let inline isNotNull value =
 let inline (^) f x = f x
 let inline (~%) x = ignore x
 let inline ucast<'a, 'b> (a: 'a): 'b = (# "" a: 'b #)
+let inline tryUcast<'a, 'b> (a: 'a): 'b option =
+    if typeof<'b>.IsAssignableFrom(typeof<'a>) then
+        Some ^ ucast a
+    else
+        None
 
 let inline (|NotNull|_|) value =
     value
@@ -82,6 +86,7 @@ module String =
     let inline toUpperInv (s: string) =
         s.ToUpperInvariant()
 
+
 module StringOption =
     let inline toLowerInv v =
         v |> Option.map String.toLowerInv
@@ -90,16 +95,18 @@ module StringOption =
         v |> Option.map String.toUpperInv
 
 module Task =
-    let bTrue = System.Threading.Tasks.Task.FromResult(true)
-    let bFalse = System.Threading.Tasks.Task.FromResult(false)
-    let completed = System.Threading.Tasks.Task.CompletedTask
+    open System.Threading.Tasks
+
+    let bTrue = Task.FromResult(true)
+    let bFalse = Task.FromResult(false)
+    let completed = Task.CompletedTask
 
     let inline map ([<InlineIfLambda>] mapping) taskValue = task {
         let! taskValue = taskValue
         return mapping taskValue
     }
 
-    let inline fromResult value = System.Threading.Tasks.Task.FromResult(value)
+    let inline fromResult value = Task.FromResult(value)
 
 module TaskOption =
     let inline map ([<InlineIfLambda>] mapping) option = task {

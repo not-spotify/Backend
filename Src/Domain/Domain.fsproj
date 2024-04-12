@@ -4,6 +4,7 @@
         <TargetFramework>net8.0</TargetFramework>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <WarnOn>3390;$(WarnOn)</WarnOn>
+        <RootNamespace>Contracts</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>
@@ -12,6 +13,15 @@
       <Compile Include="Playlist\Base.fs" />
       <Compile Include="Playlist\Queries.fs" />
       <Compile Include="Playlist\PlaylistContract.fs" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Common\Common.fsproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="FSharp.Core" />
+      <PackageReference Include="TypeShape" />
     </ItemGroup>
 
 </Project>

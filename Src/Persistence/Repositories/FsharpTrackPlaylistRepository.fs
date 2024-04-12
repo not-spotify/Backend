@@ -18,12 +18,10 @@ type FsharpTrackPlaylistRepository(dbContext: FsharpAppDbContext) =
                     where (tp.TrackId = trackId && tp.PlaylistId = playlistId)
             } |> _.Any(ct)
 
-        match existingTrackPlaylist with
-        | false ->
+        if existingTrackPlaylist |> not then
             let trackPlaylist = TrackPlaylist.Create(trackId, playlistId)
             %trackPlaylists.Update(trackPlaylist)
-        | true ->
-            ()
     }
 
-    member _.Delete(playlist) = trackPlaylists.Remove(playlist)
+    member _.Delete(playlist) =
+        trackPlaylists.Remove(playlist)
