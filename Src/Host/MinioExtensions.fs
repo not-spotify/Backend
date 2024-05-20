@@ -4,7 +4,6 @@ open System.Runtime.CompilerServices
 open Minio
 open Minio.DataModel.Args
 
-[<Extension>]
 type MinioExtensions() =
 
     [<Extension>]

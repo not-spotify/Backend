@@ -13,8 +13,8 @@ type EmailError =
 [<RequireQualifiedAccess>]
 module Email =
 
-    let MinLength = 3
-    let MaxLength = 20
+    let [<Literal>] MinLength = 7
+    let [<Literal>] MaxLength = 32
 
     let create (email: string) =
         match email with

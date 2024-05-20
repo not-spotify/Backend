@@ -12,11 +12,14 @@ type UserNameError =
 
 [<RequireQualifiedAccess>]
 module UserName =
+    let [<Literal>] MinLength = 3
+    let [<Literal>] MaxLength = 20
+
     let create (userName: string) =
         match userName with
-        | String.Length (LtEq 3) ->
+        | String.Length (LtEq MinLength) ->
             Error UserNameError.TooShort
-        | String.Length (GtEq 20) ->
+        | String.Length (GtEq MaxLength) ->
             Error UserNameError.TooLong
         | _ ->
             Ok ^ UserName userName

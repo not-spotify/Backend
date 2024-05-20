@@ -24,7 +24,7 @@ type User = {
     UpdatedAt: DateTimeOffset option
 }
 
-type CreateUserRequest = {
+type CreateUserCommand = {
     UserName: string
     Email: string
     Password: string
@@ -54,9 +54,9 @@ type UserStore = {
     TryGetByUserName: UserName -> Task<User option>
 }
 
-type CreateUser = CreateUserRequest -> TaskResult<User, CreateUserError>
+type CreateUser = CreateUserCommand -> TaskResult<User, CreateUserError>
 
-let createUserInternal (request: CreateUserRequest) =
+let createUserInternal (request: CreateUserCommand) =
     validation {
         let! email = request.Email |> Email.create |> Result.mapError Email
         and! userName = request.UserName |> UserName.create |> Result.mapError UserName

@@ -13,8 +13,8 @@ type PasswordError =
 [<RequireQualifiedAccess>]
 module Password =
 
-    let MinLength = 3
-    let MaxLength = 20
+    let [<Literal>] MinLength = 8
+    let [<Literal>] MaxLength = 67
 
     let create (password: string) =
         match password with

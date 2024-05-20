@@ -39,6 +39,9 @@
         <Compile Include="Services\JwtService.fs" />
         <Compile Include="Services\S3Service.fs" />
         <Compile Include="MinioExtensions.fs" />
+        <Compile Include="Models\Common.fs" />
+        <Compile Include="Models\Playlist.fs" />
+        <Compile Include="Models\User.fs" />
         <Compile Include="Controllers\AuthController.fs" />
         <Compile Include="Controllers\PlaylistController.fs" />
         <Compile Include="Startup.fs" />

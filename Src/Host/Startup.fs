@@ -2,6 +2,7 @@
 
 open System
 open System.IO
+open System.Reflection
 open System.Text.Json.Serialization
 open System.Threading.Tasks
 open Microsoft.AspNetCore.Authentication.JwtBearer
@@ -80,6 +81,7 @@ type Startup(config: IConfiguration) =
         %services.AddEndpointsApiExplorer()
 
         %services.AddSwaggerGen(fun c ->
+            c.SupportNonNullableReferenceTypes()
             c.AddSecurityDefinition(JwtBearerDefaults.AuthenticationScheme, OpenApiSecurityScheme(
                 Type = SecuritySchemeType.Http,
                 BearerFormat = JwtConstants.TokenType,
@@ -96,7 +98,7 @@ type Startup(config: IConfiguration) =
             securityRequirement.Add(openApiSecurityScheme, Array.empty)
 
             c.AddSecurityRequirement(securityRequirement)
-            c.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, "Host.xml"))
+            c.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, $"{Assembly.GetExecutingAssembly().GetName().Name}.xml"))
             c.EnableAnnotations()
         )
 
