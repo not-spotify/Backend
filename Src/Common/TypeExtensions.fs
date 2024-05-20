@@ -29,6 +29,14 @@ module Option =
             Some str
 
 [<RequireQualifiedAccess>]
+module ValueOption =
+    let inline ofTry (opResult, result) =
+        if opResult then
+            ValueSome result
+        else
+            ValueNone
+
+[<RequireQualifiedAccess>]
 module Result =
     let isOk = function
         | Error _ -> false
