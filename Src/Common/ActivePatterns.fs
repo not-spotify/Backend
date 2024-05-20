@@ -3,31 +3,31 @@
 open System
 open  MusicPlayerBackend.Common.TypeExtensions
 
-[<AutoOpen>]
+[<RequireQualifiedAccess>]
 module String =
-    let inline (|NullOrEmpty|_|) (str: string) =
+    let inline (|NullOrEmpty|_|) str =
         String.IsNullOrEmpty(str)
         |> Option.ofBool
 
-    let inline (|NotNullOrEmpty|_|) (str: string) =
+    let inline (|NotNullOrEmpty|_|) str =
         String.IsNullOrEmpty(str)
         |> not
         |> Option.ofBool
 
-    let inline (|NullOrWhiteSpace|_|) (str: string) =
+    let inline (|NullOrWhiteSpace|_|) str =
         String.IsNullOrWhiteSpace(str)
         |> Option.ofBool
 
-    let inline (|NotNullOrWhiteSpace|_|) (str: string) =
+    let inline (|NotNullOrWhiteSpace|_|) str =
         String.IsNullOrWhiteSpace(str)
         |> not
         |> Option.ofBool
 
-    let inline (|Length|) (str: string) =
+    let inline (|Length|) str =
         str
         |> String.length
 
-[<AutoOpen>]
+[<RequireQualifiedAccess>]
 module Object =
     let inline (|UncheckedNull|_|) obj =
         if Object.ReferenceEquals(obj, null) then
@@ -35,7 +35,8 @@ module Object =
         else
             None
 
-module FSharpType =
+[<RequireQualifiedAccess>]
+module Type =
     open Microsoft.FSharp.Reflection
 
     let inline (|Function|Module|Tuple|Record|Union|ExceptionRepresentation|Object|) t =

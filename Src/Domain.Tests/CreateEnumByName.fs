@@ -1,8 +1,10 @@
-module Domain.Tests
+module Domain.Tests.CreateEnumByName
 
+open System
+open Domain.Shared
+open Domain.User
 
 open NUnit.Framework
-
 
 [<Test>]
 let ``createEnumByName works properly`` () =
@@ -39,3 +41,11 @@ let ``createEnumByName handles invalid types`` () =
         Assert.Pass()
     | _ ->
         Assert.Fail(string actual)
+
+#nowarn "0077"
+#nowarn "0042"
+
+
+module Core =
+    /// unsafe cast like in C#
+    let inline ucast<'a, 'b> (a: 'a): 'b = (# "" a: 'b #)

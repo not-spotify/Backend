@@ -2,16 +2,14 @@
 
 open System
 open System.IO
-open System.Text
 open System.Text.Json.Serialization
+open System.Threading.Tasks
 open Microsoft.AspNetCore.Authentication.JwtBearer
 open Microsoft.AspNetCore.Builder
 open Microsoft.AspNetCore.Hosting
-open Microsoft.EntityFrameworkCore
-open Microsoft.Extensions.Options
 open Microsoft.IdentityModel.JsonWebTokens
-open Microsoft.IdentityModel.Tokens
 open Microsoft.OpenApi.Models
+open MusicPlayerBackend.Persistence.Stores
 open Serilog
 open Microsoft.AspNetCore.Identity
 open Microsoft.Extensions.DependencyInjection
@@ -24,8 +22,6 @@ open MusicPlayerBackend.Common
 open MusicPlayerBackend.Host
 open MusicPlayerBackend.Host.Ext
 open MusicPlayerBackend.Host.Services
-open MusicPlayerBackend.Persistence
-open MusicPlayerBackend.Identity
 
 type Startup(config: IConfiguration) =
     member _.ConfigureServices(services: IServiceCollection) =
@@ -46,52 +42,40 @@ type Startup(config: IConfiguration) =
                 .WithEndpoint(minioConfig.Endpoint, minioConfig.Port)
                 .WithCredentials(minioConfig.AccessKey, minioConfig.SecretKey))
 
-        %services.AddScoped<FsharpAppDbContext>(fun c ->
-            let optionsBuilder = DbContextOptionsBuilder<FsharpAppDbContext>()
-
-            %optionsBuilder.UseNpgsql(
-                connectionString = c.GetRequiredService<IConfiguration>().GetConnectionString(FsharpAppDbContext.ConnectionStringName),
-                npgsqlOptionsAction = fun builder -> %builder.MigrationsAssembly(typeof<FsharpAppDbContext>.Assembly.GetName().Name)
-            )
-
-            new FsharpAppDbContext(optionsBuilder.Options)
-        )
-
-        %services
-            .AddScoped<FsharpUnitOfWork>()
-            .AddScoped<FsharpAlbumRepository>()
-            .AddScoped<FsharpPlaylistRepository>()
-            .AddScoped<FsharpPlaylistUserPermissionRepository>()
-            .AddScoped<FsharpRefreshTokenRepository>()
-            .AddScoped<FsharpTrackPlaylistRepository>()
-            .AddScoped<FsharpTrackRepository>()
-            .AddScoped<FsharpUserRepository>()
-
         %services
             .AddTransient<S3Service>()
+
+        %services.AddSingleton<Domain.User.UserStore> (fun _ -> InMemoryUserStore.create())
+        %services.AddSingleton<Domain.Shared.Bus> (fun _ ->
+            {
+                Publish = fun _ -> Task.CompletedTask
+            } : Domain.Shared.Bus)
+
+        %services.AddSingleton<Domain.User.CreateUser> (System.Func<IServiceProvider, _>(
+            fun sc ->
+                let userStore = sc.GetRequiredService<Domain.User.UserStore>()
+                let bus = sc.GetRequiredService<Domain.Shared.Bus>()
+                Domain.User.createUser userStore bus
+        ))
+
+        %services.AddSingleton<Domain.Playlist.PlaylistStore> (fun _ -> InMemoryPlaylistStore.create())
+
+        %services.AddSingleton<Domain.Playlist.CreatePlaylist> (System.Func<IServiceProvider, _>(
+            fun sc ->
+                let playlistStore = sc.GetRequiredService<Domain.Playlist.PlaylistStore>()
+                let bus = sc.GetRequiredService<Domain.Shared.Bus>()
+                Domain.Playlist.createPlaylist playlistStore bus
+        ))
 
         %services
             .AddControllers()
             .AddControllersAsServices()
             .AddJsonOptions(fun opts -> opts.JsonSerializerOptions.Converters.Add(JsonStringEnumConverter()))
             .AddXmlSerializerFormatters()
-
-        %services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-            .AddJwtBearer(fun o ->
-                o.TokenValidationParameters <- TokenValidationParameters(
-                    ValidateIssuerSigningKey = false,
-                    IssuerSigningKey = SymmetricSecurityKey(Encoding.UTF8.GetBytes(config.GetSection(nameof(OptionSections.TokenConfig)).Get<OptionSections.TokenConfig>().SigningKey)),
-                    ValidateIssuer = false,
-                    ValidateAudience = false,
-                    RequireAudience = false
-            )
-        )
-
-        %services
-            .AddCustomIdentity()
-            .AddAuthorization()
-            .AddTransient<UserProvider>()
-            .AddTransient<JwtService>()
+            .AddJsonOptions(fun options ->
+                JsonFSharpOptions.Default()
+                    .WithUnionUntagged()
+                    .AddToJsonSerializerOptions(options.JsonSerializerOptions))
 
         %services.AddEndpointsApiExplorer()
 
@@ -118,16 +102,11 @@ type Startup(config: IConfiguration) =
 
     member _.Configure(app: IApplicationBuilder,
                        env: IWebHostEnvironment,
-                       ctx: FsharpAppDbContext,
-                       appConfig: IOptions<OptionSections.AppConfig>,
                        minioClient: IMinioClient) =
 
         %minioClient
             .CreateBucketIfNotExists("tracks")
             .CreateBucketIfNotExists("covers")
-
-        if appConfig.Value.MigrateDatabaseOnStartup then
-            ctx.Database.Migrate()
 
         %app.UseSerilogRequestLogging()
         if env.IsDevelopment() then

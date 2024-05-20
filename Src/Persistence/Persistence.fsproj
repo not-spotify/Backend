@@ -8,24 +8,15 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <Compile Include="Entities.fs" />
-        <Compile Include="TypeExtensions.fs" />
-        <Compile Include="AppDbContext.fs" />
         <Compile Include="Migrations/*.fs" />
-        <Compile Include="FsharpUnitOfWork.fs" />
-        <Compile Include="Repositories\Extensions.fs" />
-        <Compile Include="Repositories\FsharpPlaylistRepository.fs" />
-        <Compile Include="Repositories\FsharpTrackPlaylistRepository.fs" />
-        <Compile Include="Repositories\FsharpTrackRepository.fs" />
-        <Compile Include="Repositories\FsharpUserRepository.fs" />
-        <Compile Include="Repositories\FsharpPlaylistUserRepository.fs" />
-        <Compile Include="Repositories\FsharpRefreshTokenRepository.fs" />
-        <Compile Include="Repositories\FsharpAlbumRepository.fs" />
-        <Compile Include="FsharpUserStore.fs" />
+        <Compile Include="Stores\InMemoryUserStore.fs" />
+        <Compile Include="Stores\InMemoryPlaylistStore.fs" />
+        <Compile Include="Stores\InMemoryTrackFileStore.fs" />
     </ItemGroup>
 
     <ItemGroup>
       <ProjectReference Include="..\Common\Common.fsproj" />
+      <ProjectReference Include="..\Domain\Domain.fsproj" />
     </ItemGroup>
 
     <ItemGroup>

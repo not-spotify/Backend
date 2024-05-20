@@ -9,4 +9,8 @@
         <Compile Include="ActivePatterns.fs" />
     </ItemGroup>
 
+    <ItemGroup>
+      <PackageReference Include="FSharpPlus" />
+    </ItemGroup>
+
 </Project>

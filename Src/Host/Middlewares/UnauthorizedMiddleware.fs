@@ -15,8 +15,8 @@ type UnauthorizedMiddleware(next: RequestDelegate) =
         if context.Response.HasStarted = false && context.Response.StatusCode = StatusCodes.Status401Unauthorized then
             context.Response.ContentType <- MediaTypeNames.Application.Json
 
-            let jsonOptions = context.RequestServices.GetRequiredService<IOptions<JsonOptions>>().Value.SerializerOptions
+            let jsonOptions = context.RequestServices.GetRequiredService<IOptions<JsonOptions>>().Value
             let response = {| Error = "Unauthorized. Refresh token or authorize." |}
 
-            do! context.Response.WriteAsync(JsonSerializer.Serialize(response, jsonOptions))
+            do! context.Response.WriteAsync(JsonSerializer.Serialize(response, jsonOptions.SerializerOptions))
     }

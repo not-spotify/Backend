@@ -8,11 +8,17 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <Compile Include="User\Common.fs" />
-      <Compile Include="Track\TrackContract.fs" />
-      <Compile Include="Playlist\Base.fs" />
-      <Compile Include="Playlist\Queries.fs" />
-      <Compile Include="Playlist\PlaylistContract.fs" />
+      <Compile Include="Shared\Core.fs" />
+      <Compile Include="Shared\UserName.fs" />
+      <Compile Include="Shared\Email.fs" />
+      <Compile Include="Shared\Password.fs" />
+      <Compile Include="Shared\Id.fs" />
+      <Compile Include="Shared\TrackName.fs" />
+      <Compile Include="Shared\AuthorName.fs" />
+      <Compile Include="Shared\PlaylistName.fs" />
+      <Compile Include="User.fs" />
+      <Compile Include="Playlist.fs" />
+      <Compile Include="Track.fs" />
     </ItemGroup>
 
     <ItemGroup>
@@ -21,6 +27,7 @@
 
     <ItemGroup>
       <PackageReference Include="FSharp.Core" />
+      <PackageReference Include="FsToolkit.ErrorHandling.TaskResult" />
       <PackageReference Include="TypeShape" />
     </ItemGroup>
 

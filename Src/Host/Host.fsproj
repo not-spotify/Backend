@@ -14,6 +14,7 @@
 
     <ItemGroup>
         <PackageReference Include="CliWrap" />
+        <PackageReference Include="FSharp.SystemTextJson" />
         <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer"/>
         <PackageReference Include="Microsoft.AspNetCore.Identity.UI" />
         <PackageReference Include="Microsoft.AspNetCore.OpenApi"/>
@@ -29,25 +30,17 @@
 
     <ItemGroup>
         <ProjectReference Include="..\Domain\Domain.fsproj" />
-        <ProjectReference Include="..\Identity\Identity.fsproj" />
         <ProjectReference Include="..\Persistence\Persistence.fsproj" />
     </ItemGroup>
 
     <ItemGroup>
         <Compile Include="OptionSections.fs" />
         <Compile Include="Middlewares\UnauthorizedMiddleware.fs" />
-        <Compile Include="Services\UserResolver.fs" />
         <Compile Include="Services\JwtService.fs" />
-        <Compile Include="Services\PlaylistService.fs" />
         <Compile Include="Services\S3Service.fs" />
         <Compile Include="MinioExtensions.fs" />
-        <Compile Include="Models\Common.fs" />
-        <Compile Include="Models\User.fs" />
-        <Compile Include="Models\Playlist.fs" />
-        <Compile Include="Models\Track.fs" />
-        <Compile Include="Controllers\UserController.fs" />
+        <Compile Include="Controllers\AuthController.fs" />
         <Compile Include="Controllers\PlaylistController.fs" />
-        <Compile Include="Controllers\TrackController.fs" />
         <Compile Include="Startup.fs" />
         <Compile Include="Program.fs" />
     </ItemGroup>

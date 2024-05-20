@@ -6,6 +6,9 @@ module MusicPlayerBackend.Common.TypeExtensions
 // By default, function should pass value without modification (fault-tolerant)
 // For example, "ToUpper" on null string should return null
 
+open System.Collections.Generic
+
+[<RequireQualifiedAccess>]
 module Option =
     let unionUnit = Some ()
 
@@ -25,6 +28,7 @@ module Option =
         else
             Some str
 
+[<RequireQualifiedAccess>]
 module Result =
     let isOk = function
         | Error _ -> false
@@ -79,6 +83,7 @@ let inline (|GtEq|_|) a b =
     b >= a
     |> Option.ofBool
 
+[<RequireQualifiedAccess>]
 module String =
     let inline toLowerInv (s: string) =
         s.ToLowerInvariant()
@@ -86,7 +91,7 @@ module String =
     let inline toUpperInv (s: string) =
         s.ToUpperInvariant()
 
-
+[<RequireQualifiedAccess>]
 module StringOption =
     let inline toLowerInv v =
         v |> Option.map String.toLowerInv
@@ -94,6 +99,7 @@ module StringOption =
     let inline toUpperInv v =
         v |> Option.map String.toUpperInv
 
+[<RequireQualifiedAccess>]
 module Task =
     open System.Threading.Tasks
 
@@ -108,8 +114,17 @@ module Task =
 
     let inline fromResult value = Task.FromResult(value)
 
+[<RequireQualifiedAccess>]
 module TaskOption =
     let inline map ([<InlineIfLambda>] mapping) option = task {
         let! option = option
         return option |> Option.map mapping
     }
+
+[<RequireQualifiedAccess>]
+module Dictionary =
+    let inline tryGet key (dict: Dictionary<'TKey, 'TValue>) =
+        dict.TryGetValue(key) |> Option.ofTry
+
+    let inline tryFindByValue predicate (dict: Dictionary<'TKey, 'TValue>) =
+        dict.Values |> Seq.tryFind predicate
