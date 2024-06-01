@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+    <Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+        <LangVersion>default</LangVersion>
+        <RootNamespace>App</RootNamespace>
+    </PropertyGroup>
+    <ItemGroup>
+        <None Include="uno.m4a" />
+        <None Include="index.html" />
+        <None Include="Styles\main.scss" />
+        <Compile Include="Stores\PlayerStore.fs" />
+        <Compile Include="Components\PlayerControls.fs" />
+        <Compile Include="Components\RootRouter.fs" />
+        <Compile Include="Main.fs" />
+    </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="elmish" />
+        <PackageReference Include="Fable.Elmish" />
+        <PackageReference Include="Fable.Elmish.React" />
+        <PackageReference Include="Feliz" />
+        <PackageReference Include="Feliz.Router" />
+        <PackageReference Include="MobF" />
+        <PackageReference Include="MobF.React" />
+    </ItemGroup>
+</Project>

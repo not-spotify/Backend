@@ -32,5 +32,12 @@
     <PackageVersion Include="NUnit.Analyzers" Version="3.6.1" />
     <PackageVersion Include="coverlet.collector" Version="6.0.0" />
     <PackageVersion Include="TypeShape" Version="10.0.0" />
+    <PackageVersion Include="elmish" Version="4.1.0" />
+    <PackageVersion Include="Fable.Elmish" Version="4.1.0" />
+    <PackageVersion Include="Fable.Elmish.React" Version="4.0.0" />
+    <PackageVersion Include="Feliz" Version="2.7.0" />
+    <PackageVersion Include="Feliz.Router" Version="4.0.0" />
+    <PackageVersion Include="MobF" Version="0.9.1" />
+    <PackageVersion Include="MobF.React" Version="0.9.1" />
   </ItemGroup>
 </Project>

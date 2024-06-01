@@ -1,0 +1,16 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <RootNamespace>MusicPlayerBackend.Common</RootNamespace>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <Compile Include="TypeExtensions.fs" />
+        <Compile Include="ActivePatterns.fs" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="FSharpPlus" />
+    </ItemGroup>
+
+</Project>

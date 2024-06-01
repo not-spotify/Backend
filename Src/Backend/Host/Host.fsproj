@@ -1,0 +1,64 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net8.0</TargetFramework>
+        <WarnOn>3390;$(WarnOn)</WarnOn>
+        <NoWarn>$(NoWarn);1591</NoWarn>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <RootNamespace>MusicPlayerBackend.Host</RootNamespace>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="CliWrap" />
+        <PackageReference Include="FSharp.SystemTextJson" />
+        <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer"/>
+        <PackageReference Include="Microsoft.AspNetCore.Identity.UI" />
+        <PackageReference Include="Microsoft.AspNetCore.OpenApi"/>
+        <PackageReference Include="Microsoft.CodeAnalysis.Analyzers"/>
+        <PackageReference Include="Microsoft.EntityFrameworkCore"/>
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Design"/>
+        <PackageReference Include="Minio"/>
+        <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL"/>
+        <PackageReference Include="Serilog.AspNetCore" />
+        <PackageReference Include="Swashbuckle.AspNetCore"/>
+        <PackageReference Include="Swashbuckle.AspNetCore.Annotations" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Domain\Domain.fsproj" />
+        <ProjectReference Include="..\Persistence\Persistence.fsproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <Compile Include="OptionSections.fs" />
+        <Compile Include="Middlewares\UnauthorizedMiddleware.fs" />
+        <Compile Include="Services\JwtService.fs" />
+        <Compile Include="Services\S3Service.fs" />
+        <Compile Include="MinioExtensions.fs" />
+        <Compile Include="Models\Common.fs" />
+        <Compile Include="Models\Playlist.fs" />
+        <Compile Include="Models\User.fs" />
+        <Compile Include="Controllers\AuthController.fs" />
+        <Compile Include="Controllers\PlaylistController.fs" />
+        <Compile Include="Startup.fs" />
+        <Compile Include="Program.fs" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Content Update="appsettings.Development.json">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </Content>
+      <Content Update="appsettings.json">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </Content>
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Include="Properties\launchSettings.json" />
+    </ItemGroup>
+
+</Project>

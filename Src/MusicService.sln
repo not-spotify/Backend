@@ -1,0 +1,93 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Common", "Backend\Common\Common.fsproj", "{68F93951-AA8D-474B-B8EB-567A5D0B012D}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Host", "Backend\Host\Host.fsproj", "{751DF391-2844-43E2-89DA-DD5BD35D4FC3}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Persistence", "Backend\Persistence\Persistence.fsproj", "{4C2586F8-6E21-4A20-B3EC-91AF34C513F6}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Domain", "Backend\Domain\Domain.fsproj", "{70C756CE-3152-479D-A1B3-4F2D1E7C062B}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Domain.Tests", "Backend\Domain.Tests\Domain.Tests.fsproj", "{0E6FC28B-AAC5-48EB-A53A-EEC2A78B8373}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Services", "Backend\Services\Services.fsproj", "{8581B756-9AD4-41C1-B2BF-19DCEDD374EA}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Frontend", "Frontend", "{F02CDE3B-2B1C-4FAB-9BAE-7BFBC15A048B}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Files", "Solution Files", "{375CB16B-D033-46E1-83DD-48A8268D13AA}"
+	ProjectSection(SolutionItems) = preProject
+		Frontend\.config\dotnet-tools.json = Frontend\.config\dotnet-tools.json
+		Frontend\.vscode\launch.json = Frontend\.vscode\launch.json
+		Frontend\.gitattributes = Frontend\.gitattributes
+		Frontend\.gitignore = Frontend\.gitignore
+		Frontend\.npmrc = Frontend\.npmrc
+		Frontend\README.md = Frontend\README.md
+		Frontend\vite.config.js = Frontend\vite.config.js
+	EndProjectSection
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Frontend", "Frontend\src\Frontend.fsproj", "{D14C0EAC-C0BC-4521-81FE-3E8B675AA31C}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Backend", "Backend", "{B080256A-89C1-42B2-9F31-675B09CD2EC2}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Files", "Solution Files", "{C69255A1-C11B-4C5B-81C6-7ADB205221D3}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Files", "Solution Files", "{271FEA26-0EF3-4E32-AC01-E04E168B7A42}"
+	ProjectSection(SolutionItems) = preProject
+		.dockerignore = .dockerignore
+		.editorconfig = .editorconfig
+		Directory.Build.props = Directory.Build.props
+		Directory.Packages.props = Directory.Packages.props
+		Dockerfile = Dockerfile
+		MusicPlayerBackend.sln.DotSettings = MusicPlayerBackend.sln.DotSettings
+		MusicService.sln.DotSettings = MusicService.sln.DotSettings
+		MusicService.sln.DotSettings.user = MusicService.sln.DotSettings.user
+		NuGet.Config = NuGet.Config
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{68F93951-AA8D-474B-B8EB-567A5D0B012D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{68F93951-AA8D-474B-B8EB-567A5D0B012D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{68F93951-AA8D-474B-B8EB-567A5D0B012D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{68F93951-AA8D-474B-B8EB-567A5D0B012D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{751DF391-2844-43E2-89DA-DD5BD35D4FC3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{751DF391-2844-43E2-89DA-DD5BD35D4FC3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{751DF391-2844-43E2-89DA-DD5BD35D4FC3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{751DF391-2844-43E2-89DA-DD5BD35D4FC3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4C2586F8-6E21-4A20-B3EC-91AF34C513F6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4C2586F8-6E21-4A20-B3EC-91AF34C513F6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4C2586F8-6E21-4A20-B3EC-91AF34C513F6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4C2586F8-6E21-4A20-B3EC-91AF34C513F6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{70C756CE-3152-479D-A1B3-4F2D1E7C062B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{70C756CE-3152-479D-A1B3-4F2D1E7C062B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{70C756CE-3152-479D-A1B3-4F2D1E7C062B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{70C756CE-3152-479D-A1B3-4F2D1E7C062B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0E6FC28B-AAC5-48EB-A53A-EEC2A78B8373}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0E6FC28B-AAC5-48EB-A53A-EEC2A78B8373}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0E6FC28B-AAC5-48EB-A53A-EEC2A78B8373}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0E6FC28B-AAC5-48EB-A53A-EEC2A78B8373}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8581B756-9AD4-41C1-B2BF-19DCEDD374EA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8581B756-9AD4-41C1-B2BF-19DCEDD374EA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8581B756-9AD4-41C1-B2BF-19DCEDD374EA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8581B756-9AD4-41C1-B2BF-19DCEDD374EA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D14C0EAC-C0BC-4521-81FE-3E8B675AA31C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D14C0EAC-C0BC-4521-81FE-3E8B675AA31C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D14C0EAC-C0BC-4521-81FE-3E8B675AA31C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D14C0EAC-C0BC-4521-81FE-3E8B675AA31C}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{375CB16B-D033-46E1-83DD-48A8268D13AA} = {F02CDE3B-2B1C-4FAB-9BAE-7BFBC15A048B}
+		{D14C0EAC-C0BC-4521-81FE-3E8B675AA31C} = {F02CDE3B-2B1C-4FAB-9BAE-7BFBC15A048B}
+		{68F93951-AA8D-474B-B8EB-567A5D0B012D} = {B080256A-89C1-42B2-9F31-675B09CD2EC2}
+		{70C756CE-3152-479D-A1B3-4F2D1E7C062B} = {B080256A-89C1-42B2-9F31-675B09CD2EC2}
+		{0E6FC28B-AAC5-48EB-A53A-EEC2A78B8373} = {B080256A-89C1-42B2-9F31-675B09CD2EC2}
+		{751DF391-2844-43E2-89DA-DD5BD35D4FC3} = {B080256A-89C1-42B2-9F31-675B09CD2EC2}
+		{4C2586F8-6E21-4A20-B3EC-91AF34C513F6} = {B080256A-89C1-42B2-9F31-675B09CD2EC2}
+		{8581B756-9AD4-41C1-B2BF-19DCEDD374EA} = {B080256A-89C1-42B2-9F31-675B09CD2EC2}
+		{C69255A1-C11B-4C5B-81C6-7ADB205221D3} = {B080256A-89C1-42B2-9F31-675B09CD2EC2}
+	EndGlobalSection
+EndGlobal
