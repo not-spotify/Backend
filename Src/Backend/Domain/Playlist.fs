@@ -51,6 +51,7 @@ type PlaylistStore = {
     TryGetById: PlaylistId -> Task<Playlist option>
     TryGetByName: PlaylistName * UserId -> Task<Playlist option>
     IsPlaylistExist: PlaylistName * UserId -> Task<bool>
+    Remove: PlaylistId -> Task
     Save: Playlist -> TaskResult<Playlist, CreatePlaylistError>
 }
 
@@ -89,6 +90,30 @@ let createPlaylist (playlistStore: PlaylistStore) (bus: Bus) : CreatePlaylist =
 
         return playlist
     }
+
+
+type RemovePlaylistRequest = {
+    UserId: UserId
+    Id: PlaylistId
+}
+
+type RemovePlaylistError =
+    | PlaylistNotFound
+
+type RemovePlaylist = RemovePlaylistRequest -> TaskResult<Unit, RemovePlaylistError>
+
+
+let removePlaylist (playlistStore: PlaylistStore) (bus: Bus) : RemovePlaylist =
+    fun request -> taskResult {
+        let! playlist = playlistStore.TryGetById(request.Id) |> TaskResult.requireSome PlaylistNotFound
+        do! playlist.UserId = request.UserId |> Result.requireTrue PlaylistNotFound
+
+        let! playlist = playlistStore.Remove(request.Id)
+        do! bus.Publish(playlist)
+
+        return playlist
+    }
+
 
 type AddTrackToPlaylistRequest = {
     UserId: UserId

@@ -21,6 +21,13 @@ type PlaylistController() as this =
         return this.Ok(x)
     }
 
+    /// Removes a playlist
+    [<HttpDelete(Name = "RemovePlaylist")>]
+    member _.Remove(request, [<FromServices>] removePlaylist: RemovePlaylist) = task {
+        let! x = removePlaylist request
+        return this.Ok(x)
+    }
+
     /// Adds track to playlist
     [<HttpPost(Name = "AddTrackToPlaylist")>]
     member _.AddTrackToPlaylist(request, [<FromServices>] handler: AddTrackToPlaylist) = task {

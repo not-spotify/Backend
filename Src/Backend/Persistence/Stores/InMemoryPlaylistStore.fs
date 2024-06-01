@@ -31,4 +31,8 @@ let create () : PlaylistStore =
           playlists[playlist.Id] <- playlist
           return Ok playlist
       }
+
+      Remove = fun id -> task {
+          %playlists.Remove(id)
+      }
     }

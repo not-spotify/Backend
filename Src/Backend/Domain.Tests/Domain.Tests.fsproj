@@ -11,6 +11,7 @@
     <ItemGroup>
         <Compile Include="CreateEnumByName.fs" />
         <Compile Include="User\CreateUserTests.fs" />
+        <Compile Include="Playlist\DeletePlaylistTests.fs" />
         <Compile Include="Playlist\CreatePlaylistTests.fs" />
     </ItemGroup>
 

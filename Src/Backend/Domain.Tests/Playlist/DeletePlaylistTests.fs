@@ -1,4 +1,4 @@
-﻿module Domain.Tests.Playlist.CreatePlaylistTests
+﻿module Domain.Tests.Playlist.DeletePlaylistTests
 
 open System.Threading.Tasks
 open Domain.Playlist
@@ -16,6 +16,14 @@ let testStore (playlists: Playlist seq) : PlaylistStore =
 
     let save playlist = task {
         return Ok playlist
+    }
+
+    let remove id : Task = task {
+        let item = playlists |> Seq.tryFind (fun p -> p.Id = id)
+        match item with
+        | None -> ()
+        | Some item ->
+            %playlists.Remove(item)
     }
 
     let isPlaylistExist (playlistName, userId) = task {
@@ -36,14 +44,6 @@ let testStore (playlists: Playlist seq) : PlaylistStore =
         return playlists |> Seq.tryFind ^ fun p -> p.Name = playlistName && p.UserId = userId
     }
 
-    let remove id : Task = task {
-        let item = playlists |> Seq.tryFind (fun p -> p.Id = id)
-        match item with
-        | None -> ()
-        | Some item ->
-            %playlists.Remove(item)
-    }
-
     { GetByUserId = tryGetByUserId
       TryGetById = tryGetById
       TryGetByName = tryGetByName
@@ -52,12 +52,13 @@ let testStore (playlists: Playlist seq) : PlaylistStore =
       Remove = remove }
 
 [<Test>]
-let ``Try create playlist with duplicated name`` () = task {
+let ``Try delete playlist`` () = task {
     let existingUserId = UserId "24fbcccf-cc5a-4343-b2ca-b329f97c473a"
+    let existingPlaylistId = PlaylistId "24fbcccf-cc5a-4343-ffff-b329f97c473a"
     let testStore = testStore [|
                                  { CreatedAt = DateTimeOffset.UtcNow
                                    UpdatedAt = None
-                                   Id = Id.create()
+                                   Id = existingPlaylistId
                                    Name = PlaylistName "duplicated name"
                                    UserId = existingUserId }
                               |]
@@ -66,15 +67,29 @@ let ``Try create playlist with duplicated name`` () = task {
         Publish = fun _ -> Task.completed
     }
 
-    let request : CreatePlaylistRequest = {
+    let request : RemovePlaylistRequest = {
         UserId = existingUserId
-        Name = "duplicated name"
+        Id = existingUserId
     }
 
-    let! createUserResponse = createPlaylist testStore busMock request
+    let! removePlaylistResponse = removePlaylist testStore busMock request
 
-    match createUserResponse with
-    | Error (CreatePlaylistError.Failed [ CreatePlaylistFailed.DuplicatePlaylistName ]) ->
+    match removePlaylistResponse with
+    | Error RemovePlaylistError.PlaylistNotFound ->
+        Assert.Pass()
+
+    | other ->
+        Assert.Fail(string other)
+
+    let request : RemovePlaylistRequest = {
+        UserId = existingUserId
+        Id = existingPlaylistId
+    }
+
+    let! removePlaylistResponse = removePlaylist testStore busMock request
+
+    match removePlaylistResponse with
+    | Ok () ->
         Assert.Pass()
 
     | other ->
