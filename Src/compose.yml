@@ -1,0 +1,47 @@
+services:
+  web:
+    container_name: backend
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - mservice__MINIO__ENDPOINT=minio
+      - ASPNETCORE_ENVIRONMENT=Development
+    ports:
+      - "9780:9780"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      - minio
+    links: 
+      - minio
+
+  minio:
+    image: docker.io/bitnami/minio:latest
+    ports:
+      - '9000:9000'
+      - '9001:9001'
+    volumes:
+      - 'minio_data:/data'
+    environment:
+      - MINIO_ROOT_USER=minio_access_key
+      - MINIO_ROOT_PASSWORD=minio_secret_key
+      - MINIO_DEFAULT_BUCKETS=default
+
+  postgres:
+      container_name: postgrea
+      image: postgres
+      environment:
+        POSTGRES_USER: ${POSTGRES_USER:-postgres}
+        POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+        PGDATA: /data/postgres
+      volumes:
+        - postgres_data:/data/postgres
+      ports:
+        - "5532:5432"
+
+volumes:
+  minio_data:
+    driver: local
+  postgres_data:
+    driver: local
